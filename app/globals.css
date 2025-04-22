@@ -1,26 +1,36 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+  /* Brand Colors */
+  --moss-dark: #2F5D50;
+  --moss: #6A9F74;
+  --moss-light: #A3C7A1;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --sunlight: #FFD54F;
+  --sunlight-deep: #FFB300;
+  --sunlight-soft: #FFF9C4;
+
+  --neutral-clay: #E8DCCA;
+  --neutral-beige: #F5F0E6;
+  --olive-shadow: #5A6843;
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+@theme inline {
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  /* Brand Mappings */
+  --color-olive: var(--olive-shadow);
+  --color-moss: var(--moss);
+  --color-moss-light: var(--moss-light);
+  --color-moss-dark: var(--moss-dark);
+  --color-sunlight: var(--sunlight);
+  --color-sunlight-soft: var(--sunlight-soft);
+  --color-sunlight-deep: var(--sunlight-deep);
+  --color-clay: var(--neutral-clay);
+  --color-neutral-clay: var(--neutral-clay);
+  --color-neutral-beige: var(--neutral-beige);
 }
