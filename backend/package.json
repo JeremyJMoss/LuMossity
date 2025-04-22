@@ -1,0 +1,27 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "Api backend for LuMossity",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.ocm:JeremyJMoss/LuMossity.git"
+  },
+  "keywords": [
+    "CMS"
+  ],
+  "author": "Jeremy J Moss",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "mysql2": "^3.14.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}
