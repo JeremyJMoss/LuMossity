@@ -24,7 +24,7 @@ class Entity {
             throw err;
         }
 
-        if ( existingData && entity_key ) {
+        if ( existingData ) {
             throw new Error('Entity with that key already exists');
         }
 

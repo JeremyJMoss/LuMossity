@@ -15,13 +15,17 @@ module.exports.initializeDatabase = async (req, res) => {
     }
 
     const { host, user, password, database} = req.body;
-    
+
+    let connection;
+    let dbConnection;
     // Try connecting to the database
     try{
-        const connection = await DatabaseConnector.testHostConnection({host, user, password});
+        connection = await DatabaseConnector.testHostConnection({host, user, password});
         await DatabaseInitializer.createDatabase(connection, {host, user, password, database});
-        const dbConnection = await DatabaseConnector.getConnection();
+
+        dbConnection = await DatabaseConnector.getConnection();
         await DatabaseInitializer.setupTables(dbConnection);
+
         res.status(200).json({
             success: true
         });
@@ -32,7 +36,20 @@ module.exports.initializeDatabase = async (req, res) => {
             error: err.message
         });
     } finally {
-        await dbConnection.end();
+        if (connection){
+            try{
+                await connection.end();
+            } catch(err) {
+                console.error('Failed to close connection to client');
+            }
+        }
+        if (dbConnection) {
+            try {
+                await dbConnection.end();
+            } catch (err) {
+                console.error('Failed to close connection to database');
+            }
+        }
     }
     
 }

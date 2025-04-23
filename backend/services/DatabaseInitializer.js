@@ -8,7 +8,7 @@ class DatabaseInitializer {
         }
 
         try {
-            await hostConnection.query(`CREATE DATABASE IF NOT EXISTS \`${config.database}\``);
+            await hostConnection.execute(`CREATE DATABASE IF NOT EXISTS \`${config.database}\``);
             DatabaseConfigManager.saveConfig(config);
         } catch (err) {
             throw new Error('Failed to create database: ' + err.message);
@@ -19,13 +19,13 @@ class DatabaseInitializer {
 
     static async setupTables(dbConnection) {
         try {
-            await dbConnection.query(`CREATE TABLE IF NOT EXISTS entities (
+            await dbConnection.execute(`CREATE TABLE IF NOT EXISTS entities (
                 ID INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
                 entity_key VARCHAR(255) NOT NULL UNIQUE,
                 entity_name VARCHAR(255) NOT NULL
             )`);
 
-            await dbConnection.query(`CREATE TABLE IF NOT EXISTS entities_structure (
+            await dbConnection.execute(`CREATE TABLE IF NOT EXISTS entities_structure (
                 ID INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
                 entity_id INT NOT NULL,
                 unique_meta_key VARCHAR(255) NOT NULL,
