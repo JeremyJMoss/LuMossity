@@ -2,8 +2,12 @@ const fs = require('fs');
 const { configPath } = require('../util/constants');
 
 class DatabaseConfigManager {
+    static hasConfig() {
+        return fs.existsSync( configPath );
+    }
+
     static getConfig() {
-        if ( !fs.existsSync( configPath ) ) throw new Error( 'DB config not found' );
+        if ( !DatabaseConfigManager.hasConfig() ) throw new Error( 'DB config not found' );
         return JSON.parse(fs.readFileSync( configPath, 'utf-8' ) );
     }
 

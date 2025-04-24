@@ -1,8 +1,9 @@
 const express = require("express");
 const bodyParser = require('body-parser');
 const cors = require("cors");
-const setupRouter = require('./routes/init/setup');
-const entityRouter = require('./routes/entity/entity');
+const setupRouter = require('./routes/setup');
+const entityRouter = require('./routes/entity');
+const userRouter = require('./routes/user');
 
 const server = express();
 server.use(cors());
@@ -10,7 +11,8 @@ server.use(cors());
 server.use(bodyParser.json());
 
 server.use('/api/setup', setupRouter);
-server.use('/api/entity', entityRouter);
+server.use('/api/user', userRouter);
+server.use('/api/entities', entityRouter);
 
 server.listen(4000, () => {
     console.log("server listening on port 4000");

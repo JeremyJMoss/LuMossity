@@ -17,6 +17,7 @@
   "author": "Jeremy J Moss",
   "license": "ISC",
   "dependencies": {
+    "argon2": "^0.41.1",
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "mysql2": "^3.14.0"

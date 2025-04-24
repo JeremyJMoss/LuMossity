@@ -1,10 +1,20 @@
 const DatabaseConnector = require('../services/DatabaseConnector');
+const DatabaseConfigManager = require('../services/DatabaseConfigManager');
 const DatabaseInitializer = require('../services/DatabaseInitializer');
-const {validateDbInput} = require('../util/validation');
+const {validateFields} = require('../util/validation');
 
 module.exports.initializeDatabase = async (req, res) => {
 
-    const missingFields = validateDbInput( req.body );
+    const alreadyInitialized = DatabaseConfigManager.hasConfig();
+
+    if ( alreadyInitialized ) {
+        return res.status(400).json({
+            success: false,
+            error: 'Database already initialized'
+        });
+    }
+
+    const missingFields = validateFields(req.body, ['host', 'user', 'password', 'database'])
 
     if (missingFields.length > 0) {
         return res.status(422).json({
@@ -20,18 +30,19 @@ module.exports.initializeDatabase = async (req, res) => {
     let dbConnection;
     // Try connecting to the database
     try{
+
         connection = await DatabaseConnector.testHostConnection({host, user, password});
         await DatabaseInitializer.createDatabase(connection, {host, user, password, database});
 
         dbConnection = await DatabaseConnector.getConnection();
         await DatabaseInitializer.setupTables(dbConnection);
 
-        res.status(200).json({
+        return res.status(200).json({
             success: true
         });
     } catch(err) {
         console.error(err.message);
-        res.status(500).json({
+        return res.status(500).json({
             success: false,
             error: err.message
         });

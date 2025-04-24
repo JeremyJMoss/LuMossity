@@ -2,6 +2,11 @@ const DatabaseConfigManager = require('./DatabaseConfigManager');
 const { isValidDatabaseName } = require('../util/helpers');
 
 class DatabaseInitializer {
+    /**
+     * Setup Database and save config in json file 
+     * @param {mysql.Connection} hostConnection 
+     * @param {Object} config 
+     */
     static async createDatabase(hostConnection, config) {
         if (!isValidDatabaseName(config.database)) {
             throw new Error('Invalid database name');
@@ -17,8 +22,14 @@ class DatabaseInitializer {
         }
     }
 
+    /**
+     * setup required tables structure
+     * @param {mysql.Connection} dbConnection 
+     */
     static async setupTables(dbConnection) {
+
         try {
+
             await dbConnection.execute(`CREATE TABLE IF NOT EXISTS entities (
                 ID INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
                 entity_key VARCHAR(255) NOT NULL UNIQUE,
@@ -37,6 +48,84 @@ class DatabaseInitializer {
                 order_index INT DEFAULT 0,
                 FOREIGN KEY (entity_id) REFERENCES entities(ID)
             )`);
+
+            await dbConnection.execute(`CREATE TABLE IF NOT EXISTS roles (
+                ID INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+                name varchar(255) UNIQUE NOT NULL
+            )`);
+
+            await dbConnection.execute(`CREATE TABLE IF NOT EXISTS permissions(
+                ID INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+                name varchar(255) UNIQUE NOT NULL
+            )`);
+
+            await dbConnection.execute(`CREATE TABLE IF NOT EXISTS role_permissions(
+                role_id INT,
+                permission_id INT,
+                PRIMARY KEY (role_id, permission_id),
+                FOREIGN KEY (role_id) REFERENCES roles(ID),
+                FOREIGN KEY (permission_id) REFERENCES permissions(ID)
+            )`);
+
+            await dbConnection.query(`INSERT INTO roles (name) VALUES ('superadmin'), ('admin'), ('developer')`)
+
+            await dbConnection.query(`INSERT INTO permissions (name) 
+                VALUES('system:access'), ('users:create'), ('users:edit'), ('users:delete'), ('users:view'), 
+                ('entities:create'), ('entities:edit'), ('entities:delete'), ('entities:view'),
+                ('permissions:view'), ('roles:create'), ('roles:edit'), ('roles:delete'), ('roles:view')
+            `);
+
+            await dbConnection.query(`INSERT INTO role_permissions (role_id, permission_id)
+                SELECT r.ID, p.ID
+                FROM roles r
+                JOIN permissions p
+                WHERE r.name = 'superadmin';
+            `);
+
+            await dbConnection.query(`INSERT INTO role_permissions (role_id, permission_id)
+                SELECT r.ID, p.ID
+                FROM roles r
+                JOIN permissions p ON p.name != 'permissions:view'
+                WHERE r.name = 'admin'
+            `)
+
+            await dbConnection.query(`INSERT INTO role_permissions (role_id, permission_id)
+                SELECT r.ID, p.ID
+                FROM roles r
+                JOIN permissions p
+                WHERE r.name = 'developer'
+                AND p.name NOT LIKE 'users%' 
+                AND p.name NOT LIKE 'roles%'
+            `)
+
+            await dbConnection.execute(`CREATE TABLE IF NOT EXISTS users (
+                ID INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+                email VARCHAR(255) NOT NULL UNIQUE,
+                password TEXT NOT NULL,
+                role_id INT NOT NULL,
+                username VARCHAR(100) NOT NULL,
+                first_name VARCHAR(100),
+                last_name VARCHAR(100),
+                is_active BOOLEAN DEFAULT TRUE,
+                last_login DATETIME,
+                failed_logins INT DEFAULT 0,
+                lockout_until DATETIME,
+                password_reset_token VARCHAR(255),
+                password_reset_expires DATETIME,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                FOREIGN KEY (role_id) REFERENCES roles(ID)
+            )`);
+
+            await dbConnection.execute(`CREATE TABLE user_meta (
+                id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+                user_id INT NOT NULL,
+                meta_key VARCHAR(255) NOT NULL,
+                meta_value TEXT,
+                UNIQUE KEY unique_user_meta (user_id, meta_key),
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )`);
+
         } catch (err) {
             throw new Error('Could not create database tables: ' + err.message);
         } finally {
