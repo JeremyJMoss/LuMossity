@@ -1,4 +1,4 @@
-const {hash} = require('argon2');
+const {hash, verify} = require('argon2');
 
 class AuthService {
     static async hashPassword( rawPassword ) {
@@ -12,7 +12,7 @@ class AuthService {
 
     static async comparePassword(plainPassword, hashedPassword) {
         try {
-            return await argon2.verify(hashedPassword, plainPassword);
+            return await verify(hashedPassword, plainPassword);
         } catch (err) {
             throw new Error('Password verification failed: ' + err.message);
         }

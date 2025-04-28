@@ -348,11 +348,7 @@ class Entity {
             const fieldsToInsert = this.fields.filter(newField => !databaseFields.some(existing => existing.unique_meta_key === newField.unique_meta_key));
             const fieldsToUpdate = this.fields.filter(newField => databaseFields.some(existing => existing.unique_meta_key === newField.unique_meta_key));
             const fieldsToDelete = databaseFields.filter(existing => !this.fields.some(newField => newField.unique_meta_key === existing.unique_meta_key));
-
-            console.log(fieldsToInsert);
-            console.log(fieldsToUpdate);
-            console.log(fieldsToDelete);
-
+            
             // Insert new
             for (const field of fieldsToInsert) {
                 await dbConnection.query(`INSERT INTO entities_structure (entity_id, unique_meta_key, field_name, field_type, is_required, is_queryable, default_value, order_index ) VALUES (?, ?, ?)`, 
