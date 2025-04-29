@@ -30,7 +30,32 @@
   --color-sunlight: var(--sunlight);
   --color-sunlight-soft: var(--sunlight-soft);
   --color-sunlight-deep: var(--sunlight-deep);
-  --color-clay: var(--neutral-clay);
   --color-neutral-clay: var(--neutral-clay);
   --color-neutral-beige: var(--neutral-beige);
+}
+
+.loader-dual-ring {
+  display: inline-block;
+  width: 32px;
+  height: 32px;
+}
+.loader-dual-ring:after {
+  content: "";
+  display: block;
+  width: 32px;
+  height: 32px;
+  margin: 0;
+  border-radius: 50%;
+  border: 5px solid;
+  border-color: var(--moss-dark) var(--moss-dark) var(--moss) var(--moss);
+  animation: loader-dual-ring 1.2s linear infinite;
+}
+
+@keyframes loader-dual-ring {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }

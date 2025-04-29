@@ -2,19 +2,8 @@ const User = require('../models/User');
 const {validateFields} = require('../util/validation');
 
 module.exports.createInitialUser = async (req, res, next) => {
-    const missingFields = validateFields(req.body, ['username', 'email', 'password']);
-
-    if (missingFields.length > 0) {
-        return res.status(422).json({
-            success: false,
-            error: 'Missing required fields',
-            missing: missingFields
-        });
-    }
-
-    const { username, email, password } = req.body;
-
     try {
+        // check if initial user already exists
         const firstUser = await User.getUserBy( 'id', 1 );
 
         if (firstUser){
@@ -23,6 +12,18 @@ module.exports.createInitialUser = async (req, res, next) => {
                 error: 'User already has been initialised'
             });
         }
+
+        const missingFields = validateFields(req.body, ['username', 'email', 'password']);
+
+        if (missingFields.length > 0) {
+            return res.status(422).json({
+                success: false,
+                error: 'Missing required fields',
+                missing: missingFields
+            });
+        }
+
+        const { username, email, password } = req.body;
 
         const initUser = await User.create( username, email, password, 1 );
 

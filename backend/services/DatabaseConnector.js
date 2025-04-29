@@ -15,10 +15,7 @@ class DatabaseConnector {
             if (err.code === 'ECONNREFUSED') {
                 throw new Error('Cannot connect to MySQL server');
             }
-            if (err.code === 'ER_ACCESS_DENIED_ERROR') {
-                throw new Error('Access denied. Please check your MySQL username/password.');
-            }
-            throw new Error('Unknown database error: ' + err.message);
+            throw new Error('Access denied. Please check your MySQL username/password.');
         }
     }
 }
