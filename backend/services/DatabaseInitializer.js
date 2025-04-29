@@ -67,7 +67,7 @@ class DatabaseInitializer {
                 FOREIGN KEY (permission_id) REFERENCES permissions(ID)
             )`);
 
-            await dbConnection.query(`INSERT INTO roles (name) VALUES ('superadmin'), ('admin'), ('developer')`)
+            await dbConnection.query(`INSERT INTO roles (name) VALUES ('superadmin'), ('admin'), ('user')`)
 
             await dbConnection.query(`INSERT INTO permissions (name) 
                 VALUES('system:access'), ('users:create'), ('users:edit'), ('users:delete'), ('users:view'), 
@@ -93,7 +93,7 @@ class DatabaseInitializer {
                 SELECT r.ID, p.ID
                 FROM roles r
                 JOIN permissions p
-                WHERE r.name = 'developer'
+                WHERE r.name = 'user'
                 AND p.name NOT LIKE 'users%' 
                 AND p.name NOT LIKE 'roles%'
             `)

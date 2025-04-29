@@ -2,6 +2,7 @@ const AuthService = require("../services/AuthService");
 const DatabaseConnector = require("../services/DatabaseConnector");
 const jwt = require('jsonwebtoken');
 const config = require("config");
+const { maxFailedLoginAttempts, lockoutBaseTime } = require("../util/constants");
 
 class User {
     constructor( username, email, hashedPassword, role, userId ) {
@@ -20,7 +21,7 @@ class User {
      * @param {number} role 
      * @returns User|Error
      */
-    static async create( username, email, password, role = 3 ) {
+    static async create( username, email, password, role = 'user' ) {
         try {
             const existingUserData = await User.#getExistingUserData( {email} );
             
@@ -65,158 +66,166 @@ class User {
 
     static async #getExistingUserData( { email = '', id = null } ){
         // Get retrieval method
-        let query = '';
+        let query = 'SELECT u.email, u.password, u.username, r.name as role, u.ID FROM users u JOIN roles r ON r.ID = u.role_id WHERE ';
         let query_var = null;
         if (id) {
             query_var = id;
-            query = 'SELECT * FROM users WHERE ID = ? LIMIT 1';
+            query += 'ID = ? LIMIT 1';
         } else if (email) {
             query_var = email;
-            query = 'SELECT * FROM users WHERE email = ? LIMIT 1';
+            query += 'email = ? LIMIT 1';
         }
 
-        if ( !query && !query_var){
+        if ( !query_var ){
             throw new Error('No query variable set to retreive user');
         }
-        
-        // Attempt to get user
-        let dbConnection;
 
-        try {
-            dbConnection =  await DatabaseConnector.getConnection();
-
-            const [users] = await dbConnection.query(
-                query, 
-                [query_var]
-            );
-
-            if (users.length === 0) return null;
-
-            const user = users[0];
-
-            return {
-                email: user.email,
-                hashedPassword: user.password,
-                username: user.username,
-                role: user.role,
-                userId: user.ID
-            }
-        } catch (err) {
-            throw new Error('Could not retrieve user from database');
-        } finally {
-            if (dbConnection){
-                try {
-                    await dbConnection.end();
-                } catch (err) {
-                    throw new Error('Failed to close database connection');
+        return await DatabaseConnector.withConnection(async (db) => {
+            try {
+                const [users] = await db.query(
+                    query, 
+                    [query_var]
+                );
+    
+                if (users.length === 0) return null;
+    
+                const user = users[0];
+    
+                return {
+                    email: user.email,
+                    hashedPassword: user.password,
+                    username: user.username,
+                    role: user.role,
+                    userId: user.ID
                 }
+            } catch (err) {
+                throw new Error('Could not retrieve user from database');
             }
-        }
+        })
     }
 
     async #create() {
-        let dbConnection;
-        try {
-            dbConnection = await DatabaseConnector.getConnection();
-            const [result] = await dbConnection.execute(
-                `INSERT INTO users (username, email, password, role_id) VALUES(?, ?, ?, ?)`,
-                [this.username, this.email, this.hashedPassword, this.role]
-            )
+        await DatabaseConnector.withConnection(async (db) => {
+            try {
+                const roleID = await this.getRoleId(this.role);
 
-            if ( !result?.insertId ){
-                throw new Error('Insert not successful');
-            }
-
-            this.userId = result.insertId;
-
-        } catch (err) {
-            throw new Error('Could not create user: ' + err.message);
-        } finally {
-            if (dbConnection) {
-                try {
-                    await dbConnection.end();
-                } catch (err) {
-                    throw new Error('Failed to close database connection');
+                const [result] = await db.execute(
+                    `INSERT INTO users (username, email, password, role_id) VALUES(?, ?, ?, ?)`,
+                    [this.username, this.email, this.hashedPassword, roleID]
+                )
+    
+                if ( !result?.insertId ){
+                    throw new Error('Insert not successful');
                 }
+    
+                this.userId = result.insertId;
+            } catch (err) {
+                throw new Error('Could not create user: ' + err.message);
             }
-        }
+        })
     }
 
     async getFailedLogins() {
-        let dbConnection;
-
-        try {
-            dbConnection = await DatabaseConnector.getConnection();
-            const [rows] = await dbConnection.query(
-                `SELECT failed_logins FROM users WHERE ID = ? LIMIT 1`
-                [this.userId]
-            )
-
-            if (rows.length === 0) return null;
-
-            const failed_logins = rows[0];
-
-            return failed_logins;
-
-        } catch (err) {
-            throw new Error('Could not access failed logins from database');
-        } finally {
-            if (dbConnection) {
-                try {
-                    await dbConnection.end();
-                } catch (err) {
-                    throw new Error('Failed to close database connection');
-                }
+        return await DatabaseConnector.withConnection(async (db) => {
+            try {
+                const [rows] = await db.query(
+                    `SELECT failed_logins FROM users WHERE ID = ? LIMIT 1`
+                    [this.userId]
+                )
+    
+                if (rows.length === 0) return null;
+    
+                const failed_logins = rows[0];
+    
+                return failed_logins;
+            } catch (err) {
+                throw new Error('Could not access failed logins from database');
             }
-        }
+        })
     }
 
     async setFailedLogins( newAmount ) {
-        let dbConnection;
-
-        try {
-            dbConnection = await DatabaseConnector.getConnection();
-            
-            await dbConnection.query(
-                `UPDATE users SET failed_logins = ? WHERE ID = ?`
-                [newAmount, this.userId]
-            )
-
-        } catch (err) {
-            throw new Error('Could not update failed logins in database');
-        } finally {
-            if (dbConnection) {
-                try {
-                    await dbConnection.end();
-                } catch (err) {
-                    throw new Error('Failed to close database connection');
-                }
+        await DatabaseConnector.withConnection(async (db) => {
+            try {
+                await db.query(
+                    `UPDATE users SET failed_logins = ? WHERE ID = ?`
+                    [newAmount, this.userId]
+                )
+    
+            } catch (err) {
+                throw new Error('Could not update failed logins in database');
             }
-        }
+        })
     }
 
     async setLastLogin() {
-        let dbConnection;
-
-        try {
-            dbConnection = await DatabaseConnector.getConnection();
-            
-            await dbConnection.query(
-                `UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE ID = ?`,
-                [this.userId]
-            )
-
-        } catch (err) {
-            throw new Error('Could not update last login in database');
-        } finally {
-            if (dbConnection) {
-                try {
-                    await dbConnection.end();
-                } catch (err) {
-                    throw new Error('Failed to close database connection');
-                }
+        await DatabaseConnector.withConnection(async (db) => {
+            try {
+                await db.query(
+                    `UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE ID = ?`,
+                    [this.userId]
+                );
+            } catch {
+                throw new Error('Could not update last_login in database');
             }
-        }
+        })
+    }
+
+    async getLockout() {
+        return await DatabaseConnector.withConnection(async (db) => {
+            try {
+                const [rows] = await db.query(
+                    `SELECT lockout_until FROM users WHERE ID = ? LIMIT 1`,
+                    [this.userId]
+                )
+
+                if (rows.length === 0) return null;
+
+                const lockoutUntil = rows[0];
+
+                return lockoutUntil;
+
+            } catch (err) {
+                throw new Error('Could not get lockout info');
+            }
+        })
+    }
+
+    async setLockout(failedLogins) {
+
+        const amountAboveThreshold = failedLogins - 4;
+        const lockoutTimeAddition = amountAboveThreshold * lockoutBaseTime;
+
+        await DatabaseConnector.withConnection(async (db) => {
+            try {
+                await db.query(
+                    `UPDATE users SET lockout_until = DATEADD(CURRENT_TIMESTAMP, ? SECOND) WHERE ID = ?`,
+                    [lockoutTimeAddition, this.userId]
+                );
+            } catch (err) {
+                throw new Error('Could not update lockout information');
+            }
+        });
+    }
+
+    async getRoleId(role) {
+        return await DatabaseConnector.withConnection(async (db) => {
+            try {
+                const [row] = await db.query(
+                    `SELECT ID from roles WHERE name = ? LIMIT 1`,
+                    [role]
+                )
+
+                if (row.length === 0) return null;
+
+                const roleID = row[0];
+
+                return roleID;
+
+            } catch (err) {
+                throw new Error('Issue retrieving role from database');
+            }
+        })
     }
 
     async login( password ) {
@@ -225,6 +234,9 @@ class User {
 
             if ( !isCorrect ) {
                 const failedLogins = await this.getFailedLogins();
+                if ( failedLogins >= maxFailedLoginAttempts ) {
+                    await this.setLockout(failedLogins);
+                }
                 await this.setFailedLogins(++failedLogins);
                 throw new Error("Password Verification Failed");
             }

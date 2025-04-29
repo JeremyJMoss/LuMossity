@@ -71,73 +71,54 @@ class Entity {
     }
 
     static async #getEntityData(entity_key) {
-        let dbConnection;
-        try {
-            dbConnection = await DatabaseConnector.getConnection();
-
-            const [entityRows] = await dbConnection.query(
-                `SELECT * FROM \`entities\` WHERE entity_key = ? LIMIT 1`,
-                [entity_key]
-            );
-
-            if (entityRows.length === 0) return null;
-
-            const entity = entityRows[0];
-
-            const [fields] = await dbConnection.query(
-                `SELECT * FROM \`entities_structure\` WHERE entity_id = ? ORDER BY order_index ASC`,
-                [entity.ID]
-            );
-
-            return {
-                name: entity.entity_name,
-                entity_key: entity.entity_key,
-                entity_id: entity.ID,
-                fields
-            };
-        } catch (err) {
-            throw new Error('Failed to load entity data: ' + err.message);
-        } finally {
-            if (dbConnection) {
-                try {
-                    await dbConnection.end();
-                } catch (err) {
-                    console.error('Failed to close database connection');
-                }
-            }
-        }
+        return await DatabaseConnector(async (db) => {
+            try {
+                const [entityRows] = await db.query(
+                    `SELECT * FROM \`entities\` WHERE entity_key = ? LIMIT 1`,
+                    [entity_key]
+                );
+    
+                if (entityRows.length === 0) return null;
+    
+                const entity = entityRows[0];
+    
+                const [fields] = await db.query(
+                    `SELECT * FROM \`entities_structure\` WHERE entity_id = ? ORDER BY order_index ASC`,
+                    [entity.ID]
+                );
+    
+                return {
+                    name: entity.entity_name,
+                    entity_key: entity.entity_key,
+                    entity_id: entity.ID,
+                    fields
+                };
+            } catch (err) {
+                throw new Error('Failed to load entity data: ' + err.message);
+            } 
+        })
     }
 
     static async getAll () {
-        let dbConnection;
-        try {
-            dbConnection = await DatabaseConnector.getConnection();
+        return await DatabaseConnector(async (db) => {
+            try {
+                const [entities] = await db.query('SELECT * FROM entities');
 
-            const [entities] = await dbConnection.query('SELECT * FROM entities');
+                const [fields] = await db.query('SELECT * FROM entities_structure');
 
-            const [fields] = await dbConnection.query('SELECT * FROM entities_structure');
-
-            const grouped = entities.map(entity => {
-                const structure = fields.filter(field => field.entity_id === entity.ID);
-                return {
-                    ...entity,
-                    fields: structure
-                };
-            });
-        
-            return grouped;
-
-        } catch (err) {
-            throw new Error( 'Unable to retrieve all entities: ' + err.message );
-        } finally {
-            if (dbConnection) {
-                try {
-                    await dbConnection.end();
-                } catch (err) {
-                    console.error("Failed to close database connection");
-                }
+                const grouped = entities.map(entity => {
+                    const structure = fields.filter(field => field.entity_id === entity.ID);
+                    return {
+                        ...entity,
+                        fields: structure
+                    };
+                });
+            
+                return grouped;
+            } catch (err) {
+                throw new Error( 'Unable to retrieve all entities: ' + err.message );
             }
-        }
+        })
     }
 
     setName( newName ) {
@@ -193,64 +174,44 @@ class Entity {
     }
 
     async retrieveFields() {
-        let dbConnection;
-        try {
-            dbConnection = await DatabaseConnector.getConnection();
-            
-            const [structureRows] = await dbConnection.query(
-                `SELECT * FROM \`entities_structure\` WHERE entity_id = ? ORDER BY order_index ASC`,
-                [this.entity_id]
-            );
-
-            return structureRows;
-
-        } catch (err) {
-            throw new Error('Could not retreive fields for entity');
-        } finally {
-            if (dbConnection) {
-                try {
-                    await dbConnection.end();
-                } catch (err) {
-                    console.error('Failed to close database connection');
-                }
-            }
-        }
-    }
-
-    async refreshFields() { 
-        let dbConnection;
-        try {
-            dbConnection = await DatabaseConnector.getConnection();
-
-            if (!this.entity_id) {
-                const [entityRows] = await dbConnection.query(
-                    `SELECT * FROM \`entities\` WHERE entity_key = ? LIMIT 1`,
-                    [this.entity_key]
+        return await DatabaseConnector(async (db) => {
+            try {
+                const [structureRows] = await db.query(
+                    `SELECT * FROM \`entities_structure\` WHERE entity_id = ? ORDER BY order_index ASC`,
+                    [this.entity_id]
                 );
     
-                if (entityRows.length === 0) {
-                    return false;
-                }
-
-                this.entity_id = entityRows[0].ID;
-
+                return structureRows;
+            } catch (err) {
+                throw new Error('Could not retreive fields for entity');
             }
+        })
+    }
 
-            this.fields = await this.retrieveFields();
-
-            return true;
-
-        } catch (err) {
-            throw new Error('Could not retrieve fields from database');
-        } finally {
-            if (dbConnection) {
-                try {
-                    await dbConnection.end();
-                } catch (err) {
-                    console.error('Failed to close database connection');
+    async refreshFields() {
+        return await DatabaseConnector.withConnection(async (db) => {
+            try {
+                if (!this.entity_id) {
+                    const [entityRows] = await db.query(
+                        `SELECT * FROM \`entities\` WHERE entity_key = ? LIMIT 1`,
+                        [this.entity_key]
+                    );
+        
+                    if (entityRows.length === 0) {
+                        return false;
+                    }
+    
+                    this.entity_id = entityRows[0].ID;
+    
                 }
+    
+                this.fields = await this.retrieveFields();
+    
+                return true;
+            } catch (err) {
+                throw new Error('Could not retrieve fields from database');
             }
-        }
+        })
     }
 
     removeField(key) {
@@ -266,117 +227,97 @@ class Entity {
     }
 
     async #create() {
-        let dbConnection;
-        try {
-            dbConnection = await DatabaseConnector.getConnection();
-            
-            const [result] = await dbConnection.query(
-                `INSERT INTO entities (entity_key, entity_name) VALUES (?, ?)`,
-                [this.entity_key, this.name]
-            );
-
-            if ( !result?.insertId ) {
-                throw new Error(`Unable to obtain insert id for entity ${this.name}`);
-            }
-
-            this.entity_id = result.insertId;
-
-            if ( this.fields.length > 0 ) {
-                const fieldsSQL = this.fields.map((field) => {
-                    return `(${this.entity_id}, '${field.unique_meta_key}', ${field.is_queryable}, '${field.field_name}', '${field.field_type}', ${field.is_required}, '${field.default_value}', ${field.order_index})`;
-                });
-
-                const fieldValues = fieldsSQL.join(',');
-
-                await dbConnection.query(
-                    `INSERT INTO entities_structure
-                    (entity_id, unique_meta_key, is_queryable, field_name, field_type, is_required, default_value, order_index )
-                    VALUES ${fieldValues}`
+        await DatabaseConnector.withConnection(async (db) => {
+            try {
+                const [result] = await db.query(
+                    `INSERT INTO entities (entity_key, entity_name) VALUES (?, ?)`,
+                    [this.entity_key, this.name]
                 );
-            }
-
-            await dbConnection.query(
-                    `CREATE TABLE m_entity_${this.entity_key} (
-                       ID INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
-                       title TEXT,
-                       author INT,
-                       status ENUM('published', 'archived', 'draft') NOT NULL DEFAULT 'draft',
-                       last_updated DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                       published_on DATETIME,
-                       created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                       meta_json JSON
-                    )`
-            );
-
-            await dbConnection.query(
-                `CREATE TABLE m_entity_${this.entity_key}_meta (
-                    ID INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
-                    ${this.entity_key}_id INT NOT NULL,
-                    meta_key VARCHAR(255),
-                    meta_value TEXT,
-                    FOREIGN KEY (${this.entity_key}_id) 
-                    REFERENCES m_entity_${this.entity_key}(ID) 
-                    ON DELETE CASCADE
-                )`
-            )
-
-        } catch (err) {
-            throw new Error('Failed to create Entity: ' + err.message);
-        } finally {
-            if (dbConnection) {
-                try {
-                    await dbConnection.end();
-                } catch (err) {
-                    console.error('Failed to close connection to database');
+    
+                if ( !result?.insertId ) {
+                    throw new Error(`Unable to obtain insert id for entity ${this.name}`);
                 }
+    
+                this.entity_id = result.insertId;
+    
+                if ( this.fields.length > 0 ) {
+                    const fieldsSQL = this.fields.map((field) => {
+                        return `(${this.entity_id}, '${field.unique_meta_key}', ${field.is_queryable}, '${field.field_name}', '${field.field_type}', ${field.is_required}, '${field.default_value}', ${field.order_index})`;
+                    });
+    
+                    const fieldValues = fieldsSQL.join(',');
+    
+                    await db.query(
+                        `INSERT INTO entities_structure
+                        (entity_id, unique_meta_key, is_queryable, field_name, field_type, is_required, default_value, order_index )
+                        VALUES ${fieldValues}`
+                    );
+                }
+    
+                await db.query(
+                        `CREATE TABLE m_entity_${this.entity_key} (
+                           ID INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+                           title TEXT,
+                           author INT,
+                           status ENUM('published', 'archived', 'draft') NOT NULL DEFAULT 'draft',
+                           last_updated DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                           published_on DATETIME,
+                           created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                           meta_json JSON
+                        )`
+                );
+    
+                await db.query(
+                    `CREATE TABLE m_entity_${this.entity_key}_meta (
+                        ID INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+                        ${this.entity_key}_id INT NOT NULL,
+                        meta_key VARCHAR(255),
+                        meta_value TEXT,
+                        FOREIGN KEY (${this.entity_key}_id) 
+                        REFERENCES m_entity_${this.entity_key}(ID) 
+                        ON DELETE CASCADE
+                    )`
+                )
+            } catch (err) {
+                throw new Error('Failed to create Entity: ' + err.message);
             }
-        }
+        })
     }
 
     async update() {
-        let dbConnection;
-        try {
-            dbConnection = await DatabaseConnector.getConnection();
-            
-            await dbConnection.query(
-                `UPDATE entities SET entity_name = ? WHERE ID = ?`,
-                [this.name, this.entity_id]
-            );
-
-            const databaseFields = await this.retrieveFields();
-
-            const fieldsToInsert = this.fields.filter(newField => !databaseFields.some(existing => existing.unique_meta_key === newField.unique_meta_key));
-            const fieldsToUpdate = this.fields.filter(newField => databaseFields.some(existing => existing.unique_meta_key === newField.unique_meta_key));
-            const fieldsToDelete = databaseFields.filter(existing => !this.fields.some(newField => newField.unique_meta_key === existing.unique_meta_key));
-            
-            // Insert new
-            for (const field of fieldsToInsert) {
-                await dbConnection.query(`INSERT INTO entities_structure (entity_id, unique_meta_key, field_name, field_type, is_required, is_queryable, default_value, order_index ) VALUES (?, ?, ?)`, 
-                    [this.entity_id, field.unique_meta_key, field.field_name, field.field_type, field.is_required, field.is_queryable, field.default_value, field.order_index]
+        await DatabaseConnector.withConnection(async (db) => {
+            try {
+                await db.query(
+                    `UPDATE entities SET entity_name = ? WHERE ID = ?`,
+                    [this.name, this.entity_id]
                 );
-            }
-        
-            // Update existing
-            for (const field of fieldsToUpdate) {
-                await dbConnection.query(`UPDATE entities_structure SET field_name = ?, field_type = ? WHERE entity_id = ? AND unique_meta_key = ?`, [field.field_name, field.field_type, this.entity_id, field.unique_meta_key]);
-            }
-        
-            // Delete removed
-            for (const field of fieldsToDelete) {
-                await dbConnection.query(`DELETE FROM entities_structure WHERE entity_id = ? AND unique_meta_key = ?`, [this.entity_id, field.unique_meta_key]);
-            }        
-
-        } catch (err) {
-            throw new Error( 'Could not update Entity: ' + err.message );
-        } finally {
-            if (dbConnection) {
-                try {
-                    await dbConnection.end();
-                } catch (err) {
-                    console.error('Failed to close connection to database');
+    
+                const databaseFields = await this.retrieveFields();
+    
+                const fieldsToInsert = this.fields.filter(newField => !databaseFields.some(existing => existing.unique_meta_key === newField.unique_meta_key));
+                const fieldsToUpdate = this.fields.filter(newField => databaseFields.some(existing => existing.unique_meta_key === newField.unique_meta_key));
+                const fieldsToDelete = databaseFields.filter(existing => !this.fields.some(newField => newField.unique_meta_key === existing.unique_meta_key));
+    
+                // Insert new
+                for (const field of fieldsToInsert) {
+                    await db.query(`INSERT INTO entities_structure (entity_id, unique_meta_key, field_name, field_type, is_required, is_queryable, default_value, order_index ) VALUES (?, ?, ?)`, 
+                        [this.entity_id, field.unique_meta_key, field.field_name, field.field_type, field.is_required, field.is_queryable, field.default_value, field.order_index]
+                    );
                 }
+            
+                // Update existing
+                for (const field of fieldsToUpdate) {
+                    await db.query(`UPDATE entities_structure SET field_name = ?, field_type = ? WHERE entity_id = ? AND unique_meta_key = ?`, [field.field_name, field.field_type, this.entity_id, field.unique_meta_key]);
+                }
+            
+                // Delete removed
+                for (const field of fieldsToDelete) {
+                    await db.query(`DELETE FROM entities_structure WHERE entity_id = ? AND unique_meta_key = ?`, [this.entity_id, field.unique_meta_key]);
+                }
+            } catch (err) {
+                throw new Error('Could not update entity: ' + err.message);
             }
-        }
+        })
     }
 
     toJSON() {
