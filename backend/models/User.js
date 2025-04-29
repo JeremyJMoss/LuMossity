@@ -1,7 +1,5 @@
 const AuthService = require("../services/AuthService");
 const DatabaseConnector = require("../services/DatabaseConnector");
-const jwt = require('jsonwebtoken');
-const config = require("config");
 const { maxFailedLoginAttempts, lockoutBaseTime } = require("../util/constants");
 
 class User {
@@ -199,7 +197,7 @@ class User {
         await DatabaseConnector.withConnection(async (db) => {
             try {
                 await db.query(
-                    `UPDATE users SET lockout_until = DATEADD(CURRENT_TIMESTAMP, ? SECOND) WHERE ID = ?`,
+                    `UPDATE users SET lockout_until = DATEADD(CURRENT_TIMESTAMP, INTERVAL ? SECOND) WHERE ID = ?`,
                     [lockoutTimeAddition, this.userId]
                 );
             } catch (err) {
@@ -243,13 +241,10 @@ class User {
 
             await this.setLastLogin();
     
-            const token = jwt.sign(
-                { user_id: this.userId },
-                config.get('jwtSecret'),
-                { expiresIn: '7d' }
-            );
+            const refreshToken = AuthService.createJwtToken('refresh', {userId: this.userId})
+            const accessToken = AuthService.createJwtToken('access', {userId: this.userId, role: this.role});
     
-            return token;
+            return {refreshToken, accessToken};
 
         } catch (err) {
             throw err;

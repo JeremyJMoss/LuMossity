@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const { refreshTokenMaxAge } = require('../util/constants');
 const {validateFields} = require('../util/validation');
 
 module.exports.createInitialUser = async (req, res, next) => {
@@ -25,13 +26,20 @@ module.exports.createInitialUser = async (req, res, next) => {
 
         const { username, email, password } = req.body;
 
-        const initUser = await User.create( username, email, password, 1 );
+        const initUser = await User.create( username, email, password, 'superadmin' );
 
-        const token = await initUser.login( password );
+        const tokens = await initUser.login( password );
+
+        res.cookie('refreshToken', tokens.refreshToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'Strict',
+            maxAge: refreshTokenMaxAge
+        });
 
         return res.status(200).json({
             success: true,
-            token
+            accessToken: tokens.accessToken
         });
 
     } catch (err) {
