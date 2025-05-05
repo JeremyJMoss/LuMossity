@@ -38,6 +38,18 @@ class AuthService {
 
         return token;
     }
+
+    static verifyJwtToken (token) {
+        const secret = config.get('jwtSecret');
+
+        try {
+            const payload = jwt.verify(token, secret);
+            return payload;
+        } catch (err) {
+            // Token is invalid or expired
+            return null;
+        }
+    }
 }
 
 module.exports = AuthService;

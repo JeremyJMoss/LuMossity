@@ -3,23 +3,25 @@ const DatabaseConnector = require("../services/DatabaseConnector");
 const { maxFailedLoginAttempts, lockoutBaseTime } = require("../util/constants");
 
 class User {
-    constructor( username, email, hashedPassword, role, userId ) {
-        this.userId = userId;
-        this.username = username;
+    constructor( firstName, lastName, email, hashedPassword, role, userId = null ) {
+        this.user_id = userId;
+        this.first_name = firstName;
+        this.last_name = lastName;
         this.email = email;
-        this.hashedPassword = hashedPassword;
+        this.hashed_password = hashedPassword;
         this.role = role;
     }
 
     /**
      * Creates a new user
-     * @param {string} username 
+     * @param {string} firstName
+     * @param {string} lastName
      * @param {string} email 
      * @param {string} password 
      * @param {number} role 
      * @returns User|Error
      */
-    static async create( username, email, password, role = 'user' ) {
+    static async create( firstName, lastName, email, password, role = 'user' ) {
         try {
             const existingUserData = await User.#getExistingUserData( {email} );
             
@@ -28,7 +30,7 @@ class User {
             }
     
             const hashedPassword = await AuthService.hashPassword(password);
-            const user = new User( username, email, hashedPassword, role );
+            const user = new User( firstName, lastName, email, hashedPassword, role );
             await user.#create();
             return user;
 
@@ -52,7 +54,14 @@ class User {
                 return null;
             }
 
-            const user = new User( existingUserData.username, existingUserData.email, existingUserData.hashedPassword, existingUserData.role, existingUserData.userId );
+            const user = new User( 
+                existingUserData.first_name, 
+                existingUserData.last_name, 
+                existingUserData.email, 
+                existingUserData.hashed_password, 
+                existingUserData.role, 
+                existingUserData.userId 
+            );
 
             return user;
 
@@ -64,18 +73,18 @@ class User {
 
     static async #getExistingUserData( { email = '', id = null } ){
         // Get retrieval method
-        let query = 'SELECT u.email, u.password, u.username, r.name as role, u.ID FROM users u JOIN roles r ON r.ID = u.role_id WHERE ';
+        let query = 'SELECT u.email, u.password, u.first_name, u.last_name, r.name as role, u.ID FROM users u JOIN roles r ON r.ID = u.role_id WHERE ';
         let query_var = null;
         if (id) {
             query_var = id;
-            query += 'ID = ? LIMIT 1';
+            query += 'u.ID = ? LIMIT 1';
         } else if (email) {
             query_var = email;
-            query += 'email = ? LIMIT 1';
+            query += 'u.email = ? LIMIT 1';
         }
 
         if ( !query_var ){
-            throw new Error('No query variable set to retreive user');
+            throw new Error('No query variable set to retrieve user');
         }
 
         return await DatabaseConnector.withConnection(async (db) => {
@@ -84,22 +93,25 @@ class User {
                     query, 
                     [query_var]
                 );
-    
+
                 if (users.length === 0) return null;
-    
+
                 const user = users[0];
-    
+
                 return {
                     email: user.email,
-                    hashedPassword: user.password,
-                    username: user.username,
+                    hashed_password: user.password,
+                    first_name: user.first_name,
+                    last_name: user.last_name,
                     role: user.role,
                     userId: user.ID
                 }
             } catch (err) {
-                throw new Error('Could not retrieve user from database');
+                throw new Error('Could not retrieve user from database: ' + err);
             }
         })
+
+        
     }
 
     async #create() {
@@ -108,8 +120,8 @@ class User {
                 const roleID = await this.getRoleId(this.role);
 
                 const [result] = await db.execute(
-                    `INSERT INTO users (username, email, password, role_id) VALUES(?, ?, ?, ?)`,
-                    [this.username, this.email, this.hashedPassword, roleID]
+                    `INSERT INTO users (first_name, last_name, email, password, role_id) VALUES(?, ?, ?, ?, ?)`,
+                    [this.first_name, this.last_name, this.email, this.hashed_password, roleID]
                 )
     
                 if ( !result?.insertId ){
@@ -119,6 +131,64 @@ class User {
                 this.userId = result.insertId;
             } catch (err) {
                 throw new Error('Could not create user: ' + err.message);
+            }
+        })
+    }
+
+    async #update(fields = {}) {
+        const allowedFields = {
+            first_name: 'first_name',
+            last_name: 'last_name',
+            username: 'username',
+            email: 'email',
+            failed_logins: 'failed_logins',
+            lockout_until: 'lockout_until',
+            last_login: 'last_login',
+            is_active: 'is_active',
+            role_id: 'role_id',
+            password_reset_token: 'password_reset_token',
+            password_reset_expires: 'password_reset_expires'
+        };
+    
+        const keys = Object.keys(fields).filter(key => key in allowedFields);
+        if (keys.length === 0) return null;
+    
+        const updates = keys.map(key => `${allowedFields[key]} = ?`).join(', ');
+        const values = keys.map(key => fields[key]);
+    
+        await DatabaseConnector.withConnection(async (db) => {
+            try {
+                await db.query(
+                    `UPDATE users SET ${updates} WHERE ID = ?`,
+                    [...values, this.userId]
+                );
+            } catch (err) {
+                throw new Error('Could not update user fields: ' + err.message);
+            }
+        });
+    
+        // Update in-memory values too
+        for (const key of keys) {
+            this[key] = fields[key];
+        }
+    }    
+    
+    async getRoleId(role) {
+        return await DatabaseConnector.withConnection(async (db) => {
+            try {
+                const [row] = await db.query(
+                    `SELECT ID from roles WHERE name = ? LIMIT 1`,
+                    [role]
+                )
+
+                if (row.length === 0) return null;
+
+                const roleID = row[0].ID;
+
+                return roleID;
+
+            } catch (err) {
+                throw new Error('Issue retrieving role from database');
             }
         })
     }
@@ -133,38 +203,12 @@ class User {
     
                 if (rows.length === 0) return null;
     
-                const failed_logins = rows[0];
+                const failed_logins = rows[0].failed_logins;
     
                 return failed_logins;
+
             } catch (err) {
                 throw new Error('Could not access failed logins from database');
-            }
-        })
-    }
-
-    async setFailedLogins( newAmount ) {
-        await DatabaseConnector.withConnection(async (db) => {
-            try {
-                await db.query(
-                    `UPDATE users SET failed_logins = ? WHERE ID = ?`
-                    [newAmount, this.userId]
-                )
-    
-            } catch (err) {
-                throw new Error('Could not update failed logins in database');
-            }
-        })
-    }
-
-    async setLastLogin() {
-        await DatabaseConnector.withConnection(async (db) => {
-            try {
-                await db.query(
-                    `UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE ID = ?`,
-                    [this.userId]
-                );
-            } catch {
-                throw new Error('Could not update last_login in database');
             }
         })
     }
@@ -179,7 +223,7 @@ class User {
 
                 if (rows.length === 0) return null;
 
-                const lockoutUntil = rows[0];
+                const lockoutUntil = rows[0].lockout_until;
 
                 return lockoutUntil;
 
@@ -189,46 +233,26 @@ class User {
         })
     }
 
-    async setLockout(failedLogins) {
-
-        const amountAboveThreshold = failedLogins - 4;
-        const lockoutTimeAddition = amountAboveThreshold * lockoutBaseTime;
-
-        await DatabaseConnector.withConnection(async (db) => {
-            try {
-                await db.query(
-                    `UPDATE users SET lockout_until = DATEADD(CURRENT_TIMESTAMP, INTERVAL ? SECOND) WHERE ID = ?`,
-                    [lockoutTimeAddition, this.userId]
-                );
-            } catch (err) {
-                throw new Error('Could not update lockout information');
-            }
-        });
+    async setFailedLogins( newAmount ) {
+        await this.#update({failed_logins: newAmount});
     }
 
-    async getRoleId(role) {
-        return await DatabaseConnector.withConnection(async (db) => {
-            try {
-                const [row] = await db.query(
-                    `SELECT ID from roles WHERE name = ? LIMIT 1`,
-                    [role]
-                )
+    async setLastLogin() {
+        await this.#update({last_login: new Date()});
+    }
 
-                if (row.length === 0) return null;
-
-                const roleID = row[0];
-
-                return roleID;
-
-            } catch (err) {
-                throw new Error('Issue retrieving role from database');
-            }
-        })
+    async setLockout(failedLogins) {
+        const amountAboveThreshold = failedLogins - 4;
+        const lockoutTimeAddition = amountAboveThreshold * lockoutBaseTime;
+    
+        const lockoutUntil = new Date(Date.now() + lockoutTimeAddition * 1000);
+    
+        await this.#update({ lockout_until: lockoutUntil });
     }
 
     async login( password ) {
         try {
-            const isCorrect = await AuthService.comparePassword( password, this.hashedPassword );
+            const isCorrect = await AuthService.comparePassword( password, this.hashed_password );
 
             if ( !isCorrect ) {
                 const failedLogins = await this.getFailedLogins();
@@ -248,6 +272,16 @@ class User {
 
         } catch (err) {
             throw err;
+        }
+    }
+
+    toJSON() {
+        return {
+            id: this.userId,
+            email: this.email,
+            role: this.role,
+            first_name: this.first_name,
+            last_name: this.last_name
         }
     }
 

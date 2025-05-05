@@ -14,7 +14,7 @@ module.exports.createInitialUser = async (req, res, next) => {
             });
         }
 
-        const missingFields = validateFields(req.body, ['username', 'email', 'password']);
+        const missingFields = validateFields(req.body, ['firstName', 'lastName', 'email', 'password']);
 
         if (missingFields.length > 0) {
             return res.status(422).json({
@@ -24,9 +24,9 @@ module.exports.createInitialUser = async (req, res, next) => {
             });
         }
 
-        const { username, email, password } = req.body;
+        const { firstName, lastName, email, password } = req.body;
 
-        const initUser = await User.create( username, email, password, 'superadmin' );
+        const initUser = await User.create( firstName, lastName, email, password, 'superadmin' );
 
         const tokens = await initUser.login( password );
 
@@ -43,11 +43,47 @@ module.exports.createInitialUser = async (req, res, next) => {
         });
 
     } catch (err) {
-        return res.status(500). json({
+        return res.status(500).json({
             success: false,
             error: err.message
         });
     }
+}
 
-    
+module.exports.createUser = async (req, res, next) => {
+    const missingFields = validateFields(req.body, ['firstName', 'lastName', 'email', 'password']);
+
+    if (missingFields.length > 0) {
+        return res.status(422).json({
+            success: false,
+            error: 'Missing required fields',
+            missing: missingFields
+        });
+    }
+
+    const { firstName, lastName, email, password } = req.body;
+
+    try {
+        const newUser = await User.create( firstName, lastName, email, password, 'user');
+
+        const tokens = await newUser.login( password );
+
+        res.cookie('refreshToken', tokens.refreshToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'Strict',
+            maxAge: refreshTokenMaxAge
+        });
+
+        return res.status(200).json({
+            success: true,
+            accessToken: tokens.accessToken
+        });
+
+    } catch (err) {
+        return res.status(500).json({
+            success: false,
+            error: err.message
+        })
+    }
 }

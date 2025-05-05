@@ -103,7 +103,6 @@ class DatabaseInitializer {
                 email VARCHAR(255) NOT NULL UNIQUE,
                 password TEXT NOT NULL,
                 role_id INT NOT NULL,
-                username VARCHAR(100) NOT NULL,
                 first_name VARCHAR(100),
                 last_name VARCHAR(100),
                 is_active BOOLEAN DEFAULT TRUE,
