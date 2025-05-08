@@ -9,7 +9,7 @@ const authenticate = (requiredRole = null) => {
             }
 
             const token = authHeader.split(' ')[1];
-            const decoded = await verifyJwtToken(token);
+            const decoded = verifyJwtToken(token);
 
             if (!decoded || !decoded.userId) {
                 return res.status(403).json({ message: 'Invalid or expired token' });

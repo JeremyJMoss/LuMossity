@@ -1,4 +1,5 @@
 const DatabaseConnector = require ('../services/DatabaseConnector');
+const Field = require('./partials/EntityField');
 const {toSnakeCase} = require('../util/helpers');
 
 class Entity {
@@ -15,21 +16,21 @@ class Entity {
     }
 
     static async create( name, entity_key = null, fields = [] ) {
-        const finalKey = entity_key || toSnakeCase(name);
+        const final_key = entity_key || toSnakeCase(name);
 
-        let existingData;
+        let existing_entity;
         try {
-            existingData = await Entity.#getEntityData(finalKey);
+            existing_entity = await Entity.#getEntityData(final_key);
         } catch (err) {
             throw err;
         }
 
-        if ( existingData ) {
+        if ( existing_entity ) {
             throw new Error('Entity with that key already exists');
         }
 
         try {
-            const entity = new Entity( name, finalKey );
+            const entity = new Entity( name, final_key );
             
             if (fields.length > 0) {
                 fields.forEach((field) => {
@@ -46,21 +47,16 @@ class Entity {
     }
 
     static async getExistingEntity( entity_key ) {
-        let existingData;
+        let existing_entity;
         try {
-            existingData = await Entity.#getEntityData(entity_key);
+            existing_entity = await Entity.#getEntityData(entity_key);
         } catch (err) {
             throw err;
         }
 
-        if ( existingData ) {
+        if ( existing_entity ) {
             try {
-                return new Entity(
-                    existingData.name,
-                    existingData.entity_key,
-                    existingData.entity_id,
-                    existingData.fields
-                )
+                return existing_entity
             }
             catch (err) {
                 throw err;
@@ -71,28 +67,27 @@ class Entity {
     }
 
     static async #getEntityData(entity_key) {
-        return await DatabaseConnector(async (db) => {
+        return await DatabaseConnector.withConnection(async (db) => {
             try {
-                const [entityRows] = await db.query(
+                const [entity_rows] = await db.query(
                     `SELECT * FROM \`entities\` WHERE entity_key = ? LIMIT 1`,
                     [entity_key]
                 );
     
-                if (entityRows.length === 0) return null;
+                if (entity_rows.length === 0) return null;
     
-                const entity = entityRows[0];
-    
-                const [fields] = await db.query(
-                    `SELECT * FROM \`entities_structure\` WHERE entity_id = ? ORDER BY order_index ASC`,
-                    [entity.ID]
+                const entity_info = entity_rows[0];
+
+                const entity = new Entity(
+                    entity_info.entity_name,
+                    entity_info.entity_key,
+                    entity_info.ID
                 );
     
-                return {
-                    name: entity.entity_name,
-                    entity_key: entity.entity_key,
-                    entity_id: entity.ID,
-                    fields
-                };
+                await entity.refreshFields();
+    
+                return entity;
+
             } catch (err) {
                 throw new Error('Failed to load entity data: ' + err.message);
             } 
@@ -100,21 +95,22 @@ class Entity {
     }
 
     static async getAll () {
-        return await DatabaseConnector(async (db) => {
+        return await DatabaseConnector.withConnection(async (db) => {
             try {
                 const [entities] = await db.query('SELECT * FROM entities');
 
                 const [fields] = await db.query('SELECT * FROM entities_structure');
 
-                const grouped = entities.map(entity => {
-                    const structure = fields.filter(field => field.entity_id === entity.ID);
+                const entity_groups = entities.map(entity => {
+                    const structure = fields.filter(field => field.entity_id === entity.ID)
+                    .map(field => new Field(field));
                     return {
                         ...entity,
                         fields: structure
                     };
                 });
             
-                return grouped;
+                return entity_groups;
             } catch (err) {
                 throw new Error( 'Unable to retrieve all entities: ' + err.message );
             }
@@ -129,61 +125,42 @@ class Entity {
         if ( typeof config !== "object" ){
             throw new Error("Configuration for field properties malformed");
         }
-        const requiredKeys = ['key', 'type', 'fieldName', 'orderIndex'];
-        const missing = requiredKeys.filter( key => !config[key] );
-
-        if (missing.length > 0) {
-            throw new Error( `Missing required field properties: ${missing.join(', ')}` );
-        }
-
-        const {
-            key, 
-            type,
-            fieldName,
-            orderIndex,
-            isRequired = false, 
-            defaultValue = null,
-            isQueryable = false
-        } = config;
+        
+        const newField = new Field(config);
 
         // check if field already exists
-        if (this.fields.find( field => field.key == key) ) {
-            throw new Error(`Field with key "${key}" already exists`);
+        if (this.fields.find(field => field.field_name === newField.field_name)) {
+            throw new Error(`Field with name "${newField.field_name}" already exists`);
         }
         
         // add new field into array
-        this.fields.push({
-            unique_meta_key: key,
-            field_name: fieldName,
-            field_type: type,
-            is_required: isRequired,
-            default_value: defaultValue,
-            is_queryable: isQueryable,
-            order_index: orderIndex
-        });
+        this.fields.push(newField);
     }
 
     addFields( fields ) {
-        if ( Array.isArray(fields) ){
+        if ( Array.isArray(fields) ) {
             fields.forEach((field) => {
                 this.addField(field);
             })
         } else {
-            throw new Error('Fields is not an array of objects');
+            throw new Error('Malformed request body');
         }
     }
 
     async retrieveFields() {
-        return await DatabaseConnector(async (db) => {
+        return await DatabaseConnector.withConnection(async (db) => {
             try {
-                const [structureRows] = await db.query(
+                const [structure] = await db.query(
                     `SELECT * FROM \`entities_structure\` WHERE entity_id = ? ORDER BY order_index ASC`,
                     [this.entity_id]
                 );
+
+                const fields = structure.map(field => new Field(field));
     
-                return structureRows;
+                return fields;
+
             } catch (err) {
-                throw new Error('Could not retreive fields for entity');
+                throw new Error('Could not retrieve fields for entity');
             }
         })
     }
@@ -192,16 +169,16 @@ class Entity {
         return await DatabaseConnector.withConnection(async (db) => {
             try {
                 if (!this.entity_id) {
-                    const [entityRows] = await db.query(
+                    const [entity_rows] = await db.query(
                         `SELECT * FROM \`entities\` WHERE entity_key = ? LIMIT 1`,
                         [this.entity_key]
                     );
         
-                    if (entityRows.length === 0) {
+                    if (entity_rows.length === 0) {
                         return false;
                     }
     
-                    this.entity_id = entityRows[0].ID;
+                    this.entity_id = entity_rows[0].ID;
     
                 }
     
@@ -214,8 +191,25 @@ class Entity {
         })
     }
 
-    removeField(key) {
-        this.fields = this.fields.filter(field => field.unique_meta_key == key);
+    removeField(field_name) {
+        this.fields = this.fields.filter(field => field.field_name != field_name);
+    }
+
+    updateFields( fields ) {
+        if ( Array.isArray(fields) ){
+            fields.forEach((field) => {
+                this.updateField(field);
+            })
+        } else {
+            throw new Error('Malformed request body');
+        }
+    }
+
+    updateField( new_field_info ) {
+        const field_to_update = this.fields.find(field => field.field_name == new_field_info.field_name);
+        field_to_update.update(new_field_info);
+        this.removeField(field_to_update.field_name);
+        this.addField(field_to_update.toJSON());
     }
 
     clearFields() {
@@ -241,16 +235,16 @@ class Entity {
                 this.entity_id = result.insertId;
     
                 if ( this.fields.length > 0 ) {
-                    const fieldsSQL = this.fields.map((field) => {
-                        return `(${this.entity_id}, '${field.unique_meta_key}', ${field.is_queryable}, '${field.field_name}', '${field.field_type}', ${field.is_required}, '${field.default_value}', ${field.order_index})`;
+                    const fields_sql = this.fields.map((field) => {
+                        return `(${this.entity_id}, '${field.display_label}', ${field.is_queryable}, ${field.is_db_column}, '${field.field_name}', '${field.field_type}', ${field.is_required}, '${field.default_value}', ${field.order_index})`;
                     });
     
-                    const fieldValues = fieldsSQL.join(',');
+                    const field_values = fields_sql.join(',');
     
                     await db.query(
                         `INSERT INTO entities_structure
-                        (entity_id, unique_meta_key, is_queryable, field_name, field_type, is_required, default_value, order_index )
-                        VALUES ${fieldValues}`
+                        (entity_id, display_label, is_queryable, is_db_column, field_name, field_type, is_required, default_value, order_index )
+                        VALUES ${field_values}`
                     );
                 }
     
@@ -292,27 +286,28 @@ class Entity {
                     [this.name, this.entity_id]
                 );
     
-                const databaseFields = await this.retrieveFields();
+                const database_fields = await this.retrieveFields();
     
-                const fieldsToInsert = this.fields.filter(newField => !databaseFields.some(existing => existing.unique_meta_key === newField.unique_meta_key));
-                const fieldsToUpdate = this.fields.filter(newField => databaseFields.some(existing => existing.unique_meta_key === newField.unique_meta_key));
-                const fieldsToDelete = databaseFields.filter(existing => !this.fields.some(newField => newField.unique_meta_key === existing.unique_meta_key));
+                const fields_to_insert = this.fields.filter(newField => !database_fields.some(existing => existing.field_name === newField.field_name));
+                const fields_to_update = this.fields.filter(newField => database_fields.some(existing => existing.field_name === newField.field_name));
+                const fields_to_delete = database_fields.filter(existing => !this.fields.some(newField => newField.field_name === existing.field_name));
     
                 // Insert new
-                for (const field of fieldsToInsert) {
-                    await db.query(`INSERT INTO entities_structure (entity_id, unique_meta_key, field_name, field_type, is_required, is_queryable, default_value, order_index ) VALUES (?, ?, ?)`, 
-                        [this.entity_id, field.unique_meta_key, field.field_name, field.field_type, field.is_required, field.is_queryable, field.default_value, field.order_index]
+                for (const field of fields_to_insert) {
+                    await db.query(`INSERT INTO entities_structure (entity_id, field_name, display_label, field_type, is_required, is_db_column, is_queryable, default_value, order_index ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`, 
+                        [this.entity_id, field.field_name, field.display_label, field.field_type, field.is_required, field.is_db_column, field.is_queryable, field.default_value, field.order_index]
                     );
                 }
             
                 // Update existing
-                for (const field of fieldsToUpdate) {
-                    await db.query(`UPDATE entities_structure SET field_name = ?, field_type = ? WHERE entity_id = ? AND unique_meta_key = ?`, [field.field_name, field.field_type, this.entity_id, field.unique_meta_key]);
+                for (const field of fields_to_update) {
+                    await db.query(`UPDATE entities_structure SET display_label = ?, field_type = ?, is_required = ?, is_db_column = ?, is_queryable = ?, default_value = ?, order_index = ? WHERE entity_id = ? AND field_name = ?`, 
+                        [field.display_label, field.field_type, field.is_required, field.is_db_column, field.is_queryable, field.default_value, field.order_index, this.entity_id, field.field_name]);
                 }
             
                 // Delete removed
-                for (const field of fieldsToDelete) {
-                    await db.query(`DELETE FROM entities_structure WHERE entity_id = ? AND unique_meta_key = ?`, [this.entity_id, field.unique_meta_key]);
+                for (const field of fields_to_delete) {
+                    await db.query(`DELETE FROM entities_structure WHERE entity_id = ? AND field_name = ?`, [this.entity_id, field.field_name]);
                 }
             } catch (err) {
                 throw new Error('Could not update entity: ' + err.message);

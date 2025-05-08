@@ -39,14 +39,17 @@ class DatabaseInitializer {
             await dbConnection.execute(`CREATE TABLE IF NOT EXISTS entities_structure (
                 ID INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
                 entity_id INT NOT NULL,
-                unique_meta_key VARCHAR(255) NOT NULL,
-                is_queryable BOOL NOT NULL DEFAULT FALSE,
-                field_name VARCHAR(100),
+                field_name VARCHAR(100) NOT NULL,
+                display_label VARCHAR(255) DEFAULT NULL,
                 field_type VARCHAR(50),
+                is_db_column BOOL NOT NULL DEFAULT FALSE,
+                is_queryable BOOL NOT NULL DEFAULT FALSE,
                 is_required BOOL NOT NULL DEFAULT FALSE,
                 default_value TEXT,
-                order_index INT DEFAULT 0,
-                FOREIGN KEY (entity_id) REFERENCES entities(ID)
+                order_index INT DEFAULT 1,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (entity_id) REFERENCES entities(ID),
+                UNIQUE KEY unique_field_per_entity (entity_id, field_name)
             )`);
 
             await dbConnection.execute(`CREATE TABLE IF NOT EXISTS roles (
