@@ -1,3 +1,4 @@
+const { AuthenticationError, AuthorizationError } = require('../models/utility/Errors');
 const {verifyJwtToken} = require('../services/AuthService');
 
 const authenticate = (requiredRole = null) => {
@@ -5,14 +6,14 @@ const authenticate = (requiredRole = null) => {
         try {
             const authHeader = req.headers['authorization'];
             if (!authHeader || !authHeader.startsWith('Bearer ')) {
-                return res.status(401).json({ message: 'Missing or invalid Authorization header' });
+                throw new AuthenticationError('Missing or invalid Authorization header');
             }
 
             const token = authHeader.split(' ')[1];
             const decoded = verifyJwtToken(token);
 
             if (!decoded || !decoded.userId) {
-                return res.status(403).json({ message: 'Invalid or expired token' });
+                throw new AuthorizationError('Invalid or expired token');
             }
 
             req.authorizedUser = {
@@ -21,13 +22,12 @@ const authenticate = (requiredRole = null) => {
             };
 
             if (requiredRole && decoded.role !== requiredRole) {
-                return res.status(403).json({ message: 'Forbidden: insufficient permissions' });
+                throw new AuthorizationError('Forbidden: insufficient permissions');
             }
 
             next();
         } catch (err) {
-            console.error('Authentication error:', err);
-            return res.status(401).json({ message: 'Authentication failed' });
+            return res.status(err.statusCode).json({ message: err.message });
         }
     };
 };

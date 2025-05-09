@@ -7,6 +7,18 @@ class AppError extends Error {
     }
 }
 
+class AuthenticationError extends AppError {
+    constructor(message = 'Missing Authorization') {
+        super(message, 401);
+    }
+}
+
+class AuthorizationError extends AppError {
+    constructor(message = 'Not Authorized') {
+        super(message, 403);
+    }
+}
+
 class NotFoundError extends AppError {
     constructor(message = 'Resource not found') {
         super(message, 404);
@@ -28,6 +40,8 @@ class ValidationError extends AppError {
 
 module.exports = {
     AppError,
+    AuthorizationError,
+    AuthenticationError,
     NotFoundError,
     ConflictError,
     ValidationError

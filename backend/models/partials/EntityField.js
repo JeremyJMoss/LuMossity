@@ -1,12 +1,5 @@
 class Field {
     constructor(config) {
-        const required_keys = ['field_type', 'field_name', 'order_index'];
-        const missing = required_keys.filter(key => !config[key]);
-
-        if (missing.length > 0) {
-            throw new Error(`Missing required field properties: ${missing.join(', ')}`);
-        }
-
         this.field_name = config.field_name;
         this.display_label = config.display_label || null;
         this.field_type = config.field_type;

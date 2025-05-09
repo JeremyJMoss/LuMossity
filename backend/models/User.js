@@ -1,6 +1,7 @@
 const AuthService = require("../services/AuthService");
 const DatabaseConnector = require("../services/DatabaseConnector");
 const { maxFailedLoginAttempts, lockoutBaseTime } = require("../util/constants");
+const { mapMySQLError } = require("../util/helpers");
 
 class User {
     constructor( firstName, lastName, email, hashedPassword, role, userId = null ) {
@@ -26,7 +27,7 @@ class User {
             const existingUserData = await User.#getExistingUserData( {email} );
             
             if ( existingUserData ) {
-                throw new Error('User with that email already exists');
+                throw new ConflictError('User with that email already exists');
             }
     
             const hashedPassword = await AuthService.hashPassword(password);
@@ -72,23 +73,24 @@ class User {
     }
 
     static async #getExistingUserData( { email = '', id = null } ){
-        // Get retrieval method
-        let query = 'SELECT u.email, u.password, u.first_name, u.last_name, r.name as role, u.ID FROM users u JOIN roles r ON r.ID = u.role_id WHERE ';
-        let query_var = null;
-        if (id) {
-            query_var = id;
-            query += 'u.ID = ? LIMIT 1';
-        } else if (email) {
-            query_var = email;
-            query += 'u.email = ? LIMIT 1';
-        }
-
-        if ( !query_var ){
-            throw new Error('No query variable set to retrieve user');
-        }
 
         return await DatabaseConnector.withConnection(async (db) => {
+            // Get retrieval method
+            let query = 'SELECT u.email, u.password, u.first_name, u.last_name, r.name as role, u.ID FROM users u JOIN roles r ON r.ID = u.role_id WHERE ';
+            let query_var = null;
+            if (id) {
+                query_var = id;
+                query += 'u.ID = ? LIMIT 1';
+            } else if (email) {
+                query_var = email;
+                query += 'u.email = ? LIMIT 1';
+            }
+
             try {
+                if ( !query_var ){
+                    throw new AppError('No query variable set to retrieve user', 500);
+                }
+            
                 const [users] = await db.query(
                     query, 
                     [query_var]
@@ -107,7 +109,13 @@ class User {
                     userId: user.ID
                 }
             } catch (err) {
-                throw new Error('Could not retrieve user from database: ' + err);
+                if (err instanceof AppError){
+                    throw err
+                }
+
+                const {message, status_code} = mapMySQLError(err);
+                
+                throw new AppError(message, status_code);
             }
         })
 
@@ -125,12 +133,18 @@ class User {
                 )
     
                 if ( !result?.insertId ){
-                    throw new Error('Insert not successful');
+                    throw new AppError('Insert not successful', 500);
                 }
     
                 this.userId = result.insertId;
             } catch (err) {
-                throw new Error('Could not create user: ' + err.message);
+                if (err instanceof AppError){
+                    throw err
+                }
+
+                const {message, status_code} = mapMySQLError(err);
+                
+                throw new AppError(message, status_code);
             }
         })
     }
@@ -151,19 +165,19 @@ class User {
         };
     
         const keys = Object.keys(fields).filter(key => key in allowedFields);
-        if (keys.length === 0) return null;
-    
-        const updates = keys.map(key => `${allowedFields[key]} = ?`).join(', ');
-        const values = keys.map(key => fields[key]);
     
         await DatabaseConnector.withConnection(async (db) => {
             try {
+                const updates = keys.map(key => `${allowedFields[key]} = ?`).join(', ');
+                const values = keys.map(key => fields[key]);
+
                 await db.query(
                     `UPDATE users SET ${updates} WHERE ID = ?`,
                     [...values, this.userId]
                 );
             } catch (err) {
-                throw new Error('Could not update user fields: ' + err.message);
+                const {message, status_code} = mapMySQLError(err);
+                throw new AppError(message, status_code);
             }
         });
     
@@ -188,7 +202,8 @@ class User {
                 return roleID;
 
             } catch (err) {
-                throw new Error('Issue retrieving role from database');
+                const {message, status_code} = mapMySQLError(err);
+                throw new AppError(message, status_code);
             }
         })
     }

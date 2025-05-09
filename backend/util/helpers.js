@@ -15,3 +15,43 @@ module.exports.toSnakeCase = (str) => {
         .toLowerCase()
         .trim();
 }
+
+module.exports.mapMySQLError = () => {
+    const errorMap = {
+        'ECONNREFUSED': {
+            message: 'Database connection was refused.',
+            statusCode: 503
+        },
+        'PROTOCOL_CONNECTION_LOST': {
+            message: 'Lost connection to the database.',
+            statusCode: 503
+        },
+        'ER_NO_SUCH_TABLE': {
+            message: 'Expected table is missing in the database.',
+            statusCode: 500
+        },
+        'ER_BAD_FIELD_ERROR': {
+            message: 'Invalid field in the SQL query.',
+            statusCode: 500
+        },
+        'ER_PARSE_ERROR': {
+            message: 'SQL syntax error.',
+            statusCode: 500
+        },
+        'ER_ACCESS_DENIED_ERROR': {
+            message: 'Access to the database was denied.',
+            statusCode: 403
+        },
+        'ER_DUP_ENTRY': {
+            message: 'Duplicate entry violates unique constraint.',
+            statusCode: 400
+        }
+    };
+
+    const fallback = {
+        message: 'An unexpected database error occurred.',
+        statusCode: 500
+    };
+
+    return errorMap[err.code] || fallback;
+}

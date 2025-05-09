@@ -1,14 +1,11 @@
 const DatabaseConnector = require ('../services/DatabaseConnector');
 const Field = require('./partials/EntityField');
-const {toSnakeCase} = require('../util/helpers');
+const { toSnakeCase, mapMySQLError } = require('../util/helpers');
+const { NotFoundError, AppError } = require('./utility/Errors');
 
 class Entity {
 
     constructor( name, key = null, entity_id = null, fields = [] ) {
-        if ( !name || typeof name !== 'string' ) {
-            throw new Error( 'Entity must have a valid name' );
-        }
-
         this.name = name;
         this.entity_key = key;
         this.entity_id = entity_id;
@@ -19,44 +16,35 @@ class Entity {
         const final_key = entity_key || toSnakeCase(name);
 
         let existing_entity;
+
         try {
             existing_entity = await Entity.#getEntityData(final_key);
-        } catch (err) {
-            throw err;
-        }
 
-        if ( existing_entity ) {
-            throw new Error('Entity with that key already exists');
-        }
+            if ( existing_entity ) {
+                throw new NotFoundError('Entity with that key already exists');
+            }
 
-        try {
             const entity = new Entity( name, final_key );
 
             await entity.#create();
 
             return entity;
+
         } catch (err) {
-            throw err;
+            throw err
         }
     }
 
     static async getExistingEntity( entity_key ) {
         let existing_entity;
+
         try {
             existing_entity = await Entity.#getEntityData(entity_key);
+
+            return existing_entity || null 
+
         } catch (err) {
             throw err;
-        }
-
-        if ( existing_entity ) {
-            try {
-                return existing_entity
-            }
-            catch (err) {
-                throw err;
-            }
-        } else {
-            return null;
         }
     }
 
@@ -83,7 +71,12 @@ class Entity {
                 return entity;
 
             } catch (err) {
-                throw new Error('Failed to load entity data: ' + err.message);
+                if (err instanceof AppError) {
+                    throw err;
+                }
+                const {message, status_code} = mapMySQLError(err);
+
+                throw new AppError(message, status_code);
             } 
         })
     }
@@ -106,7 +99,8 @@ class Entity {
             
                 return entity_groups;
             } catch (err) {
-                throw new Error( 'Unable to retrieve all entities: ' + err.message );
+                const {message, status_code} = mapMySQLError(err)
+                throw new AppError( message, status_code );
             }
         })
     }
@@ -116,15 +110,11 @@ class Entity {
     }
 
     addField( config ) {
-        if ( typeof config !== "object" ){
-            throw new Error("Configuration for field properties malformed");
-        }
-        
         const newField = new Field(config);
 
         // check if field already exists
         if (this.fields.find(field => field.field_name === newField.field_name)) {
-            throw new Error(`Field with name "${newField.field_name}" already exists`);
+            throw new ConflictError(`Field with name "${newField.field_name}" already exists`);
         }
         
         // add new field into array
@@ -132,12 +122,12 @@ class Entity {
     }
 
     addFields( fields ) {
-        if ( Array.isArray(fields) ) {
+        try {
             fields.forEach((field) => {
                 this.addField(field);
             })
-        } else {
-            throw new Error('Malformed request body');
+        } catch {
+            throw err;
         }
     }
 
@@ -154,13 +144,14 @@ class Entity {
                 return fields;
 
             } catch (err) {
-                throw new Error('Could not retrieve fields for entity');
+                const {message, status_code} = mapMySQLError(err);
+                throw new AppError(message, status_code);
             }
         })
     }
 
     async refreshFields() {
-        return await DatabaseConnector.withConnection(async (db) => {
+        await DatabaseConnector.withConnection(async (db) => {
             try {
                 if (!this.entity_id) {
                     const [entity_rows] = await db.query(
@@ -169,58 +160,63 @@ class Entity {
                     );
         
                     if (entity_rows.length === 0) {
-                        return false;
+                        throw new NotFoundError('Entity not found');
                     }
     
                     this.entity_id = entity_rows[0].ID;
-    
                 }
     
                 this.fields = await this.retrieveFields();
-    
-                return true;
+
             } catch (err) {
-                throw new Error('Could not retrieve fields from database');
+                if ( err instanceof AppError) {
+                    throw err
+                }
+
+                const {message, status_code} = mapMySQLError(err);
+
+                throw new AppError(message, status_code);
             }
         })
     }
 
     removeFields(fields) {
-        if ( Array.isArray(fields) ){
+        try{
             fields.forEach((field_name) => {
                 this.updateField(field_name);
             })
-        } else {
-            throw new Error('Malformed request body');
+        } catch (err){
+            throw err;
         }
     }
 
     removeField(field_name) {
-        if ( typeof field_name !== "string" ) {
-            throw new Error('Malformed request body');
-        }
         const starting_length = this.fields.length;
         this.fields = this.fields.filter(field => field.field_name != field_name);
         if (starting_length === this.fields.length) {
-            throw new Error('Could not find field_name in field list');
+            throw new NotFoundError('Entity field does not exist');
         }
     }
 
     updateFields( fields ) {
-        if ( Array.isArray(fields) ){
+        try {
             fields.forEach((field) => {
                 this.updateField(field);
             })
-        } else {
-            throw new Error('Malformed request body');
+        } catch (err) {
+            throw err;
         }
     }
 
     updateField( new_field_info ) {
-        const field_to_update = this.fields.find(field => field.field_name == new_field_info.field_name);
-        field_to_update.update(new_field_info);
-        this.removeField(field_to_update.field_name);
-        this.addField(field_to_update.toJSON());
+        try{
+            const field_to_update = this.fields.find(field => field.field_name == new_field_info.field_name);
+            field_to_update.update(new_field_info);
+            this.removeField(field_to_update.field_name);
+            this.addField(field_to_update.toJSON());
+        } catch {
+            throw err;
+        }
     }
 
     clearFields() {
@@ -240,7 +236,7 @@ class Entity {
                 );
     
                 if ( !result?.insertId ) {
-                    throw new Error(`Unable to obtain insert id for entity ${this.name}`);
+                    throw new AppError(`Entity was not inserted`, 500);
                 }
     
                 this.entity_id = result.insertId;
@@ -270,7 +266,12 @@ class Entity {
                     )`
                 )
             } catch (err) {
-                throw new Error('Failed to create Entity: ' + err.message);
+                if (err instanceof AppError){
+                    throw err;
+                }
+                const {message, status_code} = mapMySQLError(err);
+
+                throw new AppError(message, status_code);
             }
         })
     }
@@ -307,7 +308,12 @@ class Entity {
                     await db.query(`DELETE FROM entities_structure WHERE entity_id = ? AND field_name = ?`, [this.entity_id, field.field_name]);
                 }
             } catch (err) {
-                throw new Error('Could not update entity: ' + err.message);
+                if (err instanceof AppError) {
+                    throw err;
+                }
+                const {message, status_code} = mapMySQLError(err);
+
+                throw new AppError(message, status_code);
             }
         })
     }
