@@ -1,3 +1,4 @@
+const { mapMySQLError } = require('../util/helpers');
 const DatabaseConfigManager = require('./DatabaseConfigManager');
 const mysql = require('mysql2/promise');
 
@@ -8,7 +9,9 @@ class DatabaseConnector {
             const config = DatabaseConfigManager.getConfig();
             return await mysql.createConnection(config);
         } catch (err) {
-            throw new Error('Database Connection Error: Could not make connection to the database');
+            const {message, status_code} = mapMySQLError(err);
+
+            throw new AppError(message, status_code);
         }
     }
 
@@ -34,10 +37,8 @@ class DatabaseConnector {
         try {
             return await mysql.createConnection({ host, user, password });
         } catch (err) {
-            if (err.code === 'ECONNREFUSED') {
-                throw new Error('Cannot connect to MySQL server');
-            }
-            throw new Error('Access denied. Please check your MySQL username/password.');
+            const {message, status_code} = mapMySQLError(err);
+            throw new Error(message, status_code);
         }
     }
 }

@@ -1,5 +1,6 @@
 const DatabaseConfigManager = require('./DatabaseConfigManager');
-const { isValidDatabaseName } = require('../util/helpers');
+const { isValidDatabaseName, mapMySQLError } = require('../util/helpers');
+const { AppError, ConflictError } = require('../models/utility/Errors');
 
 class DatabaseInitializer {
     /**
@@ -8,15 +9,19 @@ class DatabaseInitializer {
      * @param {Object} config 
      */
     static async createDatabase(hostConnection, config) {
-        if (!isValidDatabaseName(config.database)) {
-            throw new Error('Invalid database name');
-        }
-
         try {
+            if (!isValidDatabaseName(config.database)) {
+                throw new ConflictError('Invalid database name');
+            }
             await hostConnection.execute(`CREATE DATABASE IF NOT EXISTS \`${config.database}\``);
             DatabaseConfigManager.saveConfig(config);
         } catch (err) {
-            throw new Error('Failed to create database: ' + err.message);
+            if (err instanceof AppError) {
+                throw err;
+            }
+
+            const {message, status_code} = mapMySQLError(err);
+            throw new AppError(message, status_code);
         } finally {
             await hostConnection.end();
         }
@@ -129,7 +134,8 @@ class DatabaseInitializer {
             )`);
 
         } catch (err) {
-            throw new Error('Could not create database tables: ' + err.message);
+            const {message, status_code} = mapMySQLError(err);
+            throw new Error(message, status_code);
         } finally {
             await dbConnection.end();
         }
