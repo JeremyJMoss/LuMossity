@@ -1,36 +1,27 @@
 const DatabaseConnector = require('../services/DatabaseConnector');
 const DatabaseConfigManager = require('../services/DatabaseConfigManager');
 const DatabaseInitializer = require('../services/DatabaseInitializer');
-const {validateFields} = require('../util/validation');
+const { validateBodySchema } = require('../util/validation');
+const { initializeDatabaseSchema } = require("../schemas/databaseSchema");
+const { ConflictError } = require('../models/utility/Errors');
 
-module.exports.initializeDatabase = async (req, res) => {
+module.exports.initializeDatabase = async (req, res, next) => {
 
     const alreadyInitialized = DatabaseConfigManager.hasConfig();
 
-    if ( alreadyInitialized ) {
-        return res.status(400).json({
-            success: false,
-            error: 'Database already initialized'
-        });
-    }
-
-    const missingFields = validateFields(req.body, ['host', 'user', 'password', 'database'])
-
-    if (missingFields.length > 0) {
-        return res.status(422).json({
-            success: false,
-            error: 'Missing required fields',
-            missing: missingFields
-        });
-    }
-
-    const { host, user, password, database} = req.body;
-
     let connection;
     let dbConnection;
-    // Try connecting to the database
-    try{
 
+    try{
+        if ( alreadyInitialized ) {
+            throw new ConflictError('Database has already been initialised');
+        }
+
+        validateBodySchema(initializeDatabaseSchema, req.body);
+
+        const { host, user, password, database} = req.body;
+        
+        // Try connecting to the database
         connection = await DatabaseConnector.testHostConnection({host, user, password});
         await DatabaseInitializer.createDatabase(connection, {host, user, password, database});
 
@@ -41,11 +32,7 @@ module.exports.initializeDatabase = async (req, res) => {
             success: true
         });
     } catch(err) {
-        console.error(err.message);
-        return res.status(500).json({
-            success: false,
-            error: err.message
-        });
+        next(err)
     } finally {
         if (connection){
             try{

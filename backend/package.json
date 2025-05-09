@@ -22,7 +22,8 @@
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
-    "mysql2": "^3.14.0"
+    "mysql2": "^3.14.0",
+    "zod": "^3.24.4"
   },
   "devDependencies": {
     "node-dev": "^8.0.0"

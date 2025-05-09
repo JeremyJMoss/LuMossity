@@ -15,7 +15,7 @@ class Entity {
         this.fields = fields;
     }
 
-    static async create( name, entity_key = null, fields = [] ) {
+    static async create( name, entity_key = null ) {
         const final_key = entity_key || toSnakeCase(name);
 
         let existing_entity;
@@ -31,12 +31,6 @@ class Entity {
 
         try {
             const entity = new Entity( name, final_key );
-            
-            if (fields.length > 0) {
-                fields.forEach((field) => {
-                    entity.addField(field);
-                })
-            }
 
             await entity.#create();
 
@@ -191,8 +185,25 @@ class Entity {
         })
     }
 
+    removeFields(fields) {
+        if ( Array.isArray(fields) ){
+            fields.forEach((field_name) => {
+                this.updateField(field_name);
+            })
+        } else {
+            throw new Error('Malformed request body');
+        }
+    }
+
     removeField(field_name) {
+        if ( typeof field_name !== "string" ) {
+            throw new Error('Malformed request body');
+        }
+        const starting_length = this.fields.length;
         this.fields = this.fields.filter(field => field.field_name != field_name);
+        if (starting_length === this.fields.length) {
+            throw new Error('Could not find field_name in field list');
+        }
     }
 
     updateFields( fields ) {
@@ -234,20 +245,6 @@ class Entity {
     
                 this.entity_id = result.insertId;
     
-                if ( this.fields.length > 0 ) {
-                    const fields_sql = this.fields.map((field) => {
-                        return `(${this.entity_id}, '${field.display_label}', ${field.is_queryable}, ${field.is_db_column}, '${field.field_name}', '${field.field_type}', ${field.is_required}, '${field.default_value}', ${field.order_index})`;
-                    });
-    
-                    const field_values = fields_sql.join(',');
-    
-                    await db.query(
-                        `INSERT INTO entities_structure
-                        (entity_id, display_label, is_queryable, is_db_column, field_name, field_type, is_required, default_value, order_index )
-                        VALUES ${field_values}`
-                    );
-                }
-    
                 await db.query(
                         `CREATE TABLE m_entity_${this.entity_key} (
                            ID INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
@@ -278,7 +275,7 @@ class Entity {
         })
     }
 
-    async update() {
+    async sync() {
         await DatabaseConnector.withConnection(async (db) => {
             try {
                 await db.query(

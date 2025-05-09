@@ -1,0 +1,12 @@
+const { z } = require('zod');
+
+const initializeDatabaseSchema = z.object({
+    host: z.string().min(1),
+    user: z.string().min(1),
+    password: z.string().min(1),
+    database: z.string().min(1)
+});
+
+module.exports = {
+    initializeDatabaseSchema
+}

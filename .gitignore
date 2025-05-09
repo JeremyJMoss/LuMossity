@@ -25,3 +25,4 @@
 
 # config files
 /backend/config/*
+/backend/logs/*

@@ -1,28 +1,19 @@
 const User = require('../models/User');
 const { refreshTokenMaxAge } = require('../util/constants');
-const {validateFields} = require('../util/validation');
+const { validateBodySchema } = require('../util/validation');
+const { ConflictError } = require('../models/utility/Errors');
+const { createUserSchema } = require('../schemas/userSchema');
 
 module.exports.createInitialUser = async (req, res, next) => {
     try {
         // check if initial user already exists
         const firstUser = await User.getUserBy( 'id', 1 );
 
-        if (firstUser){
-            return res.status(409).json({
-                success: false,
-                error: 'User already has been initialised'
-            });
+        if ( firstUser ) {
+            throw new ConflictError('Initial user has already been initialised');
         }
 
-        const missingFields = validateFields(req.body, ['firstName', 'lastName', 'email', 'password']);
-
-        if (missingFields.length > 0) {
-            return res.status(422).json({
-                success: false,
-                error: 'Missing required fields',
-                missing: missingFields
-            });
-        }
+        validateBodySchema(createUserSchema, req.body);
 
         const { firstName, lastName, email, password } = req.body;
 
@@ -43,27 +34,16 @@ module.exports.createInitialUser = async (req, res, next) => {
         });
 
     } catch (err) {
-        return res.status(500).json({
-            success: false,
-            error: err.message
-        });
+        next(err);
     }
 }
 
 module.exports.createUser = async (req, res, next) => {
-    const missingFields = validateFields(req.body, ['firstName', 'lastName', 'email', 'password']);
-
-    if (missingFields.length > 0) {
-        return res.status(422).json({
-            success: false,
-            error: 'Missing required fields',
-            missing: missingFields
-        });
-    }
-
-    const { firstName, lastName, email, password } = req.body;
-
     try {
+        validateBodySchema(createUserSchema, req.body);
+
+        const { firstName, lastName, email, password } = req.body;
+    
         const newUser = await User.create( firstName, lastName, email, password, 'user');
 
         const tokens = await newUser.login( password );
@@ -81,9 +61,6 @@ module.exports.createUser = async (req, res, next) => {
         });
 
     } catch (err) {
-        return res.status(500).json({
-            success: false,
-            error: err.message
-        })
+        next(err);
     }
 }

@@ -1,7 +1,11 @@
 const express = require ('express');
-const {createEntity, getAllEntities, getSingleEntity, updateEntity, updateEntityFields, createEntityFields} = require('../controllers/entityController');
+const {createEntity, getAllEntities, getSingleEntity, updateEntity, updateEntityFields, createEntityFields, deleteEntityFields} = require('../controllers/entityController');
 const router = express.Router();
 const authenticate = require('../middleware/authMiddleware')
+
+router.get('/all', getAllEntities);
+
+router.get('/:entity_key', getSingleEntity);
 
 router.post('/create', authenticate("superadmin"), createEntity);
 
@@ -11,8 +15,6 @@ router.put('/:entity_key/fields/update', authenticate("superadmin"), updateEntit
 
 router.put('/:entity_key', updateEntity);
 
-router.get('/all', getAllEntities);
-
-router.get('/:entity_key', getSingleEntity);
+router.delete('/:entity_key/fields/delete', authenticate("superadmin"), deleteEntityFields);
 
 module.exports = router;
