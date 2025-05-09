@@ -2,6 +2,7 @@ const AuthService = require("../services/AuthService");
 const DatabaseConnector = require("../services/DatabaseConnector");
 const { maxFailedLoginAttempts, lockoutBaseTime } = require("../util/constants");
 const { mapMySQLError } = require("../util/helpers");
+const { AuthenticationError, AppError } = require("./utility/Errors");
 
 class User {
     constructor( firstName, lastName, email, hashedPassword, role, userId = null ) {
@@ -223,7 +224,8 @@ class User {
                 return failed_logins;
 
             } catch (err) {
-                throw new Error('Could not access failed logins from database');
+                const {message, status_code} = mapMySQLError(err);
+                throw new AppError(message, status_code);
             }
         })
     }
@@ -243,17 +245,26 @@ class User {
                 return lockoutUntil;
 
             } catch (err) {
-                throw new Error('Could not get lockout info');
+                const {message, status_code} = mapMySQLError(err);
+                throw new AppError(message, status_code);
             }
         })
     }
 
     async setFailedLogins( newAmount ) {
-        await this.#update({failed_logins: newAmount});
+        try{
+            await this.#update({failed_logins: newAmount});
+        } catch (err) {
+            throw err;
+        }
     }
 
     async setLastLogin() {
-        await this.#update({last_login: new Date()});
+        try {
+            await this.#update({last_login: new Date()});
+        } catch (err) {
+            throw err;
+        }
     }
 
     async setLockout(failedLogins) {
@@ -261,8 +272,11 @@ class User {
         const lockoutTimeAddition = amountAboveThreshold * lockoutBaseTime;
     
         const lockoutUntil = new Date(Date.now() + lockoutTimeAddition * 1000);
-    
-        await this.#update({ lockout_until: lockoutUntil });
+        try{
+            await this.#update({ lockout_until: lockoutUntil });
+        } catch(err) {
+            throw err;
+        }
     }
 
     async login( password ) {
@@ -275,7 +289,7 @@ class User {
                     await this.setLockout(failedLogins);
                 }
                 await this.setFailedLogins(++failedLogins);
-                throw new Error("Password Verification Failed");
+                throw new AuthenticationError("Password Verification Failed");
             }
 
             await this.setLastLogin();
