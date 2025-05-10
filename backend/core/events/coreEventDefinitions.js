@@ -1,4 +1,4 @@
 module.exports = [
-    { name: 'core.on-start-service', type: 'trigger' },
-    { name: 'core.on-get-all-entities', type: 'transform' }
+    { name: 'core.after.startService', type: 'trigger' },
+    { name: 'core.after.getAll.query', type: 'transform' }
 ]

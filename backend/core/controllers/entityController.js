@@ -8,11 +8,11 @@ module.exports.getAllEntities = async (req, res, next) => {
     try {
         const entities = await Entity.getAll();
 
-        const transformed_entities = await req.extensions.runEvent('core.on-get-all-entities', entities);
+        const transformed_entities = await req.extensions.runEvent('core.after.getAll.query', entities);
         
         res.status(200).json({
             success: true,
-            entities
+            entities: transformed_entities
         });
     } catch (err) {
         next(err);
