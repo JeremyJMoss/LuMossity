@@ -3,9 +3,14 @@ module.exports = (err, req, res, next) => {
     const message = err.message || 'Internal Server Error';
     const issues = err.issues || null;
 
-    res.status(status).json({
+    const err_obj = {
         success: false,
         error: message,
-        issues
-    });
+    }
+
+    if (issues !== null) {
+        err_obj.issues = issues;
+    }
+
+    res.status(status).json(err_obj);
 };

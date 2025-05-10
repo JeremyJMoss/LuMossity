@@ -7,6 +7,8 @@ const { NotFoundError } = require('../models/utility/Errors');
 module.exports.getAllEntities = async (req, res, next) => {
     try {
         const entities = await Entity.getAll();
+
+        const transformed_entities = await req.extensions.runEvent('core.on-get-all-entities', entities);
         
         res.status(200).json({
             success: true,
