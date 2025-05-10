@@ -24,5 +24,7 @@
 /frontend/next-env.d.ts
 
 # config files
-/backend/config/*
-/backend/logs/*
+/backend/core/config/*
+/backend/core/logs/*
+/backend/extensions/*
+/backend/core/node_modules
