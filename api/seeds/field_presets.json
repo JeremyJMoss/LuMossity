@@ -119,5 +119,19 @@
             "label": "Phone Number",
             "placeholder": "+61 400 000 000"
         }
+    },
+    {
+        "name": "Time Picker",
+        "field_type": "time",
+        "config": {
+            "label": "Select Time"
+        }
+    },
+    {
+        "name": "DateTime",
+        "field_type": "datetime",
+        "config": {
+            "label": "Select Date & Time"
+        }
     }
 ]
