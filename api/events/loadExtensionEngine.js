@@ -2,6 +2,7 @@ const path = require('path');
 const fs = require('fs');
 const extension_service = require('../services/ExtensionService');
 
+// core event config 
 const core_events_path = path.resolve(__dirname, 'coreEventDefinitions.js');
 const core_event_definitions = require(core_events_path);
 

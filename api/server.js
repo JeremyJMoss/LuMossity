@@ -25,6 +25,6 @@ server.use(notFoundHandler);
 server.use(errorHandler);
 
 server.listen(4000, () => {
-    extension_service.runEvent('core.after.startService');
+    extension_service.runEvent('core.server.after.start');
     console.log("server listening on port 4000");
 })

@@ -1,4 +1,6 @@
 module.exports = [
-    { name: 'core.after.startService', type: 'trigger' },
-    { name: 'core.after.getAll.query', type: 'transform' }
+    { name: 'core.server.after.start', type: 'trigger' },
+    { name: 'core.entity.after.create', type: 'trigger' },
+    { name: 'core.entity.after.update', type: 'trigger' },
+    { name: 'core.entity.after.getAll.query', type: 'transform' }
 ]

@@ -1,6 +1,13 @@
 const Entity = require('../models/Entity');
 const { validateBodySchema } = require('../util/validation');
-const { createEntitySchema, createEntityFieldsSchema, updateEntitySchema, updateEntityFieldsSchema } = require('../schemas/entitySchema');
+
+const { 
+    createEntitySchema, 
+    createEntityFieldsSchema, 
+    updateEntitySchema, 
+    updateEntityFieldsSchema 
+} = require('../schemas/entitySchema');
+
 const { NotFoundError } = require('../models/utility/Errors');
 
 // Read
@@ -8,7 +15,7 @@ module.exports.getAllEntities = async (req, res, next) => {
     try {
         const entities = await Entity.getAll();
 
-        const transformed_entities = await req.extensions.runEvent('core.after.getAll.query', entities);
+        const transformed_entities = await req.extensions.runEvent('core.entity.after.getAll.query', entities);
         
         res.status(200).json({
             success: true,
@@ -47,6 +54,8 @@ module.exports.createEntity = async (req, res, next) => {
         const { name, entity_key = null } = req.body;
 
         await Entity.create( name, entity_key );
+
+        await req.extensions.runEvent('core.entity.after.create');
 
         return res.status(201).json({
             success: true
@@ -101,6 +110,8 @@ module.exports.updateEntity = async (req, res, next) => {
 
         entity.setName( name );
         await entity.sync();
+
+        await req.extensions.runEvent('core.entity.after.update');
 
         return res.status(200).json({
             success: true
