@@ -48,7 +48,7 @@ class Entity {
         }
     }
 
-    static async #getEntityData(entity_key) {
+    static async #getEntityData( entity_key ) {
         return await DatabaseConnector.withConnection(async (db) => {
             try {
                 const [entity_rows] = await db.query(
@@ -183,7 +183,7 @@ class Entity {
     removeFields(fields) {
         try{
             fields.forEach((field_name) => {
-                this.updateField(field_name);
+                this.removeField(field_name);
             })
         } catch (err){
             throw err;
@@ -214,7 +214,7 @@ class Entity {
             field_to_update.update(new_field_info);
             this.removeField(field_to_update.field_name);
             this.addField(field_to_update.toJSON());
-        } catch {
+        } catch (err) {
             throw err;
         }
     }

@@ -1,6 +1,8 @@
 const DatabaseConfigManager = require('./DatabaseConfigManager');
 const { isValidDatabaseName, mapMySQLError } = require('../util/helpers');
+const { presetsPath } = require('../util/constants');
 const { AppError, ConflictError } = require('../models/utility/Errors');
+const fs = require("fs");
 
 class DatabaseInitializer {
     /**
@@ -46,7 +48,8 @@ class DatabaseInitializer {
                 entity_id INT NOT NULL,
                 field_name VARCHAR(100) NOT NULL,
                 display_label VARCHAR(255) DEFAULT NULL,
-                field_type VARCHAR(50),
+                field_type VARCHAR(50) NOT NULL,
+                field_config JSON DEFAULT NULL,
                 is_db_column BOOL NOT NULL DEFAULT FALSE,
                 is_queryable BOOL NOT NULL DEFAULT FALSE,
                 is_required BOOL NOT NULL DEFAULT FALSE,
@@ -56,6 +59,30 @@ class DatabaseInitializer {
                 FOREIGN KEY (entity_id) REFERENCES entities(ID),
                 UNIQUE KEY unique_field_per_entity (entity_id, field_name)
             )`);
+
+            await dbConnection.execute(`CREATE TABLE IF NOT EXISTS field_presets (
+                ID INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+                name VARCHAR(255) NOT NULL,
+                field_type VARCHAR(50) NOT NULL,
+                config JSON NOT NULL
+            )`);
+
+            if (fs.existsSync(presetsPath)) {
+                const presets = JSON.parse(fs.readFileSync(presetsPath, 'utf-8'));
+
+                for (const preset of presets) {
+                    await dbConnection.execute(
+                        `INSERT INTO field_presets (name, field_type, config)
+                        VALUES (?, ?, ?)
+                        ON DUPLICATE KEY UPDATE name = name`,
+                        [
+                            preset.name,
+                            preset.field_type,
+                            JSON.stringify(preset.config)
+                        ]
+                    );
+                }
+            }
 
             await dbConnection.execute(`CREATE TABLE IF NOT EXISTS roles (
                 ID INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
@@ -134,6 +161,7 @@ class DatabaseInitializer {
             )`);
 
         } catch (err) {
+            console.log(err);
             const {message, status_code} = mapMySQLError(err);
             throw new Error(message, status_code);
         } finally {

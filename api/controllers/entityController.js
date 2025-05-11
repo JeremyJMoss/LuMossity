@@ -5,7 +5,8 @@ const {
     createEntitySchema, 
     createEntityFieldsSchema, 
     updateEntitySchema, 
-    updateEntityFieldsSchema 
+    updateEntityFieldsSchema,
+    deleteEntityFieldsSchema
 } = require('../schemas/entitySchema');
 
 const { NotFoundError } = require('../models/utility/Errors');
@@ -79,7 +80,7 @@ module.exports.createEntityFields = async (req, res, next) => {
             throw new NotFoundError('Entity not found');
         }
 
-        entity.removeFields(fields);
+        entity.addFields(fields);
 
         await entity.sync();
 
@@ -136,9 +137,7 @@ module.exports.updateEntityFields = async ( req, res, next ) => {
             throw new NotFoundError('Entity not found');
         }
 
-        if ( fields.length > 0 ) {
-            entity.updateFields(fields);
-        }
+        entity.updateFields(fields);
 
         await entity.sync();
 
@@ -154,5 +153,28 @@ module.exports.updateEntityFields = async ( req, res, next ) => {
 
 // Delete
 module.exports.deleteEntityFields = async (req, res, next) => {
+    const {entity_key} = req.params;
 
+    try {
+        validateBodySchema(deleteEntityFieldsSchema, req.body);
+
+        const { fields } = req.body;
+
+        const entity = await Entity.getExistingEntity(entity_key);
+
+        if ( !entity ) {
+            throw new NotFoundError('Entity not found');
+        }
+
+        entity.removeFields(fields);
+
+        await entity.sync();
+
+        return res.status(204).json({
+            success: true
+        });
+
+    } catch (err) {
+        next(err)
+    }
 }

@@ -7,6 +7,12 @@ const createUserSchema = z.object({
     password: z.string().min(10)
 })
 
+const loginUserSchema = z.object({
+    email: z.string().min(1).email(),
+    password: z.string()
+})
+
 module.exports = {
-    createUserSchema
+    createUserSchema,
+    loginUserSchema
 }

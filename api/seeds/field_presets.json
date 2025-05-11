@@ -1,0 +1,123 @@
+[
+    {
+        "name": "Text",
+        "field_type": "text",
+        "config": {
+            "label": "Text",
+            "placeholder": "Enter text"
+        }
+    },
+    {
+        "name": "Email",
+        "field_type": "email",
+        "config": {
+            "label": "Email",
+            "placeholder": "your@email.com"
+        }
+    },
+    {
+        "name": "Multiline Description",
+        "field_type": "textarea",
+        "config": {
+            "label": "Description",
+            "placeholder": "Write something...",
+            "rows": 5
+        }
+    },
+    {
+        "name": "Date Picker",
+        "field_type": "date",
+        "config": {
+            "label": "Choose a Date"
+        }
+    },
+    {
+        "name": "Image Upload",
+        "field_type": "file",
+        "config": {
+            "label": "Upload Image",
+            "accept": [
+                "image/png",
+                "image/jpeg"
+            ]
+        }
+    },
+    {
+        "name": "Checkboxes",
+        "field_type": "checkbox",
+        "config": {
+            "label": "Choose Options",
+            "options": [
+                {
+                    "label": "Option A",
+                    "value": "a"
+                },
+                {
+                    "label": "Option B",
+                    "value": "b"
+                },
+                {
+                    "label": "Option C",
+                    "value": "c"
+                }
+            ],
+            "layout": "vertical"
+        }
+    },
+    {
+        "name": "Toggle Switch",
+        "field_type": "switch",
+        "config": {
+            "label": "Enable Feature"
+        }
+    },
+    {
+        "name": "Dropdown Select",
+        "field_type": "select",
+        "config": {
+            "label": "Choose an option",
+            "options": [
+                {
+                    "label": "Option 1",
+                    "value": "option1"
+                },
+                {
+                    "label": "Option 2",
+                    "value": "option2"
+                }
+            ]
+        }
+    },
+    {
+        "name": "Entity Reference",
+        "field_type": "relation",
+        "config": {
+            "label": "Select Related Item",
+            "related_entity": "entity",
+            "relation_type": "one-to-many"
+        }
+    },
+    {
+        "name": "Number",
+        "field_type": "number",
+        "config": {
+            "label": "Number",
+            "min": 0
+        }
+    },
+    {
+        "name": "Password",
+        "field_type": "password",
+        "config": {
+            "label": "Password"
+        }
+    },
+    {
+        "name": "Phone",
+        "field_type": "tel",
+        "config": {
+            "label": "Phone Number",
+            "placeholder": "+61 400 000 000"
+        }
+    }
+]

@@ -5,12 +5,12 @@ const { mapMySQLError } = require("../util/helpers");
 const { AuthenticationError, AppError } = require("./utility/Errors");
 
 class User {
-    constructor( firstName, lastName, email, hashedPassword, role, userId = null ) {
-        this.user_id = userId;
-        this.first_name = firstName;
-        this.last_name = lastName;
+    constructor( first_name, last_name, email, hashed_password, role, user_id = null ) {
+        this.user_id = user_id;
+        this.first_name = first_name;
+        this.last_name = last_name;
         this.email = email;
-        this.hashed_password = hashedPassword;
+        this.hashed_password = hashed_password;
         this.role = role;
     }
 
@@ -23,16 +23,16 @@ class User {
      * @param {number} role 
      * @returns User|Error
      */
-    static async create( firstName, lastName, email, password, role = 'user' ) {
+    static async create( first_name, last_name, email, password, role = 'user' ) {
         try {
-            const existingUserData = await User.#getExistingUserData( {email} );
+            const existing_user_data = await User.#getExistingUserData( {email} );
             
-            if ( existingUserData ) {
+            if ( existing_user_data ) {
                 throw new ConflictError('User with that email already exists');
             }
     
-            const hashedPassword = await AuthService.hashPassword(password);
-            const user = new User( firstName, lastName, email, hashedPassword, role );
+            const hashed_password = await AuthService.hashPassword(password);
+            const user = new User( first_name, last_name, email, hashed_password, role );
             await user.#create();
             return user;
 
@@ -50,19 +50,19 @@ class User {
      */
     static async getUserBy( method, value ) {
         try {
-            const existingUserData = await User.#getExistingUserData( { [method]: value } );
+            const existing_user_data = await User.#getExistingUserData( { [method]: value } );
 
-            if ( !existingUserData ) {
+            if ( !existing_user_data ) {
                 return null;
             }
 
             const user = new User( 
-                existingUserData.first_name, 
-                existingUserData.last_name, 
-                existingUserData.email, 
-                existingUserData.hashed_password, 
-                existingUserData.role, 
-                existingUserData.userId 
+                existing_user_data.first_name, 
+                existing_user_data.last_name, 
+                existing_user_data.email, 
+                existing_user_data.hashed_password, 
+                existing_user_data.role, 
+                existing_user_data.user_id 
             );
 
             return user;
@@ -101,14 +101,14 @@ class User {
 
                 const user = users[0];
 
-                return {
-                    email: user.email,
-                    hashed_password: user.password,
-                    first_name: user.first_name,
-                    last_name: user.last_name,
-                    role: user.role,
-                    userId: user.ID
-                }
+                return new User (
+                    user.first_name,
+                    user.last_name,
+                    user.email,
+                    user.password,
+                    user.role,
+                    user.ID
+                )
             } catch (err) {
                 if (err instanceof AppError){
                     throw err
@@ -126,18 +126,18 @@ class User {
     async #create() {
         await DatabaseConnector.withConnection(async (db) => {
             try {
-                const roleID = await this.getRoleId(this.role);
+                const role_id = await this.getRoleId(this.role);
 
                 const [result] = await db.execute(
                     `INSERT INTO users (first_name, last_name, email, password, role_id) VALUES(?, ?, ?, ?, ?)`,
-                    [this.first_name, this.last_name, this.email, this.hashed_password, roleID]
+                    [this.first_name, this.last_name, this.email, this.hashed_password, role_id]
                 )
     
                 if ( !result?.insertId ){
                     throw new AppError('Insert not successful', 500);
                 }
     
-                this.userId = result.insertId;
+                this.user_id = result.insertId;
             } catch (err) {
                 if (err instanceof AppError){
                     throw err
@@ -151,7 +151,7 @@ class User {
     }
 
     async #update(fields = {}) {
-        const allowedFields = {
+        const allowed_fields = {
             first_name: 'first_name',
             last_name: 'last_name',
             username: 'username',
@@ -165,16 +165,16 @@ class User {
             password_reset_expires: 'password_reset_expires'
         };
     
-        const keys = Object.keys(fields).filter(key => key in allowedFields);
+        const keys = Object.keys(fields).filter(key => key in allowed_fields);
     
         await DatabaseConnector.withConnection(async (db) => {
             try {
-                const updates = keys.map(key => `${allowedFields[key]} = ?`).join(', ');
+                const updates = keys.map(key => `${allowed_fields[key]} = ?`).join(', ');
                 const values = keys.map(key => fields[key]);
 
                 await db.query(
                     `UPDATE users SET ${updates} WHERE ID = ?`,
-                    [...values, this.userId]
+                    [...values, this.user_id]
                 );
             } catch (err) {
                 const {message, status_code} = mapMySQLError(err);
@@ -235,14 +235,14 @@ class User {
             try {
                 const [rows] = await db.query(
                     `SELECT lockout_until FROM users WHERE ID = ? LIMIT 1`,
-                    [this.userId]
+                    [this.user_id]
                 )
 
                 if (rows.length === 0) return null;
 
-                const lockoutUntil = rows[0].lockout_until;
+                const lockout_until = rows[0].lockout_until;
 
-                return lockoutUntil;
+                return lockout_until;
 
             } catch (err) {
                 const {message, status_code} = mapMySQLError(err);
@@ -251,9 +251,9 @@ class User {
         })
     }
 
-    async setFailedLogins( newAmount ) {
+    async setFailedLogins( new_amount ) {
         try{
-            await this.#update({failed_logins: newAmount});
+            await this.#update({failed_logins: new_amount});
         } catch (err) {
             throw err;
         }
@@ -267,13 +267,13 @@ class User {
         }
     }
 
-    async setLockout(failedLogins) {
-        const amountAboveThreshold = failedLogins - 4;
-        const lockoutTimeAddition = amountAboveThreshold * lockoutBaseTime;
+    async setLockout(failed_logins) {
+        const amount_above_threshold = failed_logins - 4;
+        const lockout_time_addition = amount_above_threshold * lockoutBaseTime;
     
-        const lockoutUntil = new Date(Date.now() + lockoutTimeAddition * 1000);
+        const lockout_until = new Date(Date.now() + lockout_time_addition * 1000);
         try{
-            await this.#update({ lockout_until: lockoutUntil });
+            await this.#update({ lockout_until });
         } catch(err) {
             throw err;
         }
@@ -281,23 +281,23 @@ class User {
 
     async login( password ) {
         try {
-            const isCorrect = await AuthService.comparePassword( password, this.hashed_password );
+            const is_correct = await AuthService.comparePassword( password, this.hashed_password );
 
-            if ( !isCorrect ) {
-                const failedLogins = await this.getFailedLogins();
-                if ( failedLogins >= maxFailedLoginAttempts ) {
-                    await this.setLockout(failedLogins);
+            if ( !is_correct ) {
+                const failed_logins = await this.getFailedLogins();
+                if ( failed_logins >= maxFailedLoginAttempts ) {
+                    await this.setLockout(failed_logins);
                 }
-                await this.setFailedLogins(++failedLogins);
+                await this.setFailedLogins(++failed_logins);
                 throw new AuthenticationError("Password Verification Failed");
             }
 
             await this.setLastLogin();
     
-            const refreshToken = AuthService.createJwtToken('refresh', {userId: this.userId})
-            const accessToken = AuthService.createJwtToken('access', {userId: this.userId, role: this.role});
+            const refresh_token = AuthService.createJwtToken('refresh', {userId: this.user_id})
+            const access_token = AuthService.createJwtToken('access', {userId: this.user_id, role: this.role});
     
-            return {refreshToken, accessToken};
+            return {refresh_token, access_token};
 
         } catch (err) {
             throw err;
@@ -306,7 +306,7 @@ class User {
 
     toJSON() {
         return {
-            id: this.userId,
+            id: this.user_id,
             email: this.email,
             role: this.role,
             first_name: this.first_name,

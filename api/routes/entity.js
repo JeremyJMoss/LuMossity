@@ -15,6 +15,6 @@ router.put('/:entity_key/fields/update', authenticate("superadmin"), updateEntit
 
 router.put('/:entity_key', updateEntity);
 
-router.delete('/:entity_key/fields/delete', authenticate("superadmin"), deleteEntityFields);
+router.delete('/:entity_key/fields', authenticate("superadmin"), deleteEntityFields);
 
 module.exports = router;

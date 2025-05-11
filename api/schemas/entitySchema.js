@@ -22,7 +22,7 @@ const updateEntityFieldsSchema = z.object({
     }))
 });
 
-const deleteFieldsSchema = z.object({
+const deleteEntityFieldsSchema = z.object({
     fields: z.array(z.string())
 })
 
@@ -44,5 +44,5 @@ module.exports = {
     createEntityFieldsSchema,
     updateEntitySchema,
     updateEntityFieldsSchema,
-    deleteFieldsSchema
+    deleteEntityFieldsSchema
 };
