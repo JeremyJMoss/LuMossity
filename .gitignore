@@ -7,24 +7,23 @@
 /coverage
 
 # next.js
-/frontend/.next/
-/frontend/out/
+/ui/.next/
+/ui/out/
 
 # production
-/frontend/build
+/ui/build
 
 # env files (can opt-in for committing if needed)
 **/.env*
 
 # vercel
-/frontend/.vercel
+/ui/.vercel
 
 # typescript
-/frontend/*.tsbuildinfo
-/frontend/next-env.d.ts
+/ui/*.tsbuildinfo
+/ui/next-env.d.ts
 
 # config files
-/backend/core/config/*
-/backend/core/logs/*
-/backend/extensions/*
-/backend/core/node_modules
+/api/config/*
+/api/logs/*
+/extensions/*
