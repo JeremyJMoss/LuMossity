@@ -8,6 +8,15 @@
         }
     },
     {
+        "name": "Multiline Description",
+        "field_type": "textarea",
+        "config": {
+            "label": "Description",
+            "placeholder": "Write something...",
+            "rows": 5
+        }
+    },
+    {
         "name": "Email",
         "field_type": "email",
         "config": {
@@ -16,12 +25,55 @@
         }
     },
     {
-        "name": "Multiline Description",
-        "field_type": "textarea",
+        "name": "Number",
+        "field_type": "integer",
         "config": {
-            "label": "Description",
-            "placeholder": "Write something...",
-            "rows": 5
+            "label": "Number",
+            "min": 0,
+            "max": 100,
+            "step": 1
+        }
+    },
+    {
+        "name": "Decimal Number",
+        "field_type": "float",
+        "config": {
+            "label": "Number",
+            "min": 0,
+            "max": 100,
+            "step": 0.01 
+        }
+    },
+    {
+        "name": "Price",
+        "field_type": "currency",
+        "config": {
+            "label": "Currency",
+            "min": 0,
+            "max": 100,
+            "step": 0.01
+        }
+    },
+    {
+        "name": "URL",
+        "field_type": "url",
+        "config": {
+            "label": "URL"
+        }
+    },
+    {
+        "name": "Phone",
+        "field_type": "tel",
+        "config": {
+            "label": "Phone Number",
+            "placeholder": "+61 400 000 000"
+        }
+    },
+    {
+        "name": "Password",
+        "field_type": "password",
+        "config": {
+            "label": "Password"
         }
     },
     {
@@ -32,19 +84,22 @@
         }
     },
     {
-        "name": "Image Upload",
-        "field_type": "file",
+        "name": "Time Picker",
+        "field_type": "time",
         "config": {
-            "label": "Upload Image",
-            "accept": [
-                "image/png",
-                "image/jpeg"
-            ]
+            "label": "Select Time"
+        }
+    },
+    {
+        "name": "DateTime",
+        "field_type": "datetime",
+        "config": {
+            "label": "Select Date & Time"
         }
     },
     {
         "name": "Checkboxes",
-        "field_type": "checkbox",
+        "field_type": "checkboxes",
         "config": {
             "label": "Choose Options",
             "options": [
@@ -65,17 +120,49 @@
         }
     },
     {
+        "name": "Checkbox",
+        "field_type": "checkboxes",
+        "config": {
+            "label": "Option",
+            "checked": false
+        }
+    },
+    {
+        "name": "Radio Buttons",
+        "field_type": "radio",
+        "config": {
+            "label": "Choose option",
+            "options": [
+                {
+                    "label": "Option A",
+                    "value": "a"
+                },
+                {
+                    "label": "Option B",
+                    "value": "b"
+                },
+                {
+                    "label": "Option C",
+                    "value": "c"
+                }
+            ]
+        }
+    },
+    {
         "name": "Toggle Switch",
         "field_type": "switch",
         "config": {
-            "label": "Enable Feature"
+            "label": "Enable Feature",
+            "on_label": "on",
+            "off_label": "off"
         }
     },
     {
         "name": "Dropdown Select",
         "field_type": "select",
         "config": {
-            "label": "Choose an option",
+            "label": "Select Title",
+            "placeholder": "Choose an Option",
             "options": [
                 {
                     "label": "Option 1",
@@ -89,8 +176,47 @@
         }
     },
     {
+        "name": "Multi Dropdown Select",
+        "field_type": "multiselect",
+        "config": {
+            "label": "Choose multiple options",
+            "options": [
+                {
+                    "label": "Option 1",
+                    "value": "option1"
+                },
+                {
+                    "label": "Option 2",
+                    "value": "option2"
+                }
+            ]
+        }
+    },
+    {
+        "name": "Image Upload",
+        "field_type": "image",
+        "config": {
+            "label": "Upload Image",
+            "accept": [
+                "image/png",
+                "image/jpeg",
+                "image/jpg"
+            ]
+        }
+    },
+    {
+        "name": "File Upload",
+        "field_type": "file",
+        "config": {
+            "label": "Upload File",
+            "accept": [
+                "text/pdf"
+            ]
+        }
+    },
+    {
         "name": "Entity Reference",
-        "field_type": "relation",
+        "field_type": "relation-select",
         "config": {
             "label": "Select Related Item",
             "related_entity": "entity",
@@ -98,40 +224,31 @@
         }
     },
     {
-        "name": "Number",
-        "field_type": "number",
+        "name": "Entity References",
+        "field_type": "relation-multiselect",
         "config": {
-            "label": "Number",
-            "min": 0
+            "label": "Select Related Item",
+            "related_entity": "entity",
+            "relation_type": "one-to-many"
         }
     },
     {
-        "name": "Password",
-        "field_type": "password",
+        "name": "Group",
+        "field_type": "group",
         "config": {
-            "label": "Password"
-        }
-    },
-    {
-        "name": "Phone",
-        "field_type": "tel",
-        "config": {
-            "label": "Phone Number",
-            "placeholder": "+61 400 000 000"
-        }
-    },
-    {
-        "name": "Time Picker",
-        "field_type": "time",
-        "config": {
-            "label": "Select Time"
-        }
-    },
-    {
-        "name": "DateTime",
-        "field_type": "datetime",
-        "config": {
-            "label": "Select Date & Time"
+            "label": "SubItems",
+            "repeatable": "true",
+            "add_button_text": "Add Subitem",
+            "fields": [
+                {
+                    "name": "Text",
+                    "field_type": "text",
+                    "config": {
+                        "label": "Text",
+                        "placeholder": "Enter text"
+                    }
+                }
+            ]
         }
     }
 ]
