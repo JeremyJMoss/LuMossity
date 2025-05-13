@@ -60,12 +60,34 @@ class DatabaseInitializer {
                 UNIQUE KEY unique_field_per_entity (entity_id, field_name)
             )`);
 
+            await dbConnection.execute(`CREATE TABLE IF NOT EXISTS field_types (
+                ID INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+                name VARCHAR(255) NOT NULL,
+                config JSON NOT NULL
+            )`)
+
             await dbConnection.execute(`CREATE TABLE IF NOT EXISTS field_presets (
                 ID INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
                 name VARCHAR(255) NOT NULL,
                 field_type VARCHAR(50) NOT NULL,
                 config JSON NOT NULL
             )`);
+
+            if (fs.existsSync(typeConfigPath)) {
+                const type_config = JSON.parse(fs.readFileSync(typeConfigPath, 'utf-8'));
+
+                for (const type of type_config) {
+                    await dbConnection.execute(
+                        `INSERT INTO field_types (name, config)
+                        VALUES (?, ?)
+                        ON DUPLICATE KEY UPDATE config = VALUES(config)`,
+                        [
+                            type.field_type,
+                            JSON.stringify(type.default_config_schema)
+                        ]
+                    );
+                }
+            }
 
             if (fs.existsSync(presetsPath)) {
                 const presets = JSON.parse(fs.readFileSync(presetsPath, 'utf-8'));
