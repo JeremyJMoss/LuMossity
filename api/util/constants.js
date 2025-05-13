@@ -1,6 +1,7 @@
 const path = require('path');
 
 module.exports.configPath = path.resolve(__dirname, '..', 'config', 'db.json');
+module.exports.typeConfigPath = path.resolve(__dirname, '..', 'seeds', 'field_type_config.json');
 module.exports.presetsPath = path.join(__dirname, '..', 'seeds', 'field_presets.json');
 module.exports.maxFailedLoginAttempts = 5;
 module.exports.lockoutBaseTime = 15 * 60;

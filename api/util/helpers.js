@@ -16,7 +16,7 @@ module.exports.toSnakeCase = (str) => {
         .trim();
 }
 
-module.exports.mapMySQLError = () => {
+module.exports.mapMySQLError = (err) => {
     const errorMap = {
         'ECONNREFUSED': {
             message: 'Database connection was refused.',

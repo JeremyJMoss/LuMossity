@@ -14,6 +14,15 @@ class DatabaseConfigManager {
     static saveConfig( config ) {
         fs.writeFileSync( configPath, JSON.stringify( config, null, 2 ) );
     }
+    static removeConfig() {
+        if ( DatabaseConfigManager.hasConfig() ) {
+            fs.unlink(configPath, (err) => {
+                if (err){
+                    console.log(err);
+                }
+            });
+        }
+    }
 }
 
 module.exports = DatabaseConfigManager;

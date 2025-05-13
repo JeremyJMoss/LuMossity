@@ -1,6 +1,6 @@
 const DatabaseConfigManager = require('./DatabaseConfigManager');
 const { isValidDatabaseName, mapMySQLError } = require('../util/helpers');
-const { presetsPath } = require('../util/constants');
+const { presetsPath, typeConfigPath } = require('../util/constants');
 const { AppError, ConflictError } = require('../models/utility/Errors');
 const fs = require("fs");
 
@@ -62,14 +62,14 @@ class DatabaseInitializer {
 
             await dbConnection.execute(`CREATE TABLE IF NOT EXISTS field_types (
                 ID INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
-                name VARCHAR(255) NOT NULL,
+                name VARCHAR(255) NOT NULL UNIQUE,
                 config JSON NOT NULL
             )`)
 
             await dbConnection.execute(`CREATE TABLE IF NOT EXISTS field_presets (
                 ID INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
                 name VARCHAR(255) NOT NULL,
-                field_type VARCHAR(50) NOT NULL,
+                field_type VARCHAR(50) UNIQUE NOT NULL,
                 config JSON NOT NULL
             )`);
 
@@ -124,29 +124,31 @@ class DatabaseInitializer {
                 FOREIGN KEY (permission_id) REFERENCES permissions(ID)
             )`);
 
-            await dbConnection.query(`INSERT INTO roles (name) VALUES ('superadmin'), ('admin'), ('user')`)
+            await dbConnection.query(`INSERT INTO roles (name) VALUES ('superadmin'), ('admin'), ('user') ON DUPLICATE KEY UPDATE name = name`)
 
-            await dbConnection.query(`INSERT INTO permissions (name) 
+            await dbConnection.query(`INSERT INTO permissions (name)
                 VALUES('system:access'), ('users:create'), ('users:edit'), ('users:delete'), ('users:view'), 
                 ('entities:create'), ('entities:edit'), ('entities:delete'), ('entities:view'),
                 ('permissions:view'), ('roles:create'), ('roles:edit'), ('roles:delete'), ('roles:view')
+                ON DUPLICATE KEY UPDATE name = name
             `);
 
-            await dbConnection.query(`INSERT INTO role_permissions (role_id, permission_id)
+            await dbConnection.query(`INSERT IGNORE INTO role_permissions (role_id, permission_id)
                 SELECT r.ID, p.ID
                 FROM roles r
                 JOIN permissions p
-                WHERE r.name = 'superadmin';
+                WHERE r.name = 'superadmin'
+                ;
             `);
 
-            await dbConnection.query(`INSERT INTO role_permissions (role_id, permission_id)
+            await dbConnection.query(`INSERT IGNORE INTO role_permissions (role_id, permission_id)
                 SELECT r.ID, p.ID
                 FROM roles r
                 JOIN permissions p ON p.name != 'permissions:view'
                 WHERE r.name = 'admin'
             `)
 
-            await dbConnection.query(`INSERT INTO role_permissions (role_id, permission_id)
+            await dbConnection.query(`INSERT IGNORE INTO role_permissions (role_id, permission_id)
                 SELECT r.ID, p.ID
                 FROM roles r
                 JOIN permissions p
@@ -173,7 +175,7 @@ class DatabaseInitializer {
                 FOREIGN KEY (role_id) REFERENCES roles(ID)
             )`);
 
-            await dbConnection.execute(`CREATE TABLE user_meta (
+            await dbConnection.execute(`CREATE TABLE IF NOT EXISTS user_meta (
                 id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
                 user_id INT NOT NULL,
                 meta_key VARCHAR(255) NOT NULL,
@@ -185,6 +187,7 @@ class DatabaseInitializer {
         } catch (err) {
             console.log(err);
             const {message, status_code} = mapMySQLError(err);
+            DatabaseConfigManager.removeConfig();
             throw new Error(message, status_code);
         } finally {
             await dbConnection.end();

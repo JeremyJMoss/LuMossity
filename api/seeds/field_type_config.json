@@ -1,632 +1,634 @@
-{
-    "field_type": "text",
-    "default_config_schema": {
-        "type": "object",
-        "properties": {
-            "label": {
-                "type": "string"
-            },
-            "placeholder": {
-                "type": "string"
-            },
-            "maxLength": {
-                "type": "integer"
-            },
-            "minLength": {
-                "type": "integer"
-            },
-            "required": {
-                "type": "boolean"
-            }
-        },
-        "required": [
-            "label"
-        ]
-    }
-},
-{
-    "field_type": "textarea",
-    "default_config_schema": {
-        "type": "object",
-        "properties": {
-            "label": {
-                "type": "string"
-            },
-            "placeholder": {
-                "type": "string"
-            },
-            "rows": {
-                "type": "integer",
-                "default": 5
-            },
-            "required": {
-                "type": "boolean"
-            }
-        },
-        "required": [
-            "label"
-        ]
-    }
-},
-{
-    "field_type": "email",
-    "default_config_schema": {
-        "type": "object",
-        "properties": {
-            "label": {
-                "type": "string"
-            },
-            "placeholder": {
-                "type": "string"
-            },
-            "required": {
-                "type": "boolean"
-            }
-        },
-        "required": [
-            "label"
-        ]
-    }
-},
-{
-    "field_type": "integer",
-    "default_config_schema": {
-        "type": "object",
-        "properties": {
-            "label": {
-                "type": "string"
-            },
-            "min": {
-                "type": "number"
-            },
-            "max": {
-                "type": "number"
-            },
-            "step": {
-                "type": "number",
-                "default": 1
-            },
-            "required": {
-                "type": "boolean"
-            }
-        },
-        "required": [
-            "label"
-        ]
-    }
-},
-{
-    "field_type": "float",
-    "default_config_schema": {
-        "type": "object",
-        "properties": {
-            "label": {
-                "type": "string"
-            },
-            "min": {
-                "type": "number"
-            },
-            "max": {
-                "type": "number"
-            },
-            "step": {
-                "type": "number",
-                "default": 0.01
-            },
-            "required": {
-                "type": "boolean"
-            }
-        },
-        "required": [
-            "label"
-        ]
-    }
-},
-{
-    "field_type": "checkbox",
-    "default_config_schema": {
-        "type": "object",
-        "properties": {
-            "label": {
-                "type": "string"
-            },
-            "options": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "label": {
-                            "type": "string"
-                        },
-                        "value": {
-                            "type": "string"
-                        }
-                    },
-                    "required": [
-                        "label",
-                        "value"
-                    ]
+[
+    {
+        "field_type": "text",
+        "default_config_schema": {
+            "type": "object",
+            "properties": {
+                "label": {
+                    "type": "string"
+                },
+                "placeholder": {
+                    "type": "string"
+                },
+                "maxLength": {
+                    "type": "integer"
+                },
+                "minLength": {
+                    "type": "integer"
+                },
+                "required": {
+                    "type": "boolean"
                 }
             },
-            "checked": {
-                "type": "boolean",
-                "default": false
-            },
-            "required": {
-                "type": "boolean"
-            }
-        },
-        "required": [
-            "label",
-            "options"
-        ]
-    }
-},
-{
-    "field_type": "radio",
-    "default_config_schema": {
-        "type": "object",
-        "properties": {
-            "label": {
-                "type": "string"
-            },
-            "options": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "label": {
-                            "type": "string"
-                        },
-                        "value": {
-                            "type": "string"
-                        },
-                    },
-                    "required": [
-                        "label",
-                        "value"
-                    ]
+            "required": [
+                "label"
+            ]
+        }
+    },
+    {
+        "field_type": "textarea",
+        "default_config_schema": {
+            "type": "object",
+            "properties": {
+                "label": {
+                    "type": "string"
+                },
+                "placeholder": {
+                    "type": "string"
+                },
+                "rows": {
+                    "type": "integer",
+                    "default": 5
+                },
+                "required": {
+                    "type": "boolean"
                 }
             },
-            "required": {
-                "type": "boolean"
-            }
-        },
-        "required": [
-            "label",
-            "options"
-        ]
-    }
-},
-{
-    "field_type": "tel",
-    "default_config_schema": {
-        "type": "object",
-        "properties": {
-            "label": {
-                "type": "string"
+            "required": [
+                "label"
+            ]
+        }
+    },
+    {
+        "field_type": "email",
+        "default_config_schema": {
+            "type": "object",
+            "properties": {
+                "label": {
+                    "type": "string"
+                },
+                "placeholder": {
+                    "type": "string"
+                },
+                "required": {
+                    "type": "boolean"
+                }
             },
-            "placeholder": {
-                "type": "string"
+            "required": [
+                "label"
+            ]
+        }
+    },
+    {
+        "field_type": "integer",
+        "default_config_schema": {
+            "type": "object",
+            "properties": {
+                "label": {
+                    "type": "string"
+                },
+                "min": {
+                    "type": "number"
+                },
+                "max": {
+                    "type": "number"
+                },
+                "step": {
+                    "type": "number",
+                    "default": 1
+                },
+                "required": {
+                    "type": "boolean"
+                }
             },
-            "required": {
-                "type": "boolean"
-            }
-        },
-        "required": [
-            "label"
-        ]
-    }
-},
-{
-    "field_type": "password",
-    "default_config_schema": {
-        "type": "object",
-        "properties": {
-            "label": {
-                "type": "string"
+            "required": [
+                "label"
+            ]
+        }
+    },
+    {
+        "field_type": "float",
+        "default_config_schema": {
+            "type": "object",
+            "properties": {
+                "label": {
+                    "type": "string"
+                },
+                "min": {
+                    "type": "number"
+                },
+                "max": {
+                    "type": "number"
+                },
+                "step": {
+                    "type": "number",
+                    "default": 0.01
+                },
+                "required": {
+                    "type": "boolean"
+                }
             },
-            "minLength": {
-                "type": "integer"
-            },
-            "maxLength": {
-                "type": "integer"
-            },
-            "required": {
-                "type": "boolean"
-            }
-        },
-        "required": [
-            "label"
-        ]
-    }
-},
-{
-    "field_type": "date",
-    "default_config_schema": {
-        "type": "object",
-        "properties": {
-            "label": {
-                "type": "string"
-            },
-            "defaultToday": {
-                "type": "boolean",
-                "default": true
-            },
-            "required": {
-                "type": "boolean"
-            }
-        },
-        "required": [
-            "label"
-        ]
-    }
-},
-{
-    "field_type": "time",
-    "default_config_schema": {
-        "type": "object",
-        "properties": {
-            "label": {
-                "type": "string"
-            },
-            "required": {
-                "type": "boolean"
-            }
-        },
-        "required": [
-            "label"
-        ]
-    }
-},
-{
-    "field_type": "datetime",
-    "default_config_schema": {
-        "type": "object",
-        "properties": {
-            "label": {
-                "type": "string"
-            },
-            "defaultToday": {
-                "type": "boolean",
-                "default": true
-            },
-            "required": {
-                "type": "boolean"
-            }
-        },
-        "required": ["label"]
-    }
-},
-{
-    "field_type": "select",
-    "default_config_schema": {
-        "type": "object",
-        "properties": {
-            "label": {
-                "type": "string"
-            },
-            "entity": {
-                "type": "boolean"
-            },
-            "entityQueryOptions": {
-                "type": "object",
-                "properties": {
-                    "limit": {
-                        "type": "integer",
-                        "minimum": 1
-                    },
-                    "offset": {
-                        "type": "integer",
-                        "minimum": 0
-                    },
-                    "orderBy": {
-                        "type": "string"
-                    },
-                    "orderType": {
-                        "type": "string",
-                        "default": "asc",
-                        "enum": [
-                            "asc",
-                            "desc"
-                        ]
-                    },
-                    "where": {
+            "required": [
+                "label"
+            ]
+        }
+    },
+    {
+        "field_type": "checkbox",
+        "default_config_schema": {
+            "type": "object",
+            "properties": {
+                "label": {
+                    "type": "string"
+                },
+                "options": {
+                    "type": "array",
+                    "items": {
                         "type": "object",
-                        "description": "Key-value filters; supports operators like $like, $gt, $lt, $in, $or",
-                        "additionalProperties": {
-                            "anyOf": [
-                                {
-                                    "type": [
-                                        "string",
-                                        "number",
-                                        "boolean"
-                                    ]
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "$like": {
-                                            "type": "string"
-                                        },
-                                        "$gt": {
-                                            "type": "number"
-                                        },
-                                        "$lt": {
-                                            "type": "number"
-                                        },
-                                        "$gte": {
-                                            "type": "number"
-                                        },
-                                        "$lte": {
-                                            "type": "number"
-                                        },
-                                        "$ne": {
-                                            "type": [
-                                                "string",
-                                                "number",
-                                                "boolean"
-                                            ]
-                                        },
-                                        "$in": {
-                                            "type": "array",
-                                            "items": {
+                        "properties": {
+                            "label": {
+                                "type": "string"
+                            },
+                            "value": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "label",
+                            "value"
+                        ]
+                    }
+                },
+                "checked": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "required": {
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "label",
+                "options"
+            ]
+        }
+    },
+    {
+        "field_type": "radio",
+        "default_config_schema": {
+            "type": "object",
+            "properties": {
+                "label": {
+                    "type": "string"
+                },
+                "options": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "label": {
+                                "type": "string"
+                            },
+                            "value": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "label",
+                            "value"
+                        ]
+                    }
+                },
+                "required": {
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "label",
+                "options"
+            ]
+        }
+    },
+    {
+        "field_type": "tel",
+        "default_config_schema": {
+            "type": "object",
+            "properties": {
+                "label": {
+                    "type": "string"
+                },
+                "placeholder": {
+                    "type": "string"
+                },
+                "required": {
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "label"
+            ]
+        }
+    },
+    {
+        "field_type": "password",
+        "default_config_schema": {
+            "type": "object",
+            "properties": {
+                "label": {
+                    "type": "string"
+                },
+                "minLength": {
+                    "type": "integer"
+                },
+                "maxLength": {
+                    "type": "integer"
+                },
+                "required": {
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "label"
+            ]
+        }
+    },
+    {
+        "field_type": "date",
+        "default_config_schema": {
+            "type": "object",
+            "properties": {
+                "label": {
+                    "type": "string"
+                },
+                "defaultToday": {
+                    "type": "boolean",
+                    "default": true
+                },
+                "required": {
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "label"
+            ]
+        }
+    },
+    {
+        "field_type": "time",
+        "default_config_schema": {
+            "type": "object",
+            "properties": {
+                "label": {
+                    "type": "string"
+                },
+                "required": {
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "label"
+            ]
+        }
+    },
+    {
+        "field_type": "datetime",
+        "default_config_schema": {
+            "type": "object",
+            "properties": {
+                "label": {
+                    "type": "string"
+                },
+                "defaultToday": {
+                    "type": "boolean",
+                    "default": true
+                },
+                "required": {
+                    "type": "boolean"
+                }
+            },
+            "required": ["label"]
+        }
+    },
+    {
+        "field_type": "select",
+        "default_config_schema": {
+            "type": "object",
+            "properties": {
+                "label": {
+                    "type": "string"
+                },
+                "entity": {
+                    "type": "boolean"
+                },
+                "entityQueryOptions": {
+                    "type": "object",
+                    "properties": {
+                        "limit": {
+                            "type": "integer",
+                            "minimum": 1
+                        },
+                        "offset": {
+                            "type": "integer",
+                            "minimum": 0
+                        },
+                        "orderBy": {
+                            "type": "string"
+                        },
+                        "orderType": {
+                            "type": "string",
+                            "default": "asc",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        },
+                        "where": {
+                            "type": "object",
+                            "description": "Key-value filters; supports operators like $like, $gt, $lt, $in, $or",
+                            "additionalProperties": {
+                                "anyOf": [
+                                    {
+                                        "type": [
+                                            "string",
+                                            "number",
+                                            "boolean"
+                                        ]
+                                    },
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "$like": {
+                                                "type": "string"
+                                            },
+                                            "$gt": {
+                                                "type": "number"
+                                            },
+                                            "$lt": {
+                                                "type": "number"
+                                            },
+                                            "$gte": {
+                                                "type": "number"
+                                            },
+                                            "$lte": {
+                                                "type": "number"
+                                            },
+                                            "$ne": {
                                                 "type": [
                                                     "string",
                                                     "number",
                                                     "boolean"
                                                 ]
-                                            }
-                                        },
-                                        "$or": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "object",
-                                                "additionalProperties": {
-                                                    "anyOf": [
-                                                        {
-                                                            "type": [
-                                                                "string",
-                                                                "number",
-                                                                "boolean"
-                                                            ]
-                                                        },
-                                                        {
-                                                            "type": "object",
-                                                            "properties": {
-                                                                "$like": {
-                                                                    "type": "string"
-                                                                },
-                                                                "$gt": {
-                                                                    "type": "number"
-                                                                },
-                                                                "$lt": {
-                                                                    "type": "number"
-                                                                },
-                                                                "$gte": {
-                                                                    "type": "number"
-                                                                },
-                                                                "$lte": {
-                                                                    "type": "number"
-                                                                },
-                                                                "$ne": {
-                                                                    "type": [
-                                                                        "string",
-                                                                        "number",
-                                                                        "boolean"
-                                                                    ]
-                                                                },
-                                                                "$in": {
-                                                                    "type": "array",
-                                                                    "items": {
+                                            },
+                                            "$in": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": [
+                                                        "string",
+                                                        "number",
+                                                        "boolean"
+                                                    ]
+                                                }
+                                            },
+                                            "$or": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "object",
+                                                    "additionalProperties": {
+                                                        "anyOf": [
+                                                            {
+                                                                "type": [
+                                                                    "string",
+                                                                    "number",
+                                                                    "boolean"
+                                                                ]
+                                                            },
+                                                            {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "$like": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "$gt": {
+                                                                        "type": "number"
+                                                                    },
+                                                                    "$lt": {
+                                                                        "type": "number"
+                                                                    },
+                                                                    "$gte": {
+                                                                        "type": "number"
+                                                                    },
+                                                                    "$lte": {
+                                                                        "type": "number"
+                                                                    },
+                                                                    "$ne": {
                                                                         "type": [
                                                                             "string",
                                                                             "number",
                                                                             "boolean"
                                                                         ]
+                                                                    },
+                                                                    "$in": {
+                                                                        "type": "array",
+                                                                        "items": {
+                                                                            "type": [
+                                                                                "string",
+                                                                                "number",
+                                                                                "boolean"
+                                                                            ]
+                                                                        }
                                                                     }
-                                                                }
-                                                            },
-                                                            "additionalProperties": false
-                                                        }
-                                                    ]
+                                                                },
+                                                                "additionalProperties": false
+                                                            }
+                                                        ]
+                                                    }
                                                 }
                                             }
-                                        }
-                                    },
-                                    "additionalProperties": false
-                                }
-                            ]
-                        }
-                    }
-                },
-                "additionalProperties": false
-            },
-            "entityType": {
-                "type": "integer"
-            },
-            "entityOptionTitle": {
-                "type": "string"
-            },
-            "sort": {
-                "type": "boolean",
-                "default": false
-            },
-            "sortType": {
-                "type": "string",
-                "default": "asc",
-                "enum": [
-                    "asc",
-                    "desc"
-                ]
-            },
-            "multiple": {
-                "type": "boolean",
-                "default": false
-            },
-            "displayType": {
-                "type": "string",
-                "default": "selectbox",
-                "enum": [
-                    "selectbox",
-                    "checkbox-inline",
-                    "checkboxes"
-                ]
-            },
-            "options": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "label": {
-                            "type": "string"
-                        },
-                        "value": {
-                            "type": "string"
+                                        },
+                                        "additionalProperties": false
+                                    }
+                                ]
+                            }
                         }
                     },
-                    "required": [
-                        "label",
-                        "value"
-                    ],
                     "additionalProperties": false
+                },
+                "entityType": {
+                    "type": "integer"
+                },
+                "entityOptionTitle": {
+                    "type": "string"
+                },
+                "sort": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "sortType": {
+                    "type": "string",
+                    "default": "asc",
+                    "enum": [
+                        "asc",
+                        "desc"
+                    ]
+                },
+                "multiple": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "displayType": {
+                    "type": "string",
+                    "default": "selectbox",
+                    "enum": [
+                        "selectbox",
+                        "checkbox-inline",
+                        "checkboxes"
+                    ]
+                },
+                "options": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "label": {
+                                "type": "string"
+                            },
+                            "value": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "label",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    }
+                },
+                "required": {
+                    "type": "boolean"
                 }
             },
-            "required": {
-                "type": "boolean"
-            }
-        },
-        "required": [
-            "label"
-        ],
-        "if": {
-            "properties": {
-                "entity": {
-                    "const": true
-                }
-            }
-        },
-        "then": {
             "required": [
-                "entityType",
-                "entityOptionTitle"
-            ]
-        },
-        "additionalProperties": false
-    }
-},
-{
-    "field_type": "switch",
-    "default_config_schema": {
-        "type": "object",
-        "properties": {
-            "label": {
-                "type": "string"
-            },
-            "onLabel": {
-                "type": "string"
-            },
-            "offLabel": {
-                "type": "string"
-            },
-            "defaultState": {
-                "type": "boolean",
-                "default": false
-            }
-        },
-        "required": [
-            "label"
-        ]
-    }
-},
-{
-    "field_type": "image",
-    "default_config_schema": {
-        "type": "object",
-        "properties": {
-            "label": {
-                "type": "string"
-            },
-            "accept": {
-                "type": "array",
-                "items": {
-                    "type": "string",
-                    "enum": [
-                        "image/png",
-                        "image/jpeg",
-                        "image/svg+xml",
-                        "image/tiff",
-                        "image/gif",
-                        "image/webp"
-                    ]
+                "label"
+            ],
+            "if": {
+                "properties": {
+                    "entity": {
+                        "const": true
+                    }
                 }
-            }
-        },
-        "required": [
-            "label",
-            "accept"
-        ]
-    }
-},
-{
-    "field_type": "file",
-    "default_config_schema": {
-        "type": "object",
-        "properties": {
-            "label": {
-                "type": "string"
             },
-            "accept": {
-                "type": "array",
-                "items": {
-                    "type": "string",
-                    "enum": [
-                        "text/html",
-                        "application/pdf",
-                        "text/csv",
-                        "text/plain",
-                        "application/vnd.ms-powerpoint",
-                        "application/msword",
-                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                        "application/zip",
-                        "application/x-zip-compressed",
-                        "application/vnd.ms-excel",
-                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                    ]
-                }
-            }
-        },
-        "required": [ "label", "accept"]
-    }
-},
-{
-    "field_type": "group",
-    "default_config_schema": {
-      "type": "object",
-      "properties": {
-        "label": {
-          "type": "string"
-        },
-        "fields": {
-          "type": "array",
-          "items": {
+            "then": {
+                "required": [
+                    "entityType",
+                    "entityOptionTitle"
+                ]
+            },
+            "additionalProperties": false
+        }
+    },
+    {
+        "field_type": "switch",
+        "default_config_schema": {
             "type": "object",
             "properties": {
-              "field_type": {
-                "type": "string"
-              },
-              "config": {
-                "type": "object"
-              }
+                "label": {
+                    "type": "string"
+                },
+                "onLabel": {
+                    "type": "string"
+                },
+                "offLabel": {
+                    "type": "string"
+                },
+                "defaultState": {
+                    "type": "boolean",
+                    "default": false
+                }
             },
-            "required": ["field_type", "config"]
-          }
-        },
-        "repeatable": {
-          "type": "boolean",
-          "default": false
+            "required": [
+                "label"
+            ]
         }
-      },
-      "required": ["label", "fields"]
+    },
+    {
+        "field_type": "image",
+        "default_config_schema": {
+            "type": "object",
+            "properties": {
+                "label": {
+                    "type": "string"
+                },
+                "accept": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "enum": [
+                            "image/png",
+                            "image/jpeg",
+                            "image/svg+xml",
+                            "image/tiff",
+                            "image/gif",
+                            "image/webp"
+                        ]
+                    }
+                }
+            },
+            "required": [
+                "label",
+                "accept"
+            ]
+        }
+    },
+    {
+        "field_type": "file",
+        "default_config_schema": {
+            "type": "object",
+            "properties": {
+                "label": {
+                    "type": "string"
+                },
+                "accept": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "enum": [
+                            "text/html",
+                            "application/pdf",
+                            "text/csv",
+                            "text/plain",
+                            "application/vnd.ms-powerpoint",
+                            "application/msword",
+                            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                            "application/zip",
+                            "application/x-zip-compressed",
+                            "application/vnd.ms-excel",
+                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                        ]
+                    }
+                }
+            },
+            "required": [ "label", "accept"]
+        }
+    },
+    {
+        "field_type": "group",
+        "default_config_schema": {
+        "type": "object",
+        "properties": {
+            "label": {
+            "type": "string"
+            },
+            "fields": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                "field_type": {
+                    "type": "string"
+                },
+                "config": {
+                    "type": "object"
+                }
+                },
+                "required": ["field_type", "config"]
+            }
+            },
+            "repeatable": {
+            "type": "boolean",
+            "default": false
+            }
+        },
+        "required": ["label", "fields"]
+        }
     }
-  }
+]
