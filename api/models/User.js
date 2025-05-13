@@ -289,7 +289,7 @@ class User {
                     await this.setLockout(failed_logins);
                 }
                 await this.setFailedLogins(++failed_logins);
-                throw new AuthenticationError("Password Verification Failed");
+                throw new AuthenticationError("Email or password was invalid");
             }
 
             await this.setLastLogin();

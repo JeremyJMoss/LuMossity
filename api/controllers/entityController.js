@@ -80,7 +80,7 @@ module.exports.createEntityFields = async (req, res, next) => {
             throw new NotFoundError('Entity not found');
         }
 
-        entity.addFields(fields);
+        await entity.addFields(fields);
 
         await entity.sync();
 
@@ -137,7 +137,7 @@ module.exports.updateEntityFields = async ( req, res, next ) => {
             throw new NotFoundError('Entity not found');
         }
 
-        entity.updateFields(fields);
+        await entity.updateFields(fields);
 
         await entity.sync();
 

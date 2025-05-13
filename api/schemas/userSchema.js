@@ -9,7 +9,7 @@ const createUserSchema = z.object({
 
 const loginUserSchema = z.object({
     email: z.string().min(1).email(),
-    password: z.string()
+    password: z.string().min(1)
 })
 
 module.exports = {

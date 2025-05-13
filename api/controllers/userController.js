@@ -1,7 +1,7 @@
 const User = require('../models/User');
 const { refreshTokenMaxAge } = require('../util/constants');
 const { validateBodySchema } = require('../util/validation');
-const { ConflictError } = require('../models/utility/Errors');
+const { ConflictError, AuthenticationError } = require('../models/utility/Errors');
 const { createUserSchema, loginUserSchema } = require('../schemas/userSchema');
 
 module.exports.createInitialUser = async (req, res, next) => {
@@ -72,6 +72,10 @@ module.exports.loginUser = async (req, res, next) => {
         const {email, password} = req.body;
 
         const user = await User.getUserBy('email', email);
+
+        if (user === null) {
+            throw new AuthenticationError('Email or password was invalid');
+        }
 
         const tokens = await user.login(password);
 

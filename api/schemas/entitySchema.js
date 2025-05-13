@@ -13,13 +13,14 @@ const updateEntityFieldsSchema = z.object({
     fields: z.array(z.object({
         field_name: z.string(),
         field_type: z.string(),
+        field_config: z.object(),
         display_label: z.string().optional(),
         is_db_column: z.boolean().optional(),
         is_required: z.boolean().optional(),
         is_queryable: z.boolean().optional(),
         default_value: z.any().optional(),
         order_index: z.number().positive().int()
-    }))
+    })).nonempty()
 });
 
 const deleteEntityFieldsSchema = z.object({
@@ -30,13 +31,14 @@ const createEntityFieldsSchema = z.object({
     fields: z.array(z.object({
         field_name: z.string(),
         field_type: z.string(),
+        field_config: z.object({}).passthrough(),
         display_label: z.string().optional(),
         is_db_column: z.boolean().optional(),
         is_required: z.boolean().optional(),
         is_queryable: z.boolean().optional(),
         default_value: z.any().optional(),
         order_index: z.number().positive().int()
-    }))
+    }).strict()).nonempty()
 })
 
 module.exports = {

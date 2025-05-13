@@ -13,8 +13,6 @@ module.exports.fieldTypeToMySQLType = {
   email: 'VARCHAR(255)',
   integer: 'INT',
   float: 'FLOAT',
-  currency: 'DECIMAL(10, 2)',
-  url: 'VARCHAR(2083)',
   tel: 'VARCHAR(20)',
   password: 'VARCHAR(255)',
   date: 'DATE',
@@ -24,11 +22,8 @@ module.exports.fieldTypeToMySQLType = {
   checkbox: 'BOOLEAN',
   radio: 'VARCHAR(255)',
   switch: 'BOOLEAN',
-  select: 'VARCHAR(255)',
-  multiselect: 'JSON',
+  select: 'JSON',
   image: 'JSON',
   file: 'JSON',
-  relation_select: 'INT',
-  relation_multiselect: "JSON",
   group: 'JSON'
 };

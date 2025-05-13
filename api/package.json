@@ -1,5 +1,6 @@
 {
   "name": "lumossity-api",
+  "private": true,
   "version": "1.0.0",
   "description": "Api backend for LuMossity",
   "main": "server.js",
@@ -17,6 +18,7 @@
   "author": "Jeremy J Moss",
   "license": "ISC",
   "dependencies": {
+    "ajv": "^6.12.6",
     "argon2": "^0.41.1",
     "config": "^3.3.12",
     "cors": "^2.8.5",

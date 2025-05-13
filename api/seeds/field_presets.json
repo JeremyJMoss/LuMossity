@@ -225,7 +225,7 @@
         "config": {
             "label": "Select Related Item",
             "entity": true,
-            "entityOptionTitle": "id",
+            "entityOptionTitle": "title",
             "displayType": "selectbox"
         }
     },

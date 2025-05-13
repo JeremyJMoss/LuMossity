@@ -1,7 +1,8 @@
 const DatabaseConnector = require ('../services/DatabaseConnector');
 const Field = require('./partials/EntityField');
 const { toSnakeCase, mapMySQLError } = require('../util/helpers');
-const { NotFoundError, AppError } = require('./utility/Errors');
+const { NotFoundError, AppError, ConflictError } = require('./utility/Errors');
+const { fieldTypeToMySQLType } = require('../util/constants');
 
 class Entity {
 
@@ -88,9 +89,9 @@ class Entity {
 
                 const [fields] = await db.query('SELECT * FROM entities_structure');
 
-                const entity_groups = entities.map(entity => {
-                    const structure = fields.filter(field => field.entity_id === entity.ID)
-                    .map(field => new Field(field));
+                const entity_groups = await entities.map(async entity => {
+                    const structure = await Promise.all( fields.filter(field => field.entity_id === entity.ID)
+                    .map((field) => Field.create(field)));
                     return {
                         ...entity,
                         fields: structure
@@ -109,24 +110,29 @@ class Entity {
         this.name = newName;
     }
 
-    addField( config ) {
-        const newField = new Field(config);
-
-        // check if field already exists
-        if (this.fields.find(field => field.field_name === newField.field_name)) {
-            throw new ConflictError(`Field with name "${newField.field_name}" already exists`);
-        }
+    async addField( config ) {
+        try {
+            const newField = await Field.create(config);
         
-        // add new field into array
-        this.fields.push(newField);
+            // check if field already exists
+            if (this.fields.find(field => field.field_name === newField.field_name)) {
+                throw new ConflictError(`Field with name ${newField.field_name} already exists`);
+            }
+            
+            // add new field into array
+            this.fields.push(newField);
+
+        } catch (err) {
+            throw err;
+        }
     }
 
-    addFields( fields ) {
+    async addFields( fields ) {
         try {
-            fields.forEach((field) => {
-                this.addField(field);
-            })
-        } catch {
+            for (const field of fields) {
+                await this.addField(field);
+            }
+        } catch (err) {
             throw err;
         }
     }
@@ -139,7 +145,7 @@ class Entity {
                     [this.entity_id]
                 );
 
-                const fields = structure.map(field => new Field(field));
+                const fields = await Promise.all(structure.map((field) => Field.create(field)));
     
                 return fields;
 
@@ -182,9 +188,9 @@ class Entity {
 
     removeFields(fields) {
         try{
-            fields.forEach((field_name) => {
+            for (const field_name of fields) {
                 this.removeField(field_name);
-            })
+            }
         } catch (err){
             throw err;
         }
@@ -198,20 +204,20 @@ class Entity {
         }
     }
 
-    updateFields( fields ) {
+    async updateFields( fields ) {
         try {
-            fields.forEach((field) => {
-                this.updateField(field);
-            })
+            for (const field of fields) {
+                await this.updateField(field);
+            }
         } catch (err) {
             throw err;
         }
     }
 
-    updateField( new_field_info ) {
+    async updateField( new_field_info ) {
         try{
             const field_to_update = this.fields.find(field => field.field_name == new_field_info.field_name);
-            field_to_update.update(new_field_info);
+            await field_to_update.update(new_field_info);
             this.removeField(field_to_update.field_name);
             this.addField(field_to_update.toJSON());
         } catch (err) {
@@ -226,6 +232,14 @@ class Entity {
     orderFields() {
         return this.fields.sort((a, b) => a.order_index - b.order_index);
     }
+
+    static async getMeta( entity_key ) {
+        if (!key) {
+            return await DatabaseConnector( db => {
+                db.query(`SELECT meta_json from m_entity_${entity_key} WHERE `);
+            });
+        }
+    } 
 
     async #create() {
         await DatabaseConnector.withConnection(async (db) => {
@@ -292,25 +306,50 @@ class Entity {
     
                 // Insert new
                 for (const field of fields_to_insert) {
-                    await db.query(`INSERT INTO entities_structure (entity_id, field_name, display_label, field_type, is_required, is_db_column, is_queryable, default_value, order_index ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`, 
-                        [this.entity_id, field.field_name, field.display_label, field.field_type, field.is_required, field.is_db_column, field.is_queryable, field.default_value, field.order_index]
+                    if (field.is_db_column) {
+                        const column_type = fieldTypeToMySQLType[field.field_type]; 
+                        const column_required = field.is_required ? 'NULL ' : 'NOT NULL ';
+                        const default_value = field.default_value !== null ? `DEFAULT ${db.escape(default_value)}` : '';
+                        await db.query(`ALTER TABLE \`m_entity_${this.entity_key}\` ADD COLUMN \`${field.field_name}\` ${column_type} ${column_required} ${default_value}`);
+                    }
+                    await db.query(`INSERT INTO entities_structure (entity_id, field_name, display_label, field_type, is_required, is_db_column, is_queryable, default_value, order_index, field_config ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, 
+                        [this.entity_id, field.field_name, field.display_label, field.field_type, field.is_required, field.is_db_column, field.is_queryable, field.default_value, field.order_index, JSON.stringify(field.field_config)]
                     );
                 }
             
                 // Update existing
                 for (const field of fields_to_update) {
-                    await db.query(`UPDATE entities_structure SET display_label = ?, field_type = ?, is_required = ?, is_db_column = ?, is_queryable = ?, default_value = ?, order_index = ? WHERE entity_id = ? AND field_name = ?`, 
-                        [field.display_label, field.field_type, field.is_required, field.is_db_column, field.is_queryable, field.default_value, field.order_index, this.entity_id, field.field_name]);
+                    if (field.is_db_column) {
+
+                    }
+
+                    await db.query(`UPDATE entities_structure SET display_label = ?, field_type = ?, is_required = ?, is_db_column = ?, is_queryable = ?, default_value = ?, order_index = ?, 'field_config = ? WHERE entity_id = ? AND field_name = ?`, 
+                        [field.display_label, field.field_type, field.is_required, field.is_db_column, field.is_queryable, field.default_value, field.order_index, this.entity_id, field.field_name, JSON.stringify(field.field_config)]);
                 }
             
                 // Delete removed
                 for (const field of fields_to_delete) {
+                    if (field.is_db_column) {
+                        await db.query(`ALTER TABLE \`m_entity_${this.entity_key}\` DROP COLUMN \`${field.field_name}\``);
+                    } else {
+                        await db.query(`DELETE FROM m_entity_${this.entity_key}_meta WHERE meta_key = ?`, [field.field_name]);
+                        
+                        const json_path = `$.${field.field_name}`;
+                        await db.query(
+                            `UPDATE m_entity_${entity_key}
+                             SET meta_json = JSON_REMOVE(meta_json, '${json_path}')
+                             WHERE JSON_CONTAINS_PATH(meta_json, 'one', '${json_path}');`
+                        )
+                    }
                     await db.query(`DELETE FROM entities_structure WHERE entity_id = ? AND field_name = ?`, [this.entity_id, field.field_name]);
                 }
             } catch (err) {
                 if (err instanceof AppError) {
                     throw err;
                 }
+
+                console.log(err);
+
                 const {message, status_code} = mapMySQLError(err);
 
                 throw new AppError(message, status_code);
