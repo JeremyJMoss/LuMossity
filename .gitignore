@@ -27,3 +27,5 @@
 /api/config/*
 /api/logs/*
 /extensions/*
+
+!.gitkeep

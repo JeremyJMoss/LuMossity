@@ -1,5 +1,5 @@
 {
-  "name": "backend",
+  "name": "lumossity-api",
   "version": "1.0.0",
   "description": "Api backend for LuMossity",
   "main": "server.js",

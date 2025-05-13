@@ -1,6 +1,11 @@
 {
+  "name": "lumossity",
+  "private": true,
+  "workspaces": ["api", "ui"],
   "scripts": {
-    "dev": "concurrently \"npm run dev --prefix api\" \"npm run dev --prefix ui\""
+    "dev": "concurrently \"npm:dev:*\"",
+    "dev:ui": "npm --workspace ui run dev",
+    "dev:api": "npm --workspace api run dev"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"
