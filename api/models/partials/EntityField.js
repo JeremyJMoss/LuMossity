@@ -17,7 +17,7 @@ class Field {
     }
 
     static async create(config) {
-        if (Object.hasOwn(config, 'field_config') && Object.hasOwn(config, 'field_name')) {
+        if (Object.hasOwn(config, 'field_config') && Object.hasOwn(config, 'field_type')) {
             try {
                 await Field.checkFieldConfig(config.field_config, config.field_type);
             } catch (err) {
@@ -31,10 +31,20 @@ class Field {
         if (!this.is_db_column) {
             if (Object.hasOwn(config, 'is_db_column')) this.is_db_column = config.is_db_column;
             if (Object.hasOwn(config, 'field_type')) this.field_type = config.field_type;
-            if (Object.hasOwn(config, 'is_queryable')) this.is_queryable = config.is_queryable;
             if (Object.hasOwn(config, 'is_required')) this.is_required = config.is_required;
             if (Object.hasOwn(config, 'default_value')) this.default_value = config.default_value;
+        } else {
+            if (Object.hasOwn(config, 'is_db_column')){
+                if (config.is_db_column === false) {
+                    if (Object.hasOwn(config, 'field_type')) {
+                        if (config.field_type !== this.field_type) {
+                            
+                        }
+                    }
+                }
+            }
         }
+        if (Object.hasOwn(config, 'is_queryable')) this.is_queryable = config.is_queryable;
         if (Object.hasOwn(config, 'display_label')) this.display_label = config.display_label;
         if (Object.hasOwn(config, 'order_index')) this.order_index = config.order_index;
 

@@ -319,9 +319,6 @@ class Entity {
             
                 // Update existing
                 for (const field of fields_to_update) {
-                    if (field.is_db_column) {
-
-                    }
 
                     await db.query(`UPDATE entities_structure SET display_label = ?, field_type = ?, is_required = ?, is_db_column = ?, is_queryable = ?, default_value = ?, order_index = ?, 'field_config = ? WHERE entity_id = ? AND field_name = ?`, 
                         [field.display_label, field.field_type, field.is_required, field.is_db_column, field.is_queryable, field.default_value, field.order_index, this.entity_id, field.field_name, JSON.stringify(field.field_config)]);
