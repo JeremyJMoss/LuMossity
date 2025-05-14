@@ -6,7 +6,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "npx node-dev server.js"
+    "dev": "npx node-dev server.js",
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -28,6 +29,7 @@
     "zod": "^3.24.4"
   },
   "devDependencies": {
+    "jest": "^29.7.0",
     "node-dev": "^8.0.0"
   }
 }

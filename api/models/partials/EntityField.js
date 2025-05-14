@@ -51,7 +51,7 @@ class Field {
             } else {
                 // Type change
                 if (changed('field_type') && config.field_type !== this.field_type) {
-                    const canConvert = await this.#checkTypeConversionPossible(this.field_name, config.field_type, entity_key);
+                    const canConvert = await this.checkTypeConversionPossible(this.field_name, config.field_type, entity_key);
                     if (!canConvert) {
                         const mysql_type = fieldTypeToMySQLType[config.field_type];
                         throw new ConflictError(`Cannot convert column "${this.field_name}" to type "${mysql_type}": some values are incompatible with this type.`);
@@ -119,7 +119,7 @@ class Field {
         }
     }
 
-    async #checkTypeConversionPossible(column_name, new_field_type, entity_key) {
+    async checkTypeConversionPossible(column_name, new_field_type, entity_key) {
         const mysql_field_type = fieldTypeToMySQLType[new_field_type];
 
         return await DatabaseConnector.withConnection(async db => {
