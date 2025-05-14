@@ -217,7 +217,7 @@ class Entity {
     async updateField( new_field_info ) {
         try{
             const field_to_update = this.fields.find(field => field.field_name == new_field_info.field_name);
-            await field_to_update.update(new_field_info);
+            await field_to_update.update(new_field_info, this.entity_key);
             this.removeField(field_to_update.field_name);
             this.addField(field_to_update.toJSON());
         } catch (err) {
@@ -293,66 +293,196 @@ class Entity {
     async sync() {
         await DatabaseConnector.withConnection(async (db) => {
             try {
+                // Update entity name
                 await db.query(
                     `UPDATE entities SET entity_name = ? WHERE ID = ?`,
                     [this.name, this.entity_id]
                 );
-    
-                const database_fields = await this.retrieveFields();
-    
-                const fields_to_insert = this.fields.filter(newField => !database_fields.some(existing => existing.field_name === newField.field_name));
-                const fields_to_update = this.fields.filter(newField => database_fields.some(existing => existing.field_name === newField.field_name));
-                const fields_to_delete = database_fields.filter(existing => !this.fields.some(newField => newField.field_name === existing.field_name));
-    
-                // Insert new
-                for (const field of fields_to_insert) {
-                    if (field.is_db_column) {
-                        const column_type = fieldTypeToMySQLType[field.field_type]; 
-                        const column_required = field.is_required ? 'NULL ' : 'NOT NULL ';
-                        const default_value = field.default_value !== null ? `DEFAULT ${db.escape(default_value)}` : '';
-                        await db.query(`ALTER TABLE \`m_entity_${this.entity_key}\` ADD COLUMN \`${field.field_name}\` ${column_type} ${column_required} ${default_value}`);
-                    }
-                    await db.query(`INSERT INTO entities_structure (entity_id, field_name, display_label, field_type, is_required, is_db_column, is_queryable, default_value, order_index, field_config ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, 
-                        [this.entity_id, field.field_name, field.display_label, field.field_type, field.is_required, field.is_db_column, field.is_queryable, field.default_value, field.order_index, JSON.stringify(field.field_config)]
-                    );
-                }
-            
-                // Update existing
-                for (const field of fields_to_update) {
 
-                    await db.query(`UPDATE entities_structure SET display_label = ?, field_type = ?, is_required = ?, is_db_column = ?, is_queryable = ?, default_value = ?, order_index = ?, 'field_config = ? WHERE entity_id = ? AND field_name = ?`, 
-                        [field.display_label, field.field_type, field.is_required, field.is_db_column, field.is_queryable, field.default_value, field.order_index, this.entity_id, field.field_name, JSON.stringify(field.field_config)]);
-                }
-            
-                // Delete removed
-                for (const field of fields_to_delete) {
-                    if (field.is_db_column) {
-                        await db.query(`ALTER TABLE \`m_entity_${this.entity_key}\` DROP COLUMN \`${field.field_name}\``);
-                    } else {
-                        await db.query(`DELETE FROM m_entity_${this.entity_key}_meta WHERE meta_key = ?`, [field.field_name]);
-                        
-                        const json_path = `$.${field.field_name}`;
-                        await db.query(
-                            `UPDATE m_entity_${entity_key}
-                             SET meta_json = JSON_REMOVE(meta_json, '${json_path}')
-                             WHERE JSON_CONTAINS_PATH(meta_json, 'one', '${json_path}');`
-                        )
-                    }
-                    await db.query(`DELETE FROM entities_structure WHERE entity_id = ? AND field_name = ?`, [this.entity_id, field.field_name]);
-                }
+                const database_fields = await this.retrieveFields();
+
+                const fields_to_insert = this.fields.filter(
+                    newField => !database_fields.some(existing => existing.field_name === newField.field_name)
+                );
+                const fields_to_update = this.fields.filter(
+                    newField => database_fields.some(existing => existing.field_name === newField.field_name)
+                );
+                const fields_to_delete = database_fields.filter(
+                    existing => !this.fields.some(newField => newField.field_name === existing.field_name)
+                );
+
+                await this.#applyFieldChangesToDB(db, fields_to_insert, fields_to_update);
+                await this.#updateStructureTable(db, fields_to_insert, fields_to_update);
+                await this.#cleanupRemovedFields(db, fields_to_delete);
+
             } catch (err) {
                 if (err instanceof AppError) {
                     throw err;
                 }
 
-                console.log(err);
-
-                const {message, status_code} = mapMySQLError(err);
-
+                const { message, status_code } = mapMySQLError(err);
                 throw new AppError(message, status_code);
             }
-        })
+        });
     }
+
+    async #applyFieldChangesToDB(db, fields_to_insert, fields_to_update) {
+        // === INSERT NEW FIELDS (DB columns only) ===
+        for (const field of fields_to_insert) {
+            if (field.is_db_column) {
+                const column_type = fieldTypeToMySQLType[field.field_type]; 
+                const column_required = field.is_required ? 'NOT NULL' : 'NULL';
+                const default_value = field.default_value !== null
+                    ? `DEFAULT ${db.escape(field.default_value)}`
+                    : '';
+
+                await db.query(
+                    `ALTER TABLE \`m_entity_${this.entity_key}\` ADD COLUMN \`${field.field_name}\` ${column_type} ${column_required} ${default_value}`
+                );
+            }
+        }
+
+        // === FIELD UPDATES / MIGRATIONS ===
+        for (const field of fields_to_update) {
+            if (!field.is_db_column && field.old_field_location === 'db') {
+                await db.query(
+                    `INSERT INTO m_entity_${this.entity_key}_meta (${this.entity_key}_id, meta_key, meta_value)
+                    SELECT ID, ?, \`${field.field_name}\` FROM m_entity_${this.entity_key}`,
+                    [field.field_name]
+                );
+                await db.query(
+                    `ALTER TABLE \`m_entity_${this.entity_key}\` DROP COLUMN \`${field.field_name}\``
+                );
+            } else if (field.is_db_column && field.old_field_location === 'meta') {
+                const column_type = fieldTypeToMySQLType[field.field_type]; 
+                const column_required = field.is_required ? 'NOT NULL' : 'NULL';
+                const default_value = field.default_value !== null
+                    ? `DEFAULT ${db.escape(field.default_value)}`
+                    : '';
+
+                await db.query(
+                    `ALTER TABLE \`m_entity_${this.entity_key}\` ADD COLUMN \`${field.field_name}\` ${column_type} ${column_required} ${default_value}`
+                );
+                await db.query(
+                    `UPDATE m_entity_${this.entity_key} AS e
+                    JOIN m_entity_${this.entity_key}_meta AS m
+                    ON e.ID = m.${this.entity_key}_id AND m.meta_key = ?
+                    SET e.\`${field.field_name}\` = m.meta_value`,
+                    [field.field_name]
+                );
+                await db.query(
+                    `DELETE FROM m_entity_${this.entity_key}_meta WHERE meta_key = ?`,
+                    [field.field_name]
+                );
+                await db.query(
+                    `UPDATE m_entity_${this.entity_key}
+                    SET meta_json = JSON_REMOVE(meta_json, '$.${field.field_name}')
+                    WHERE JSON_CONTAINS_PATH(meta_json, 'one', '$.${field.field_name}');`
+                );
+
+            } else if (field.is_db_column && field.old_field_location === null) {
+                const column_type = fieldTypeToMySQLType[field.field_type]; 
+                const column_required = field.is_required ? 'NOT NULL' : 'NULL';
+                const default_value = field.default_value !== null
+                    ? `DEFAULT ${db.escape(field.default_value)}`
+                    : '';
+
+                await db.query(
+                    `ALTER TABLE \`m_entity_${this.entity_key}\` MODIFY COLUMN \`${field.field_name}\` ${column_type} ${column_required} ${default_value}`
+                );
+            }
+        }
+    }
+
+    async #updateStructureTable(db, fields_to_insert, fields_to_update) {
+        let results;
+
+        // === INSERT NEW STRUCTURE ENTRIES ===
+        results = await Promise.allSettled(fields_to_insert.map((field) =>
+            db.query(
+                `INSERT INTO entities_structure 
+                (entity_id, field_name, display_label, field_type, is_required, is_db_column, is_queryable, default_value, order_index, field_config) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [
+                    this.entity_id,
+                    field.field_name,
+                    field.display_label,
+                    field.field_type,
+                    field.is_required,
+                    field.is_db_column,
+                    field.is_queryable,
+                    field.default_value,
+                    field.order_index,
+                    JSON.stringify(field.field_config)
+                ]
+            )
+        ));
+        results.forEach(r => {
+            if (r.status === 'rejected') throw new ConflictError(r.reason);
+        });
+
+        // === UPDATE EXISTING STRUCTURE ENTRIES ===
+        results = await Promise.allSettled(fields_to_update.map((field) =>
+            db.query(
+                `UPDATE entities_structure 
+                SET display_label = ?, field_type = ?, is_required = ?, is_db_column = ?, is_queryable = ?, default_value = ?, order_index = ?, field_config = ?
+                WHERE entity_id = ? AND field_name = ?`,
+                [
+                    field.display_label,
+                    field.field_type,
+                    field.is_required,
+                    field.is_db_column,
+                    field.is_queryable,
+                    field.default_value,
+                    field.order_index,
+                    JSON.stringify(field.field_config),
+                    this.entity_id,
+                    field.field_name
+                ]
+            )
+        ));
+        results.forEach(r => {
+            if (r.status === 'rejected') throw new ConflictError(r.reason);
+        });
+    }
+
+    async #cleanupRemovedFields(db, fields_to_delete) {
+        for (const field of fields_to_delete) {
+            if (field.is_db_column) {
+                await db.query(
+                    `ALTER TABLE \`m_entity_${this.entity_key}\` DROP COLUMN \`${field.field_name}\``
+                );
+            } else {
+                await db.query(
+                    `DELETE FROM m_entity_${this.entity_key}_meta WHERE meta_key = ?`,
+                    [field.field_name]
+                );
+            }
+        }
+
+        // === BATCH JSON_REMOVE from meta_json ===
+        const json_paths = fields_to_delete.map(f => `'$.${f.field_name}'`).join(', ');
+        if (json_paths.length > 0) {
+            await db.query(
+                `UPDATE m_entity_${this.entity_key}
+                SET meta_json = JSON_REMOVE(meta_json, ${json_paths})
+                WHERE JSON_CONTAINS_PATH(meta_json, 'one', ${json_paths});`
+            );
+        }
+
+        // === DELETE FROM STRUCTURE TABLE ===
+        const results = await Promise.allSettled(fields_to_delete.map((field) =>
+            db.query(
+                `DELETE FROM entities_structure WHERE entity_id = ? AND field_name = ?`,
+                [this.entity_id, field.field_name]
+            )
+        ));
+        results.forEach(r => {
+            if (r.status === 'rejected') throw new ConflictError(r.reason);
+        });
+    }
+
+
 
     toJSON() {
         return {
