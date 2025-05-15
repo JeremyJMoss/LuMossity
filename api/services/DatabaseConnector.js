@@ -1,6 +1,7 @@
 const { mapMySQLError } = require('../util/helpers');
 const DatabaseConfigManager = require('./DatabaseConfigManager');
 const mysql = require('mysql2/promise');
+const {AppError} = require('../models/utility/Errors');
 
 class DatabaseConnector {
 
@@ -15,12 +16,22 @@ class DatabaseConnector {
         }
     }
 
-    static async withConnection(callback) {
+    static async withConnection(callback, includeTransactions = true) {
         let dbConnection;
         try {
             dbConnection = await this.getConnection();
-            return await callback(dbConnection);
+            if (includeTransactions) await dbConnection.beginTransaction();
+            const result = await callback(dbConnection);
+            if (includeTransactions) await dbConnection.commit()
+            return result;
         } catch (err) {
+            if (dbConnection && includeTransactions){
+                try {
+                    await dbConnection.rollback();
+                } catch (rollbackErr) {
+                    throw new AppError('Rollback failed:', rollbackErr);
+                }
+            }
             throw err;
         } finally {
             if (dbConnection) {
@@ -38,7 +49,7 @@ class DatabaseConnector {
             return await mysql.createConnection({ host, user, password });
         } catch (err) {
             const {message, status_code} = mapMySQLError(err);
-            throw new Error(message, status_code);
+            throw new AppError(message, status_code);
         }
     }
 }

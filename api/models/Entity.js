@@ -290,6 +290,119 @@ class Entity {
         })
     }
 
+    async #syncQueryableFields(db, field) {
+        if (field.old_queryable_value !== null && !field.is_db_column) {
+            if (field.old_queryable_value === true && !field.is_queryable) {
+                // Was queryable, now unqueryable → delete from meta table
+                await db.query(
+                    `DELETE FROM m_entity_${this.entity_key}_meta WHERE meta_key = ?`,
+                    [field.field_name]
+                );
+            } else if (field.old_queryable_value === false && field.is_queryable) {
+                // Was unqueryable, now queryable → copy from meta_json to meta table
+                await db.query(
+                    `INSERT INTO m_entity_${this.entity_key}_meta (${this.entity_key}_id, meta_key, meta_value)
+                    SELECT ID, ?, JSON_UNQUOTE(JSON_EXTRACT(meta_json, '$.${field.field_name}'))
+                    FROM m_entity_${this.entity_key}
+                    WHERE JSON_CONTAINS_PATH(meta_json, 'one', '$.${field.field_name}')`,
+                    [field.field_name]
+                );
+            }
+        }
+    }
+
+    async #moveMetaToColumn (db, field) {
+        // moving from meta to database column
+        const column_type = fieldTypeToMySQLType[field.field_type]; 
+        const column_required = field.is_required ? 'NOT NULL' : 'NULL';
+        const default_value = field.default_value !== null
+            ? `DEFAULT ${db.escape(field.default_value)}`
+            : '';
+
+        // add database column
+        await db.query(
+            `ALTER TABLE \`m_entity_${this.entity_key}\` ADD COLUMN \`${field.field_name}\` ${column_type} ${column_required} ${default_value}`
+        );
+
+        if (field.is_queryable){
+            // move meta values from meta table to database column
+            await db.query(
+                `UPDATE m_entity_${this.entity_key} AS e
+                JOIN m_entity_${this.entity_key}_meta AS m
+                ON e.ID = m.${this.entity_key}_id AND m.meta_key = ?
+                SET e.\`${field.field_name}\` = m.meta_value`,
+                [field.field_name]
+            );
+        } else {
+            // move meta values from meta_json to column
+            await db.query(
+                `UPDATE m_entity_${this.entity_key}
+                SET \`${field.field_name}\` = JSON_UNQUOTE(JSON_EXTRACT(meta_json, '$.${field.field_name}'))
+                WHERE JSON_CONTAINS_PATH(meta_json, 'one', '$.${field.field_name}')`
+            );
+        }
+
+        // delete entries from meta table
+        await db.query(
+            `DELETE FROM m_entity_${this.entity_key}_meta WHERE meta_key = ?`,
+            [field.field_name]
+        );
+
+        // remove meta data from meta_json
+        await db.query(
+            `UPDATE m_entity_${this.entity_key}
+            SET meta_json = JSON_REMOVE(meta_json, '$.${field.field_name}')
+            WHERE JSON_CONTAINS_PATH(meta_json, 'one', '$.${field.field_name}');`
+        );
+    }
+
+    async #moveColumnToMeta (db, field) {
+        if (field.is_queryable) { 
+            // move from db column to meta field
+            await db.query(
+                `INSERT INTO m_entity_${this.entity_key}_meta (${this.entity_key}_id, meta_key, meta_value)
+                SELECT ID, ?, \`${field.field_name}\` FROM m_entity_${this.entity_key}`,
+                [field.field_name]
+            );
+        }
+
+        // set values for meta_json
+        await db.query(
+            `UPDATE m_entity_${this.entity_key}
+            SET meta_json = JSON_SET(meta_json, '$.${field.field_name}', \`${field.field_name}\`)
+            WHERE \`${field.field_name}\` IS NOT NULL`
+        );
+
+        // drop database column
+        await db.query(
+            `ALTER TABLE \`m_entity_${this.entity_key}\` DROP COLUMN \`${field.field_name}\``
+        );
+    }
+
+    async #insertNewEntityColumn (db, field) {
+        const column_type = fieldTypeToMySQLType[field.field_type]; 
+        const column_required = field.is_required ? 'NOT NULL' : 'NULL';
+        const default_value = field.default_value !== null
+            ? `DEFAULT ${db.escape(field.default_value)}`
+            : '';
+
+        await db.query(
+            `ALTER TABLE \`m_entity_${this.entity_key}\` ADD COLUMN \`${field.field_name}\` ${column_type} ${column_required} ${default_value}`
+        );
+    }
+
+    async #modifyColumnStructure(db, field) {
+        const column_type = fieldTypeToMySQLType[field.field_type]; 
+        const column_required = field.is_required ? 'NOT NULL' : 'NULL';
+        const default_value = field.default_value !== null
+            ? `DEFAULT ${db.escape(field.default_value)}`
+            : '';
+
+        await db.query(
+            `ALTER TABLE \`m_entity_${this.entity_key}\` MODIFY COLUMN \`${field.field_name}\` ${column_type} ${column_required} ${default_value}`
+        );
+    }
+
     async sync() {
         await DatabaseConnector.withConnection(async (db) => {
             try {
@@ -330,66 +443,26 @@ class Entity {
         // === INSERT NEW FIELDS (DB columns only) ===
         for (const field of fields_to_insert) {
             if (field.is_db_column) {
-                const column_type = fieldTypeToMySQLType[field.field_type]; 
-                const column_required = field.is_required ? 'NOT NULL' : 'NULL';
-                const default_value = field.default_value !== null
-                    ? `DEFAULT ${db.escape(field.default_value)}`
-                    : '';
-
-                await db.query(
-                    `ALTER TABLE \`m_entity_${this.entity_key}\` ADD COLUMN \`${field.field_name}\` ${column_type} ${column_required} ${default_value}`
-                );
+                await this.#insertNewEntityColumn(db, field);
             }
         }
 
         // === FIELD UPDATES / MIGRATIONS ===
         for (const field of fields_to_update) {
-            if (!field.is_db_column && field.old_field_location === 'db') {
-                await db.query(
-                    `INSERT INTO m_entity_${this.entity_key}_meta (${this.entity_key}_id, meta_key, meta_value)
-                    SELECT ID, ?, \`${field.field_name}\` FROM m_entity_${this.entity_key}`,
-                    [field.field_name]
-                );
-                await db.query(
-                    `ALTER TABLE \`m_entity_${this.entity_key}\` DROP COLUMN \`${field.field_name}\``
-                );
-            } else if (field.is_db_column && field.old_field_location === 'meta') {
-                const column_type = fieldTypeToMySQLType[field.field_type]; 
-                const column_required = field.is_required ? 'NOT NULL' : 'NULL';
-                const default_value = field.default_value !== null
-                    ? `DEFAULT ${db.escape(field.default_value)}`
-                    : '';
+            await this.#syncQueryableFields(db, field);
 
-                await db.query(
-                    `ALTER TABLE \`m_entity_${this.entity_key}\` ADD COLUMN \`${field.field_name}\` ${column_type} ${column_required} ${default_value}`
-                );
-                await db.query(
-                    `UPDATE m_entity_${this.entity_key} AS e
-                    JOIN m_entity_${this.entity_key}_meta AS m
-                    ON e.ID = m.${this.entity_key}_id AND m.meta_key = ?
-                    SET e.\`${field.field_name}\` = m.meta_value`,
-                    [field.field_name]
-                );
-                await db.query(
-                    `DELETE FROM m_entity_${this.entity_key}_meta WHERE meta_key = ?`,
-                    [field.field_name]
-                );
-                await db.query(
-                    `UPDATE m_entity_${this.entity_key}
-                    SET meta_json = JSON_REMOVE(meta_json, '$.${field.field_name}')
-                    WHERE JSON_CONTAINS_PATH(meta_json, 'one', '$.${field.field_name}');`
-                );
+            if (!field.is_db_column && field.old_field_location === 'db') {
+
+                await this.#moveColumnToMeta(db, field);
+
+            } else if (field.is_db_column && field.old_field_location === 'meta') {
+
+                await this.#moveMetaToColumn(db, field);
 
             } else if (field.is_db_column && field.old_field_location === null) {
-                const column_type = fieldTypeToMySQLType[field.field_type]; 
-                const column_required = field.is_required ? 'NOT NULL' : 'NULL';
-                const default_value = field.default_value !== null
-                    ? `DEFAULT ${db.escape(field.default_value)}`
-                    : '';
 
-                await db.query(
-                    `ALTER TABLE \`m_entity_${this.entity_key}\` MODIFY COLUMN \`${field.field_name}\` ${column_type} ${column_required} ${default_value}`
-                );
+                await this.#modifyColumnStructure(db, field)
+
             }
         }
     }

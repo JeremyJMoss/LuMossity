@@ -16,6 +16,7 @@ class Field {
         this.order_index = config.order_index;
         this.field_config = config.field_config;
         this.old_field_location = null;
+        this.old_queryable_value = null;
     }
 
     static async create(config) {
@@ -40,13 +41,13 @@ class Field {
 
         if (!this.is_db_column) {
             if (changed('field_type')) this.field_type = config.field_type;
-            if (changed('is_required')) this.is_required = config.is_required;
+            if (changed('is_required')) this.is_required = !!config.is_required;
             if (changed('default_value')) this.default_value = config.default_value;
         } else {
             if (changed('is_db_column') && !config.is_db_column) {
                 this.old_field_location = 'db';
                 if (changed('field_type')) this.field_type = config.field_type;
-                if (changed('is_required')) this.is_required = config.is_required;
+                if (changed('is_required')) this.is_required = !!config.is_required;
                 if (changed('default_value')) this.default_value = config.default_value;
             } else {
                 // Type change
@@ -60,14 +61,14 @@ class Field {
                 }
 
                 // Required flag change
-                if (changed('is_required') && config.is_required !== this.is_required) {
+                if (changed('is_required') && !!config.is_required !== this.is_required) {
                     if (config.is_required) {
                         const hasNoNulls = await this.#checkColumnForNull(this.field_name, entity_key);
                         if (!hasNoNulls) {
                             throw new ConflictError(`Cannot convert column "${this.field_name}" to a required field: some values are set to null.`);
                         }
                     }
-                    this.is_required = config.is_required;
+                    this.is_required = !!config.is_required;
                 }
 
                 // Default value validation
@@ -88,7 +89,12 @@ class Field {
         }
 
         // Shared properties
-        if (changed('is_queryable')) this.is_queryable = config.is_queryable;
+        if (changed('is_queryable')) {
+            if (this.is_queryable !== !!config.is_queryable) {
+                this.old_queryable_value = this.is_queryable;
+                this.is_queryable = !!config.is_queryable;
+            }
+        }
         if (changed('display_label')) this.display_label = config.display_label;
         if (changed('order_index')) this.order_index = config.order_index;
 
@@ -102,12 +108,12 @@ class Field {
 
     static async checkFieldConfig(config, field_type) {
         try {
-            return await DatabaseConnector.withConnection( async (db) => {
+            const field_schema = await DatabaseConnector.withConnection( async (db) => {
                 const [field_config] = await db.query(`SELECT config FROM field_types WHERE name = ?`, field_type);
-                const field_schema = field_config[0].config;
-                
-                return validateFieldConfig(field_schema, config);
+                return field_config[0].config;
             })
+
+            return validateFieldConfig(field_schema, config);
         } catch (err) {
             if (err instanceof AppError){
                 throw err;
@@ -149,13 +155,13 @@ class Field {
     }
 
     async #isDefaultCompatible(default_value, field_type) {
-    const mysql_field_type = fieldTypeToMySQLType[field_type];
+        const mysql_field_type = fieldTypeToMySQLType[field_type];
 
-    return await DatabaseConnector.withConnection(async db => {
-        const [rows] = await db.query(`SELECT CAST(? AS ${mysql_field_type}) AS result`, [default_value]);
-        return rows[0].result !== null;
-    })
-}
+        return await DatabaseConnector.withConnection(async db => {
+            const [rows] = await db.query(`SELECT CAST(? AS ${mysql_field_type}) AS result`, [default_value]);
+            return rows[0].result !== null;
+        })
+    }
 
 
     toJSON() {
