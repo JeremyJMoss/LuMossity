@@ -95,3 +95,20 @@ module.exports.loginUser = async (req, res, next) => {
         next(err);
     }
 }
+
+module.exports.getAllUsers = async (req, res, next) => {
+    const {page = null, limit = null} = req.query;
+
+    console.log(page, limit);
+
+    try {
+        const users = await User.getAllUsers(page, limit);
+
+        return res.status(200).json({
+            success: true,
+            users
+        })
+    } catch (err) {
+        next(err);
+    }
+}

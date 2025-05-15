@@ -73,6 +73,52 @@ class User {
         }
     }
 
+    static async getAllUsers( page = null, limit = null ) {
+        let limit_sql = '';
+        if (limit !== null) {
+            limit_sql = ` LIMIT ${limit}`;
+        }
+
+        let page_sql = '';
+        if (page !== null && limit !== null) {
+            if (page < 1) {
+                page = 1;
+            }
+            const offset = (page - 1) * limit;
+            page_sql = ` OFFSET ${offset}`;
+        }
+
+        return await DatabaseConnector.withConnection( async db => {
+            try {
+                const [users] = await db.query(
+                    `SELECT * FROM users${limit_sql}${page_sql};`
+                );
+
+                if (users.length === 0) return [];
+
+                const user_objs = users.map((user) => new User (
+                        user.first_name,
+                        user.last_name,
+                        user.email,
+                        user.password,
+                        user.role,
+                        user.ID
+                ));
+
+                return user_objs;
+
+            } catch (err) {
+                if (err instanceof AppError){
+                    throw err
+                }
+
+                const {message, status_code} = mapMySQLError(err);
+                
+                throw new AppError(message, status_code);
+            }
+        });
+    }
+
     static async #getExistingUserData( { email = '', id = null } ){
 
         return await DatabaseConnector.withConnection(async (db) => {
