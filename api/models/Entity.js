@@ -490,6 +490,7 @@ class Entity {
                 ]
             )
         ));
+
         results.forEach(r => {
             if (r.status === 'rejected') throw new ConflictError(r.reason);
         });
@@ -514,6 +515,7 @@ class Entity {
                 ]
             )
         ));
+        
         results.forEach(r => {
             if (r.status === 'rejected') throw new ConflictError(r.reason);
         });
