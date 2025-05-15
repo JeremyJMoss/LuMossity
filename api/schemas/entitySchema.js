@@ -13,8 +13,7 @@ const updateEntityFieldsSchema = z.object({
     fields: z.array(z.object({
         field_name: z.string(),
         field_type: z.string(),
-        field_config: z.object(),
-        display_label: z.string().optional(),
+        field_config: z.object({}).passthrough(),
         is_db_column: z.boolean().optional(),
         is_required: z.boolean().optional(),
         is_queryable: z.boolean().optional(),
@@ -32,7 +31,6 @@ const createEntityFieldsSchema = z.object({
         field_name: z.string(),
         field_type: z.string(),
         field_config: z.object({}).passthrough(),
-        display_label: z.string().optional(),
         is_db_column: z.boolean().optional(),
         is_required: z.boolean().optional(),
         is_queryable: z.boolean().optional(),

@@ -498,12 +498,13 @@
                 }
             },
             "required": [
-                "label"
+                "label", "displayType"
             ],
             "if": {
+                "required": ["entity"],
                 "properties": {
                     "entity": {
-                        "const": true
+                    "const": true
                     }
                 }
             },
@@ -512,6 +513,9 @@
                     "entityType",
                     "entityOptionTitle"
                 ]
+            },
+            "else": {
+                   "required": ["options"]
             },
             "additionalProperties": false
         }

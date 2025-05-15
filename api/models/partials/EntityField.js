@@ -2,12 +2,11 @@ const DatabaseConnector = require("../../services/DatabaseConnector");
 const { validateFieldConfig } = require( "../../util/validation");
 const { mapMySQLError } = require( "../../util/helpers");
 const { AppError, ConflictError } = require( "../utility/Errors");
-const { fieldTypeToMySQLType } = require("../../util/constants");
+const { fieldTypeToMySQLType, fieldTypeToMySQLCastType } = require("../../util/constants");
 
 class Field {
     constructor(config) {
         this.field_name = config.field_name;
-        this.display_label = config.display_label || null;
         this.field_type = config.field_type;
         this.is_db_column = !!config.is_db_column;
         this.is_queryable = !!config.is_queryable;
@@ -15,8 +14,8 @@ class Field {
         this.default_value = config.default_value || null;
         this.order_index = config.order_index;
         this.field_config = config.field_config;
-        this.old_field_location = null;
-        this.old_queryable_value = null;
+        this.old_field_location = config.old_field_location || null;
+        this.old_queryable_value = config.old_queryable_value || null;
     }
 
     static async create(config) {
@@ -45,7 +44,6 @@ class Field {
             if (changed('default_value')) this.default_value = config.default_value;
         } else {
             if (changed('is_db_column') && !config.is_db_column) {
-                this.old_field_location = 'db';
                 if (changed('field_type')) this.field_type = config.field_type;
                 if (changed('is_required')) this.is_required = !!config.is_required;
                 if (changed('default_value')) this.default_value = config.default_value;
@@ -95,7 +93,6 @@ class Field {
                 this.is_queryable = !!config.is_queryable;
             }
         }
-        if (changed('display_label')) this.display_label = config.display_label;
         if (changed('order_index')) this.order_index = config.order_index;
 
         // Field config
@@ -126,19 +123,30 @@ class Field {
     }
 
     async checkTypeConversionPossible(column_name, new_field_type, entity_key) {
-        const mysql_field_type = fieldTypeToMySQLType[new_field_type];
+        const mysql_field_type = fieldTypeToMySQLCastType[new_field_type];
+        try {
 
-        return await DatabaseConnector.withConnection(async db => {
-            const [rows] = await db.query(
-                `SELECT \`${column_name}\` 
-                FROM \`m_entity_${entity_key}\`
-                WHERE CAST(\`${column_name}\` AS ${mysql_field_type}) IS NULL 
-                AND \`${column_name}\` IS NOT NULL;
-                `
-            );
+            return await DatabaseConnector.withConnection(async db => {
+                const [rows] = await db.query(
+                    `SELECT ${column_name}\ 
+                    FROM \`m_entity_${entity_key}\`
+                    WHERE CAST(${column_name} AS ${mysql_field_type}) IS NULL 
+                    AND ${column_name} IS NOT NULL;
+                    `
+                );
 
-            return rows.length === 0;
-        });
+                return rows.length === 0;
+            });
+        } catch (err) {
+            console.log(err);
+            if (err instanceof AppError){
+                throw err;
+            }
+
+            const {message, status_code} = mapMySQLError(err);
+            
+            throw new AppError(message, status_code);
+        }
     }
 
     async #checkColumnForNull(column_name, entity_key) {
@@ -155,7 +163,7 @@ class Field {
     }
 
     async #isDefaultCompatible(default_value, field_type) {
-        const mysql_field_type = fieldTypeToMySQLType[field_type];
+        const mysql_field_type = fieldTypeToMySQLCastType[field_type];
 
         return await DatabaseConnector.withConnection(async db => {
             const [rows] = await db.query(`SELECT CAST(? AS ${mysql_field_type}) AS result`, [default_value]);
@@ -164,18 +172,24 @@ class Field {
     }
 
 
-    toJSON() {
-        return {
+    toJSON( withOldValues = false ) {
+        const return_value = {
             field_name: this.field_name,
-            display_label: this.display_label,
             field_type: this.field_type,
             is_db_column: this.is_db_column,
             is_queryable: this.is_queryable,
             is_required: this.is_required,
             default_value: this.default_value,
             order_index: this.order_index,
-            field_config: this.field_config
+            field_config: this.field_config,
         };
+
+        if (withOldValues) {
+            return_value.old_field_location = this.old_field_location;
+            return_value.old_queryable_value = this.old_queryable_value;
+        }
+
+        return return_value;
     }
 }
 

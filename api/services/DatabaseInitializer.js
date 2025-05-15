@@ -47,7 +47,6 @@ class DatabaseInitializer {
                 ID INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
                 entity_id INT NOT NULL,
                 field_name VARCHAR(100) NOT NULL,
-                display_label VARCHAR(255) DEFAULT NULL,
                 field_type VARCHAR(50) NOT NULL,
                 field_config JSON DEFAULT NULL,
                 is_db_column BOOL NOT NULL DEFAULT FALSE,

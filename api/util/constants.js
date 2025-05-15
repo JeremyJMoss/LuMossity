@@ -27,3 +27,24 @@ module.exports.fieldTypeToMySQLType = {
   file: 'JSON',
   group: 'JSON'
 };
+
+module.exports.fieldTypeToMySQLCastType = {
+  text: 'CHAR',
+  textarea: 'CHAR',
+  email: 'CHAR',
+  integer: 'SIGNED',
+  float: 'DECIMAL(65,30)',
+  tel: 'CHAR',
+  password: 'CHAR',
+  date: 'DATE',
+  time: 'TIME',
+  datetime: 'DATETIME',
+  checkbox: 'UNSIGNED',
+  checkboxes: 'JSON',
+  radio: 'CHAR',
+  switch: 'UNSIGNED',
+  select: 'JSON',
+  image: 'JSON',
+  file: 'JSON',
+  group: 'JSON'
+};

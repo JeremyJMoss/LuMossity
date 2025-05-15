@@ -65,8 +65,7 @@ describe('checkTypeConversionPossible', () => {
 
     beforeEach(() => {
         field = new Field({
-            field_name: 'test', 
-            display_label: 'test', 
+            field_name: 'test',
             field_type: 'text', 
             is_db_column: true, 
             is_queryable: true, 

@@ -219,7 +219,7 @@ class Entity {
             const field_to_update = this.fields.find(field => field.field_name == new_field_info.field_name);
             await field_to_update.update(new_field_info, this.entity_key);
             this.removeField(field_to_update.field_name);
-            this.addField(field_to_update.toJSON());
+            this.addField(field_to_update.toJSON(true));
         } catch (err) {
             throw err;
         }
@@ -433,6 +433,8 @@ class Entity {
                     throw err;
                 }
 
+                console.log(err);
+
                 const { message, status_code } = mapMySQLError(err);
                 throw new AppError(message, status_code);
             }
@@ -474,12 +476,11 @@ class Entity {
         results = await Promise.allSettled(fields_to_insert.map((field) =>
             db.query(
                 `INSERT INTO entities_structure 
-                (entity_id, field_name, display_label, field_type, is_required, is_db_column, is_queryable, default_value, order_index, field_config) 
+                (entity_id, field_name, field_type, is_required, is_db_column, is_queryable, default_value, order_index, field_config) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                 [
                     this.entity_id,
                     field.field_name,
-                    field.display_label,
                     field.field_type,
                     field.is_required,
                     field.is_db_column,
@@ -499,10 +500,9 @@ class Entity {
         results = await Promise.allSettled(fields_to_update.map((field) =>
             db.query(
                 `UPDATE entities_structure 
-                SET display_label = ?, field_type = ?, is_required = ?, is_db_column = ?, is_queryable = ?, default_value = ?, order_index = ?, field_config = ?
+                SET field_type = ?, is_required = ?, is_db_column = ?, is_queryable = ?, default_value = ?, order_index = ?, field_config = ?
                 WHERE entity_id = ? AND field_name = ?`,
                 [
-                    field.display_label,
                     field.field_type,
                     field.is_required,
                     field.is_db_column,
@@ -515,7 +515,7 @@ class Entity {
                 ]
             )
         ));
-        
+
         results.forEach(r => {
             if (r.status === 'rejected') throw new ConflictError(r.reason);
         });
@@ -564,7 +564,7 @@ class Entity {
             id: this.entity_id,
             key: this.entity_key,
             name: this.name,
-            fields: this.fields
+            fields: this.fields.map(field => field.toJSON())
         };
     }
 }
