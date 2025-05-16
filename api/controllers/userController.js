@@ -99,8 +99,6 @@ module.exports.loginUser = async (req, res, next) => {
 module.exports.getAllUsers = async (req, res, next) => {
     const {page = null, limit = null} = req.query;
 
-    console.log(page, limit);
-
     try {
         const users = await User.getAllUsers(page, limit);
 

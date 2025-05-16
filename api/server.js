@@ -1,6 +1,7 @@
 const express = require("express");
 const bodyParser = require('body-parser');
 const cors = require("cors");
+const logger = require("./models/utility/Logger");
 const setupRouter = require('./routes/setup');
 const entityRouter = require('./routes/entity');
 const userRouter = require('./routes/user');
@@ -26,5 +27,5 @@ server.use(errorHandler);
 
 server.listen(4000, () => {
     extension_service.runEvent('core.server.after.start');
-    console.log("server listening on port 4000");
+    logger.info("server started at http://localhost:4000");
 })

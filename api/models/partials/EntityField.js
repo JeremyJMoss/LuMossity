@@ -19,6 +19,14 @@ class Field {
         this.old_queryable_value = config.old_queryable_value || null;
     }
 
+    /**
+     * Factory function for creating fields
+     * @async
+     * @function
+     * @param {Object} config - configuration for setting up new field 
+     * @returns {Promise<Field>} - new field
+     * @throws {ValidationError|AppError} - error if validation of schema fails
+     */
     static async create(config) {
         if (Object.hasOwn(config, 'field_config') && Object.hasOwn(config, 'field_type')) {
             try {
@@ -30,6 +38,14 @@ class Field {
         }
     }
 
+    /**
+     * Updates database fields and makes sure all updates are valid before sync with the entity
+     * @async
+     * @function
+     * @param {Object} config - configuration of the new version of the field
+     * @param {string} entity_key - key relating to the entity that this field belong to
+     * @throws {ValidationError|ConflictError|AppError}
+     */
     async update(config, entity_key) {
         const changed = (key) => Object.hasOwn(config, key);
 
@@ -51,10 +67,20 @@ class Field {
             } else {
                 // Type change
                 if (changed('field_type') && config.field_type !== this.field_type) {
-                    const canConvert = await this.checkTypeConversionPossible(this.field_name, config.field_type, entity_key);
-                    if (!canConvert) {
-                        const mysql_type = fieldTypeToMySQLType[config.field_type];
-                        throw new ConflictError(`Cannot convert column "${this.field_name}" to type "${mysql_type}": some values are incompatible with this type.`);
+                    try {
+                        const canConvert = await this.checkTypeConversionPossible(this.field_name, config.field_type, entity_key);
+                        if (!canConvert) {
+                            const mysql_type = fieldTypeToMySQLType[config.field_type];
+                            throw new ConflictError(`Cannot convert column "${this.field_name}" to type "${mysql_type}": some values are incompatible with this type.`);
+                        }
+                    } catch (err) {
+                        if (err instanceof AppError){
+                            throw err;
+                        }
+            
+                        const {message, status_code} = mapMySQLError(err);
+                        
+                        throw new AppError(message, status_code);
                     }
                     this.field_type = config.field_type;
                 }
@@ -62,9 +88,19 @@ class Field {
                 // Required flag change
                 if (changed('is_required') && !!config.is_required !== this.is_required) {
                     if (config.is_required) {
-                        const hasNoNulls = await this.#checkColumnForNull(this.field_name, entity_key);
-                        if (!hasNoNulls) {
-                            throw new ConflictError(`Cannot convert column "${this.field_name}" to a required field: some values are set to null.`);
+                        try {
+                            const hasNoNulls = await this.#checkColumnForNull(this.field_name, entity_key);
+                            if (!hasNoNulls) {
+                                throw new ConflictError(`Cannot convert column "${this.field_name}" to a required field: some values are set to null.`);
+                            }
+                        } catch (err) {
+                            if (err instanceof AppError){
+                                throw err;
+                            }
+                
+                            const {message, status_code} = mapMySQLError(err);
+                            
+                            throw new AppError(message, status_code);
                         }
                     }
                     this.is_required = !!config.is_required;
@@ -75,10 +111,20 @@ class Field {
                     const targetType = changed('field_type') ? config.field_type : this.field_type;
 
                     if (config.default_value !== null) {
-                        const isValid = await this.#isDefaultCompatible(config.default_value, targetType);
-                        if (!isValid) {
-                            const mysql_type = fieldTypeToMySQLType[targetType];
-                            throw new ConflictError(`Cannot set default for "${this.field_name}": value is not compatible with type "${mysql_type}".`);
+                        try {
+                            const isValid = await this.#isDefaultCompatible(config.default_value, targetType);
+                            if (!isValid) {
+                                const mysql_type = fieldTypeToMySQLType[targetType];
+                                throw new ConflictError(`Cannot set default for "${this.field_name}": value is not compatible with type "${mysql_type}".`);
+                            }
+                        } catch (err) {
+                            if (err instanceof AppError){
+                                throw err;
+                            }
+                
+                            const {message, status_code} = mapMySQLError(err);
+                            
+                            throw new AppError(message, status_code);
                         }
                     }
                     
@@ -98,12 +144,30 @@ class Field {
 
         // Field config
         if (changed('field_config')) {
-            await Field.checkFieldConfig(config.field_config, this.field_type);
+            try {
+                await Field.checkFieldConfig(config.field_config, this.field_type);
+            } catch (err) {
+                if (err instanceof AppError){
+                    throw err;
+                }
+
+                const {message, status_code} = mapMySQLError(err);
+                
+                throw new AppError(message, status_code);
+            }
             this.field_config = config.field_config;
         }
     }
 
-
+    /**
+     * checks field schema matches field type
+     * @async
+     * @function
+     * @param {Object} config - configuration for field type 
+     * @param {*} field_type - field_type for schema check to see if field config is valid
+     * @returns {Promise<boolean>} whether field config matches schema for field type
+     * @throws {ValidationError|AppError} - throws validation error if validation of schema failed. Throws App Error if sql actions have failed. 
+     */
     static async checkFieldConfig(config, field_type) {
         try {
             const field_schema = await DatabaseConnector.withConnection( async (db) => {
@@ -123,6 +187,11 @@ class Field {
         }
     }
 
+    /**
+     * Gets query string to be used to check for type cooercion 
+     * @param {{table: string, column: string, source_type: string, target_type: string}} config - the configuration for the query
+     * @returns {string|null} the query string for that type cooercion check or null if type cooercion not necessary
+     */
     #getValidationQuery ( { table, column, source_type, target_type } ) {
         source_type = source_type.toLowerCase();
         target_type = target_type.toLowerCase();
@@ -168,6 +237,16 @@ class Field {
         return null;
     }
 
+    /**
+     * Checks to see if current type of column can be changed to new type passed in
+     * @async
+     * @function
+     * @param {string} column_name - column that must be checked for type cooercion
+     * @param {string} new_field_type - field type to check if column can be changed to
+     * @param {string} entity_key - entity key for table in question 
+     * @returns {Promise<boolean>} whether type cooercion is possible
+     * @throws {ConflictError|AppError} - if database query fails or other mysql error
+     */
     async checkTypeConversionPossible(column_name, new_field_type, entity_key) {
         const mysql_field_type = fieldTypeToMySQLType[new_field_type];
         const table = `m_entity_${entity_key}`;
@@ -208,7 +287,6 @@ class Field {
 
 
             } catch (err) {
-                console.log(err);
                 if (err instanceof AppError){
                     throw err;
                 }
@@ -220,16 +298,34 @@ class Field {
         });
     }
 
+    /**
+     * Checks if column has any null values
+     * @param {string} column_name - column to check
+     * @param {string} entity_key - entity table to check
+     * @returns {Promise<boolean>} if column has null values or not
+     * @throws {AppError} error if mysql query fails
+     */
     async #checkColumnForNull(column_name, entity_key) {
         return await DatabaseConnector.withConnection(async db => {
-            const [rows] = await db.query(
-                `SELECT *
-                FROM \`m_entity_${entity_key}\`
-                WHERE \`${column_name}\` IS NULL;
-                `
-            );
+             try {
+                const [rows] = await db.query(
+                    `SELECT *
+                    FROM \`m_entity_${entity_key}\`
+                    WHERE \`${column_name}\` IS NULL;
+                    `
+                );
 
-            return rows.length !== 0;
+                return rows.length !== 0;
+
+            } catch (err) {
+                if (err instanceof AppError){
+                    throw err;
+                }
+    
+                const {message, status_code} = mapMySQLError(err);
+                
+                throw new AppError(message, status_code);
+            }
         });
     }
 

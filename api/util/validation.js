@@ -2,7 +2,6 @@ const Ajv = require('ajv');
 const ajv = new Ajv({allErrors: true, strictTypes: true});
 const { ValidationError } = require('../models/utility/Errors');
 
-
 module.exports.validateBodySchema = ( schema, req_body = {} ) => {
     const parsed = schema.safeParse(req_body);
     if ( !parsed.success) {
@@ -24,6 +23,7 @@ module.exports.validateFieldConfig = (fieldSchema, config) => {
   if (!isValid) {
     throw new ValidationError('Invalid field config', formatAjvErrors(validate.errors));
   }
+  
   return true;
 }
 

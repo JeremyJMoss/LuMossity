@@ -184,7 +184,6 @@ class DatabaseInitializer {
             )`);
 
         } catch (err) {
-            console.log(err);
             const {message, status_code} = mapMySQLError(err);
             DatabaseConfigManager.removeConfig();
             throw new Error(message, status_code);

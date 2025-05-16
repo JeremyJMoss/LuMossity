@@ -429,11 +429,10 @@ class Entity {
                 await this.#cleanupRemovedFields(db, fields_to_delete);
 
             } catch (err) {
+
                 if (err instanceof AppError) {
                     throw err;
                 }
-
-                console.log(err);
 
                 const { message, status_code } = mapMySQLError(err);
                 throw new AppError(message, status_code);
@@ -477,7 +476,7 @@ class Entity {
             db.query(
                 `INSERT INTO entities_structure 
                 (entity_id, field_name, field_type, is_required, is_db_column, is_queryable, default_value, order_index, field_config) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                 [
                     this.entity_id,
                     field.field_name,
