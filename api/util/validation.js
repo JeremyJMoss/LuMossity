@@ -1,5 +1,5 @@
 const Ajv = require('ajv');
-const ajv = new Ajv({allErrors: true, coerceTypes: false, strict: true, strictTypes: true});
+const ajv = new Ajv({allErrors: true, strictTypes: true});
 const { ValidationError } = require('../models/utility/Errors');
 
 
