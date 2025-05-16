@@ -1,5 +1,5 @@
 const Ajv = require('ajv');
-const ajv = new Ajv();
+const ajv = new Ajv({allErrors: true, coerceTypes: false, strict: true, strictTypes: true});
 const { ValidationError } = require('../models/utility/Errors');
 
 
@@ -22,7 +22,24 @@ module.exports.validateFieldConfig = (fieldSchema, config) => {
   const isValid = validate(config);
 
   if (!isValid) {
-    throw new ValidationError('Invalid field config', [ajv.errorsText(validate.errors)]);
+    throw new ValidationError('Invalid field config', formatAjvErrors(validate.errors));
   }
   return true;
+}
+
+function formatAjvErrors(errors) {
+  return errors.map(err => {
+    if (err.keyword === 'required') {
+      const field = err.params.missingProperty.replace('.', '');
+      return `The field '${field}' is required.`;
+    } else if (err.keyword === 'type' && err.instancePath ) {
+      return `The field '${err.instancePath.slice(1)}' should be of type '${err.params.type}'.`;
+    } else if (err.keyword === 'type' && err.dataPath ) {
+      return `The field '${err.dataPath.slice(1)}' should be of type '${err.params.type}'.`;
+    } else if (err.keyword === 'if') {
+      return null;
+    } else {
+      return `${err.instancePath} ${err.message}`;
+    }
+  }).filter(err => err !== null);
 }
