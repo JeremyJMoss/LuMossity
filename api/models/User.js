@@ -1,3 +1,7 @@
+// ==================================================
+// =============== Module Dependencies ==============
+// ==================================================
+
 const AuthService = require("../services/AuthService");
 const DatabaseConnector = require("../services/DatabaseConnector");
 const { maxFailedLoginAttempts, lockoutBaseTime } = require("../util/constants");
@@ -5,6 +9,10 @@ const { mapMySQLError } = require("../util/helpers");
 const { AuthenticationError, AppError, ConflictError } = require("./utility/Errors");
 const logger = require ("./utility/Logger");
 
+
+// ==================================================
+// ================= User Class =====================
+// ==================================================
 class User {
     // ==================================================
     // =============== Class Initialization =============
@@ -65,7 +73,7 @@ class User {
         return await DatabaseConnector.withConnection(async (db) => {
             try {
                 const [rows] = await db.query(
-                    `SELECT failed_logins FROM users WHERE ID = ? LIMIT 1`
+                    `SELECT failed_logins FROM users WHERE ID = ? LIMIT 1`,
                     [this.user_id]
                 )
     
@@ -191,7 +199,7 @@ class User {
                 if ( failed_logins >= maxFailedLoginAttempts ) {
                     await this.setLockout(failed_logins);
                 }
-                await this.setFailedLogins(++failed_logins);
+                await this.setFailedLogins(failed_logins+1);
                 throw new AuthenticationError("Email or password was invalid");
             }
 
