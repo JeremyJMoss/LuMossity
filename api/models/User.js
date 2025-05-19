@@ -36,6 +36,18 @@ class User {
     // ==================================================
     // =========== Public Getters and Setters ===========
     // ==================================================
+
+    get hashed_password() {
+        return this.#hashed_password
+    }
+
+    set hashed_password(hashed_password) {
+        this.#hashed_password = hashed_password;
+    }
+
+    get user_id() {
+        return this.#user_id;
+    }
     /**
      * Gets the role id for the role name given.
      * @async
@@ -466,18 +478,21 @@ class User {
                 return null;
             }
 
+            const user = existing_user_data.toJSON();
+            user.hashed_password = existing_user_data.hashed_password;
+
             logger.debug(`User retrieved by ${method}: ${value}`);
 
-            const user = new User( 
-                existing_user_data.first_name, 
-                existing_user_data.last_name, 
-                existing_user_data.email, 
-                existing_user_data.hashed_password, 
-                existing_user_data.role, 
-                existing_user_data.user_id 
+            const existing_user = new User( 
+                user.first_name, 
+                user.last_name, 
+                user.email, 
+                user.hashed_password, 
+                user.role, 
+                user.id
             );
 
-            return user;
+            return existing_user;
 
 
         } catch (err) {
@@ -485,6 +500,41 @@ class User {
         }
     }
 
+    static async deleteUser( user_id ) {
+        logger.info(`Attempting to delete user with id: ${user_id}`);
+        const existing_user_data = await User.#getExistingUserData( { [method]: value } );
+
+        if ( !existing_user_data ) {
+            logger.debug(`User unable to be deleted no user with user id: ${user_id}`);
+            throw new NotFoundError('Cannot delete user as user with that ID does not exist');
+        }
+
+        if (existing_user_data.user_id == 1) {
+            logger.warn('Initial user unable to be deleted.');
+            throw new ConflictError('Unable to delete initial user.');
+        }
+
+        await DatabaseConnector.withConnection(async (db) => {
+            try {
+                db.execute('DELETE FROM users WHERE ID = ?', [user_id]);
+            } catch (err) {
+                logger.error(err, {
+                    class: 'User',
+                    method: 'deleteUser'
+                })
+                
+                const {message, status_code} = mapMySQLError(err);
+                
+                throw new AppError(message, status_code);
+            }
+        })
+
+        logger.debug(`User with id: ${user_id} has been deleted.`);
+    }
+
+    // ==================================================
+    // ============= Private Static Methods =============
+    // ==================================================
     /**
      * Gets the data for a user based on identifier passed in.
      * @async
@@ -512,6 +562,7 @@ class User {
 
             try {
                 if ( !query_var ){
+                    logger.debug("No query varaible set to gather user by.")
                     throw new AppError('No query variable set to retrieve user', 500);
                 }
             

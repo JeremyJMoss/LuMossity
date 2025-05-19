@@ -87,6 +87,23 @@ module.exports.createUser = async (req, res, next) => {
 }
 
 // ==================================================
+// ===================== Delete =====================
+// ==================================================
+module.exports.deleteUser = async (req, res, next) => {
+    const {user_id} = req.params;
+
+    try {
+        await User.deleteUser(user_id);
+        res.status(204).json({
+            success: true;
+        });
+    } catch (err) {
+        next(err);
+    }
+}
+
+
+// ==================================================
 // ================= Authentication =================
 // ==================================================
 module.exports.loginUser = async (req, res, next) => {
