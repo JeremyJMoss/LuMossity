@@ -2,13 +2,17 @@ const DatabaseConfigManager = require('./DatabaseConfigManager');
 const { isValidDatabaseName, mapMySQLError } = require('../util/helpers');
 const { presetsPath, typeConfigPath } = require('../util/constants');
 const { AppError, ConflictError } = require('../models/utility/Errors');
-const fs = require("fs");
+const fs = require('fs');
 
 class DatabaseInitializer {
     /**
-     * Setup Database and save config in json file 
-     * @param {mysql.Connection} hostConnection 
-     * @param {Object} config 
+     * Setup Database and save config in json file
+     * @static
+     * @async
+     * @method
+     * @param {mysql.Connection} hostConnection - Host connection to use to create the database.
+     * @param {Object} config - Configuration for the new database
+     * @throws {AppError} If mysql connection or query fails
      */
     static async createDatabase(hostConnection, config) {
         try {
@@ -30,12 +34,17 @@ class DatabaseInitializer {
     }
 
     /**
-     * setup required tables structure
-     * @param {mysql.Connection} dbConnection 
+     * Setup required tables structure
+     * @static
+     * @async
+     * @method
+     * @param {mysql.Connection} dbConnection - Connection to the mysql database.
+     * @throws {AppError} If a mysql query fails during transaction.
      */
     static async setupTables(dbConnection) {
 
         try {
+            await dbConnection.beginTransaction();
 
             await dbConnection.execute(`CREATE TABLE IF NOT EXISTS entities (
                 ID INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
@@ -183,7 +192,14 @@ class DatabaseInitializer {
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             )`);
 
+            await dbConnection.commit()
+
         } catch (err) {
+            try {
+                await dbConnection.rollback();
+            } catch (rollbackErr) {
+                throw new AppError('Rollback failed:', rollbackErr);
+            }
             const {message, status_code} = mapMySQLError(err);
             DatabaseConfigManager.removeConfig();
             throw new Error(message, status_code);

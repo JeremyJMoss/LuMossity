@@ -1,3 +1,6 @@
+// ==================================================
+// =============== Module Dependencies ==============
+// ==================================================
 const Entity = require('../models/Entity');
 const { validateBodySchema } = require('../util/validation');
 
@@ -11,7 +14,9 @@ const {
 
 const { NotFoundError } = require('../models/utility/Errors');
 
-// Read
+// ==================================================
+// ====================== Read ======================
+// ==================================================
 module.exports.getAllEntities = async (req, res, next) => {
     try {
         const entities = await Entity.getAll();
@@ -46,7 +51,9 @@ module.exports.getSingleEntity = async (req, res, next) => {
     }
 }
 
-// Create
+// ==================================================
+// ===================== Create =====================
+// ==================================================
 module.exports.createEntity = async (req, res, next) => {
 
     try{
@@ -94,7 +101,9 @@ module.exports.createEntityFields = async (req, res, next) => {
     }
 }
 
-// Update
+// ==================================================
+// ===================== Update =====================
+// ==================================================
 module.exports.updateEntity = async (req, res, next) => {
     const { entity_key } = req.params;
 
@@ -151,7 +160,9 @@ module.exports.updateEntityFields = async ( req, res, next ) => {
     }
 }
 
-// Delete
+// ==================================================
+// ===================== Delete =====================
+// ==================================================
 module.exports.deleteEntityFields = async (req, res, next) => {
     const {entity_key} = req.params;
 

@@ -1,3 +1,4 @@
+// setup core event definitions
 module.exports = [
     { name: 'core.server.after.start', type: 'trigger' },
     { name: 'core.entity.after.create', type: 'trigger' },

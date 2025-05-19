@@ -1,3 +1,6 @@
+// ==================================================
+// =============== Module Dependencies ==============
+// ==================================================
 const DatabaseConnector = require('../services/DatabaseConnector');
 const DatabaseConfigManager = require('../services/DatabaseConfigManager');
 const DatabaseInitializer = require('../services/DatabaseInitializer');
@@ -5,6 +8,9 @@ const { validateBodySchema } = require('../util/validation');
 const { initializeDatabaseSchema } = require("../schemas/databaseSchema");
 const { ConflictError } = require('../models/utility/Errors');
 
+// ==================================================
+// ===================== Create =====================
+// ==================================================
 module.exports.initializeDatabase = async (req, res, next) => {
 
     const alreadyInitialized = DatabaseConfigManager.hasConfig();

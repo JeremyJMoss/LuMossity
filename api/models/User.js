@@ -17,25 +17,32 @@ class User {
     // ==================================================
     // =============== Class Initialization =============
     // ==================================================
+    #user_id;
+    #first_name;
+    #last_name;
+    #email;
+    #hashed_password;
+    #role;
+    
     constructor( first_name, last_name, email, hashed_password, role, user_id = null ) {
-        this.user_id = user_id;
-        this.first_name = first_name;
-        this.last_name = last_name;
-        this.email = email;
-        this.hashed_password = hashed_password;
-        this.role = role;
+        this.#user_id = user_id;
+        this.#first_name = first_name;
+        this.#last_name = last_name;
+        this.#email = email;
+        this.#hashed_password = hashed_password;
+        this.#role = role;
     }
     
     // ==================================================
     // =========== Public Getters and Setters ===========
     // ==================================================
     /**
-     * Returns the role id for the role name given
+     * Gets the role id for the role name given.
      * @async
      * @method
-     * @param {string} role - the name of the role
-     * @returns {Promise<int|null>} the ID of the role or null if role does not exist
-     * @throws {AppError} throws AppError if mysql request fails
+     * @param {string} role - The name of the role.
+     * @returns {Promise<int|null>} The ID of the role or null if role does not exist.
+     * @throws {AppError} If mysql request fails
      */
     async getRoleId(role) {
         return await DatabaseConnector.withConnection(async (db) => {
@@ -63,18 +70,18 @@ class User {
     }
 
     /**
-     * Returns the amount of failed_login attempts the user has had.
+     * The amount of failed_login attempts the user has had.
      * @async
      * @method
      * @returns {Promise<int>} The amount of failed login attempts the user has had.
-     * @throws {AppError} Throws AppError if mysql request fails.
+     * @throws {AppError} If mysql request fails.
      */
     async getFailedLogins() {
         return await DatabaseConnector.withConnection(async (db) => {
             try {
                 const [rows] = await db.query(
                     `SELECT failed_logins FROM users WHERE ID = ? LIMIT 1`,
-                    [this.user_id]
+                    [this.#user_id]
                 )
     
                 if (rows.length === 0) return null;
@@ -95,18 +102,18 @@ class User {
     }
 
     /**
-     * Returns timestamp of when the user is locked out until.
+     * The timestamp of when the user is locked out until.
      * @async
      * @method
      * @returns {int} Timestamp of when the user is locked out until.
-     * @throws {AppError} Throws AppError when mysql request fails.
+     * @throws {AppError} If mysql request fails.
      */
     async getLockout() {
         return await DatabaseConnector.withConnection(async (db) => {
             try {
                 const [rows] = await db.query(
                     `SELECT lockout_until FROM users WHERE ID = ? LIMIT 1`,
-                    [this.user_id]
+                    [this.#user_id]
                 )
 
                 if (rows.length === 0) return null;
@@ -131,7 +138,7 @@ class User {
      * @async
      * @method
      * @param {int} new_amount - New value for failed logins.
-     * @returns {Promise<null>}
+     * @returns {Promise<null>} nothing
      * @throws {AppError} Throws AppError when mysql request fails.
      */
     async setFailedLogins( new_amount ) {
@@ -147,7 +154,7 @@ class User {
      * @async
      * @method
      * @returns {Promise<null>}
-     * @throws {AppError} Throws AppError when mysql request fails.
+     * @throws {AppError} When mysql request fails.
      */
     async setLastLogin() {
         try {
@@ -172,7 +179,7 @@ class User {
         const lockout_until = new Date(Date.now() + lockout_time_addition * 1000);
         try{
             await this.#update({ lockout_until });
-            logger.warn(`User ${this.email} locked out until ${lockout_until}`);
+            logger.warn(`User ${this.#email} locked out until ${lockout_until}`);
         } catch(err) {
             throw err;
         }
@@ -191,10 +198,10 @@ class User {
      */
     async login( password ) {
         try {
-            const is_correct = await AuthService.comparePassword( password, this.hashed_password );
+            const is_correct = await AuthService.comparePassword( password, this.#hashed_password );
 
             if ( !is_correct ) {
-                logger.debug(`User login failed for user ${this.email}`);
+                logger.debug(`User login failed for user ${this.#email}`);
                 const failed_logins = await this.getFailedLogins();
                 if ( failed_logins >= maxFailedLoginAttempts ) {
                     await this.setLockout(failed_logins);
@@ -203,14 +210,14 @@ class User {
                 throw new AuthenticationError("Email or password was invalid");
             }
 
-            logger.debug(`User ${this.email} logged in successfully`);
+            logger.debug(`User ${this.#email} logged in successfully`);
 
             await this.setLastLogin();
     
-            const refresh_token = AuthService.createJwtToken('refresh', {userId: this.user_id})
-            const access_token = AuthService.createJwtToken('access', {userId: this.user_id, role: this.role});
+            const refresh_token = AuthService.createJwtToken('refresh', {userId: this.#user_id})
+            const access_token = AuthService.createJwtToken('access', {userId: this.#user_id, role: this.#role});
 
-            logger.debug(`Generated tokens for user ${this.email}`);
+            logger.debug(`Generated tokens for user ${this.#email}`);
     
             return {refresh_token, access_token};
 
@@ -226,11 +233,11 @@ class User {
      */
     toJSON() {
         return {
-            id: this.user_id,
-            email: this.email,
-            role: this.role,
-            first_name: this.first_name,
-            last_name: this.last_name
+            id: this.#user_id,
+            email: this.#email,
+            role: this.#role,
+            first_name: this.#first_name,
+            last_name: this.#last_name
         }
     }
 
@@ -247,22 +254,22 @@ class User {
     async #create() {
         await DatabaseConnector.withConnection(async (db) => {
             try {
-                const role_id = await this.getRoleId(this.role);
+                const role_id = await this.getRoleId(this.#role);
 
-                logger.info(`Creating User: ${this.email}`);
+                logger.info(`Creating User: ${this.#email}`);
 
                 const [result] = await db.execute(
                     `INSERT INTO users (first_name, last_name, email, password, role_id) VALUES(?, ?, ?, ?, ?)`,
-                    [this.first_name, this.last_name, this.email, this.hashed_password, role_id]
+                    [this.#first_name, this.#last_name, this.#email, this.#hashed_password, role_id]
                 )
     
                 if ( !result?.insertId ){
                     throw new AppError('Insert not successful', 500);
                 }
 
-                logger.info(`Created user: ${this.email}`)
+                logger.info(`Created user: ${this.#email}`)
     
-                this.user_id = result.insertId;
+                this.#user_id = result.insertId;
             } catch (err) {
                 if (err instanceof AppError){
                     throw err
@@ -289,7 +296,7 @@ class User {
      * @throws {AppError} Throws AppError when mysql request fails.
      */
     async #update( fields = {} ) {
-        logger.info(`Attempting update for User: ${this.email}`);
+        logger.info(`Attempting update for User: ${this.#email}`);
     
         const allowed_fields = {
             first_name: 'first_name',
@@ -310,7 +317,7 @@ class User {
         );
     
         if (keys.length === 0) {
-            logger.debug(`No updates needed for user ${this.email} (values unchanged)`);
+            logger.debug(`No updates needed for user ${this.#email} (values unchanged)`);
             return;
         }
     
@@ -321,10 +328,10 @@ class User {
     
                 await db.query(
                     `UPDATE users SET ${updates} WHERE ID = ?`,
-                    [...values, this.user_id]
+                    [...values, this.#user_id]
                 );
     
-                logger.info(`Updated user ${this.email} fields: ${keys.join(', ')}`);
+                logger.info(`Updated user ${this.#email} fields: ${keys.join(', ')}`);
             } catch (err) {
                 logger.error(err, {
                     class: "User",
@@ -354,7 +361,7 @@ class User {
      * @param {string} email - Email of the new user
      * @param {string} password - Password of the new user
      * @param {number} role - Role of the new user
-     * @returns {User} User that has been created.
+     * @returns {Promise<User>} User that has been created.
      * @throws {ConflictError|AppError} Throws ConflictError if user with email already exists. Throws AppError if mysql request fails.
      */
     static async create( first_name, last_name, email, password, role = 'user' ) {
@@ -384,7 +391,7 @@ class User {
      * @static
      * @param {int} page - Page number to retrieve.
      * @param {int} limit - How many per page.
-     * @returns {<Promise<[User]>} Array of Users from database.
+     * @returns {Promise<[User]>} Array of Users from database.
      * @throws {AppError} Throws AppError if mysql request fails.
      */
     static async getAllUsers( page = null, limit = null ) {

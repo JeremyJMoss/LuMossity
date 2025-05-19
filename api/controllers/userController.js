@@ -4,6 +4,27 @@ const { validateBodySchema } = require('../util/validation');
 const { ConflictError, AuthenticationError } = require('../models/utility/Errors');
 const { createUserSchema, loginUserSchema } = require('../schemas/userSchema');
 
+// ==================================================
+// ====================== Read ======================
+// ==================================================
+module.exports.getAllUsers = async (req, res, next) => {
+    const {page = null, limit = null} = req.query;
+
+    try {
+        const users = await User.getAllUsers(page, limit);
+
+        return res.status(200).json({
+            success: true,
+            users
+        })
+    } catch (err) {
+        next(err);
+    }
+}
+
+// ==================================================
+// ===================== Create =====================
+// ==================================================
 module.exports.createInitialUser = async (req, res, next) => {
     try {
         // check if initial user already exists
@@ -65,6 +86,9 @@ module.exports.createUser = async (req, res, next) => {
     }
 }
 
+// ==================================================
+// ================= Authentication =================
+// ==================================================
 module.exports.loginUser = async (req, res, next) => {
     try {
         validateBodySchema(loginUserSchema, req.body);
@@ -91,21 +115,6 @@ module.exports.loginUser = async (req, res, next) => {
             access_token: tokens.access_token
         });
 
-    } catch (err) {
-        next(err);
-    }
-}
-
-module.exports.getAllUsers = async (req, res, next) => {
-    const {page = null, limit = null} = req.query;
-
-    try {
-        const users = await User.getAllUsers(page, limit);
-
-        return res.status(200).json({
-            success: true,
-            users
-        })
     } catch (err) {
         next(err);
     }

@@ -16,26 +16,39 @@ class Entity {
     // ==================================================
     // =============== Class Initialization =============
     // ==================================================
+    #name;
+    #entity_key;
+    #entity_id;
+    #fields;
+
     constructor( name, key = null, entity_id = null, fields = [] ) {
-        this.name = name;
-        this.entity_key = key;
-        this.entity_id = entity_id;
-        this.fields = fields;
+        this.#name = name;
+        this.#entity_key = key;
+        this.#entity_id = entity_id;
+        this.#fields = fields;
     }
 
     // ==================================================
     // ========== Getter and Setter Methods  ============
     // ==================================================
-    setName( newName ) {
-        this.name = newName;
+    /**
+     * Sets the new name for the instance
+     * @param {string} new_name - the new name for the instance
+     */
+    setName( new_name ) {
+        this.#name = new_name;
+    }
+
+    get name() {
+        return this.#name;
     }
 
     get table_name() {
-    return `m_entity_${this.entity_key}`;
+    return `m_entity_${this.#entity_key}`;
 }
 
     get meta_table_name() {
-        return `m_entity_${this.entity_key}_meta`;
+        return `m_entity_${this.#entity_key}_meta`;
     }
 
     // ==================================================
@@ -56,12 +69,12 @@ class Entity {
             const newField = await Field.create(config);
         
             // check if field already exists
-            if (this.fields.find(field => field.field_name === newField.field_name)) {
+            if (this.#fields.find(field => field.field_name === newField.field_name)) {
                 throw new ConflictError(`Field with name ${newField.field_name} already exists`);
             }
             
             // add new field into array
-            this.fields.push(newField);
+            this.#fields.push(newField);
 
         } catch (err) {
             throw err;
@@ -80,10 +93,10 @@ class Entity {
 
     async updateField( new_field_info ) {
         try{
-            const field_to_update = this.fields.find(field => field.field_name == new_field_info.field_name);
-            await field_to_update.update(new_field_info, this.entity_key);
-            const index = this.fields.findIndex(f => f.field_name === field_to_update.field_name);
-            this.fields[index] = field_to_update;
+            const field_to_update = this.#fields.find(field => field.field_name == new_field_info.field_name);
+            await field_to_update.update(new_field_info, this.#entity_key);
+            const index = this.#fields.findIndex(f => f.field_name === field_to_update.field_name);
+            this.#fields[index] = field_to_update;
         } catch (err) {
             throw err;
         }
@@ -100,9 +113,9 @@ class Entity {
     }
 
     removeField(field_name) {
-        const starting_length = this.fields.length;
-        this.fields = this.fields.filter(field => field.field_name != field_name);
-        if (starting_length === this.fields.length) {
+        const starting_length = this.#fields.length;
+        this.#fields = this.#fields.filter(field => field.field_name != field_name);
+        if (starting_length === this.#fields.length) {
             throw new NotFoundError('Entity field does not exist');
         }
     }
@@ -112,7 +125,7 @@ class Entity {
             try {
                 const [structure] = await db.query(
                     `SELECT * FROM \`entities_structure\` WHERE entity_id = ? ORDER BY order_index ASC`,
-                    [this.entity_id]
+                    [this.#entity_id]
                 );
 
                 const fields = await Promise.all(structure.map((field) => Field.create(field)));
@@ -127,30 +140,30 @@ class Entity {
     }
 
     clearFields() {
-        this.fields = [];
+        this.#fields = [];
     }
 
     orderFields() {
-        this.fields.sort((a, b) => a.order_index - b.order_index);
+        this.#fields.sort((a, b) => a.order_index - b.order_index);
     }
 
     async refreshFields() {
         await DatabaseConnector.withConnection(async (db) => {
             try {
-                if (!this.entity_id) {
+                if (!this.#entity_id) {
                     const [entity_rows] = await db.query(
                         `SELECT * FROM \`entities\` WHERE entity_key = ? LIMIT 1`,
-                        [this.entity_key]
+                        [this.#entity_key]
                     );
         
                     if (entity_rows.length === 0) {
                         throw new NotFoundError('Entity not found');
                     }
     
-                    this.entity_id = entity_rows[0].ID;
+                    this.#entity_id = entity_rows[0].ID;
                 }
     
-                this.fields = await this.retrieveFields();
+                this.#fields = await this.retrieveFields();
 
             } catch (err) {
                 if ( err instanceof AppError) {
@@ -173,19 +186,19 @@ class Entity {
                 // Update entity name
                 await db.query(
                     `UPDATE entities SET entity_name = ? WHERE ID = ?`,
-                    [this.name, this.entity_id]
+                    [this.#name, this.#entity_id]
                 );
 
                 const database_fields = await this.retrieveFields();
 
-                const fields_to_insert = this.fields.filter(
+                const fields_to_insert = this.#fields.filter(
                     newField => !database_fields.some(existing => existing.field_name === newField.field_name)
                 );
-                const fields_to_update = this.fields.filter(
+                const fields_to_update = this.#fields.filter(
                     newField => database_fields.some(existing => existing.field_name === newField.field_name)
                 );
                 const fields_to_delete = database_fields.filter(
-                    existing => !this.fields.some(newField => newField.field_name === existing.field_name)
+                    existing => !this.#fields.some(newField => newField.field_name === existing.field_name)
                 );
 
                 await this.#applyFieldChangesToDB(db, fields_to_insert, fields_to_update);
@@ -308,14 +321,14 @@ class Entity {
             try {
                 const [result] = await db.query(
                     `INSERT INTO entities (entity_key, entity_name) VALUES (?, ?)`,
-                    [this.entity_key, this.name]
+                    [this.#entity_key, this.#name]
                 );
     
                 if ( !result?.insertId ) {
                     throw new AppError(`Entity was not inserted`, 500);
                 }
     
-                this.entity_id = result.insertId;
+                this.#entity_id = result.insertId;
     
                 await db.query(
                         `CREATE TABLE ${this.table_name} (
@@ -333,11 +346,11 @@ class Entity {
                 await db.query(
                     `CREATE TABLE ${this.meta_table_name} (
                         ID INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
-                        ${this.entity_key}_id INT NOT NULL,
+                        ${this.#entity_key}_id INT NOT NULL,
                         meta_key VARCHAR(255),
                         meta_value TEXT,
-                        FOREIGN KEY (${this.entity_key}_id) 
-                        REFERENCES m_entity_${this.entity_key}(ID) 
+                        FOREIGN KEY (${this.#entity_key}_id) 
+                        REFERENCES m_entity_${this.#entity_key}(ID) 
                         ON DELETE CASCADE
                     )`
                 )
@@ -363,7 +376,7 @@ class Entity {
             } else if (field.old_queryable_value === false && field.is_queryable) {
                 // Was unqueryable, now queryable → copy from meta_json to meta table
                 await db.query(
-                    `INSERT INTO ${this.meta_table_name} (${this.entity_key}_id, meta_key, meta_value)
+                    `INSERT INTO ${this.meta_table_name} (${this.#entity_key}_id, meta_key, meta_value)
                     SELECT ID, ?, JSON_UNQUOTE(JSON_EXTRACT(meta_json, '$.${field.field_name}'))
                     FROM ${this.table_name}
                     WHERE JSON_CONTAINS_PATH(meta_json, 'one', '$.${field.field_name}')`,
@@ -391,7 +404,7 @@ class Entity {
             await db.query(
                 `UPDATE ${this.table_name} AS e
                 JOIN ${this.meta_table_name} AS m
-                ON e.ID = m.${this.entity_key}_id AND m.meta_key = ?
+                ON e.ID = m.${this.#entity_key}_id AND m.meta_key = ?
                 SET e.\`${field.field_name}\` = m.meta_value`,
                 [field.field_name]
             );
@@ -422,7 +435,7 @@ class Entity {
         if (field.is_queryable) { 
             // move from db column to meta field
             await db.query(
-                `INSERT INTO ${this.meta_table_name} (${this.entity_key}_id, meta_key, meta_value)
+                `INSERT INTO ${this.meta_table_name} (${this.#entity_key}_id, meta_key, meta_value)
                 SELECT ID, ?, \`${field.field_name}\` FROM ${this.table_name}`,
                 [field.field_name]
             );
@@ -503,7 +516,7 @@ class Entity {
                 (entity_id, field_name, field_type, is_required, is_db_column, is_queryable, default_value, order_index, field_config) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                 [
-                    this.entity_id,
+                    this.#entity_id,
                     field.field_name,
                     field.field_type,
                     field.is_required,
@@ -534,7 +547,7 @@ class Entity {
                     field.default_value,
                     field.order_index,
                     JSON.stringify(field.field_config),
-                    this.entity_id,
+                    this.#entity_id,
                     field.field_name
                 ]
             )
@@ -573,7 +586,7 @@ class Entity {
         const results = await Promise.allSettled(fields_to_delete.map((field) =>
             db.query(
                 `DELETE FROM entities_structure WHERE entity_id = ? AND field_name = ?`,
-                [this.entity_id, field.field_name]
+                [this.#entity_id, field.field_name]
             )
         ));
         results.forEach(r => {
@@ -583,10 +596,10 @@ class Entity {
 
     toJSON() {
         return {
-            id: this.entity_id,
-            key: this.entity_key,
-            name: this.name,
-            fields: this.fields.map(field => field.toJSON())
+            id: this.#entity_id,
+            key: this.#entity_key,
+            name: this.#name,
+            fields: this.#fields.map(field => field.toJSON())
         };
     }
 }

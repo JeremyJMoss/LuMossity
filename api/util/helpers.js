@@ -16,6 +16,12 @@ module.exports.toSnakeCase = (str) => {
         .trim();
 }
 
+/**
+ * Get message and status code based on mysql error.
+ * @function
+ * @param {Error} err - Error object.
+ * @returns {{message: string, statusCode: int}} message and status code of mysql error
+ */
 module.exports.mapMySQLError = (err) => {
     const errorMap = {
         'ECONNREFUSED': {
