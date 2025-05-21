@@ -25,7 +25,12 @@ module.exports.initializeDatabase = async (req, res, next) => {
 
         validateBodySchema(initializeDatabaseSchema, req.body);
 
-        const { host, user, password, database} = req.body;
+        const { user, password, database} = req.body;
+        let { host } = req.body;
+
+        if (host === 'localhost' || host === '127.0.0.1' ) {
+            host = 'mysql';
+        }
         
         // Try connecting to the database
         connection = await DatabaseConnector.testHostConnection({host, user, password});

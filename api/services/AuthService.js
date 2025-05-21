@@ -1,6 +1,5 @@
 const {hash, verify} = require('argon2');
 const jwt = require('jsonwebtoken');
-const config = require('config');
 const {AppError, AuthenticationError} = require('../models/utility/Errors');
 
 class AuthService {
@@ -62,7 +61,7 @@ class AuthService {
 
         const token = jwt.sign(
             info,
-            config.get('jwtSecret'),
+            process.env.JWT_SECRET,
             { expiresIn }
         );
 
@@ -77,7 +76,7 @@ class AuthService {
      * @returns {Object|null} Information stored in valid JWT token.
      */
     static verifyJwtToken (token) {
-        const secret = config.get('jwtSecret');
+        const secret = process.env.JWT_SECRET;
 
         try {
             const payload = jwt.verify(token, secret);

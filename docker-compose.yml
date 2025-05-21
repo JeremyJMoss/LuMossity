@@ -1,0 +1,36 @@
+services:
+  mysql:
+    image: mysql:8
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sh:/docker-entrypoint-initdb.d/init.sh
+    ports:
+      - "3307:3306"
+
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    env_file:
+      - api/.env
+    ports:
+      - "4000:4000"
+    depends_on:
+      - mysql
+  ui:
+    build:
+      context: .
+      dockerfile: ui/Dockerfile
+    ports:
+      - "3000:3000"
+    env_file:
+      - ui/.env
+    depends_on:
+      - api
+
+volumes:
+  mysql_data:

@@ -5,7 +5,6 @@ const { createLogger, format, transports } = require('winston');
 const DailyRotateFile = require('winston-daily-rotate-file');
 const path = require('path');
 const fs = require('fs');
-const config = require('config');
 
 // ==================================================
 // =================== Logger Class =================
@@ -19,7 +18,7 @@ class Logger {
     constructor(options = {}) {
         const {
             logDirectory = path.resolve(__dirname, "../../logs"),
-            level = config.get('env') === "dev" ? "debug" : "info",
+            level = process.env.NODE_ENV === "dev" ? "debug" : "info",
             maxFiles = "14d",
             maxSize = "20m",
         } = options;
