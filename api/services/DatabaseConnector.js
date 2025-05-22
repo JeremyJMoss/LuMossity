@@ -17,7 +17,7 @@ class DatabaseConnector {
     static async getConnection() {
         try {
             const config = DatabaseConfigManager.getConfig();
-            return await mysql.createConnection(config);
+            return await mysql.createConnection({...config, host: 'mysql' });
         } catch (err) {
             logger.error(err);
             const {message, status_code} = mapMySQLError(err);
@@ -81,9 +81,9 @@ class DatabaseConnector {
      * @returns Connection to the mysql server instance.
      * @throws {AppError} If mysql connection fails.
      */
-    static async testHostConnection({ host, user, password }) {
+    static async testHostConnection({ user, password }) {
         try {
-            return await mysql.createConnection({ host, user, password });
+            return await mysql.createConnection({ host: 'mysql', user, password });
         } catch (err) {
             logger.error(err);
             const {message, status_code} = mapMySQLError(err);

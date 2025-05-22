@@ -1,49 +1,62 @@
-// middleware.js
-
 import { NextRequest, NextResponse } from 'next/server';
-const APIURL = 'http://api:4000';
+import { INTERNAL_API_URL } from './constants/constants';
+
 const HOMEURL = process.env.NEXT_PUBLIC_HOME_URL;
 
 export async function middleware(req: NextRequest) {
-    const { pathname } = req.nextUrl;
-  
-    // Skip checks for these paths
-    if (
-      pathname.startsWith('/api') ||
-      pathname.startsWith('/_next') ||
-      pathname.startsWith('/favicon.ico') ||
-      pathname.startsWith('/images') ||
-      pathname.startsWith('/fonts')
-    ) {
-      return NextResponse.next();
-    }
-  
-    try {
-      // 1. Check if database is initialized
-      const dbResponse = await fetch(`${APIURL}/api/setup/database`, { method: 'POST' });
-      const dbStatus = dbResponse.status;
-  
-      if (dbStatus === 422 && !pathname.startsWith('/initialize')) {
-        // Database not initialized -> redirect to /initialize
+  const { pathname } = req.nextUrl;
+
+  // Bypass static files and internal Next.js routes
+  if (
+    pathname.startsWith('/api') ||
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/favicon.ico') ||
+    pathname.startsWith('/images') ||
+    pathname.startsWith('/fonts')
+  ) {
+    return NextResponse.next();
+  }
+
+  try {
+    const dbResponse = await fetch(`${INTERNAL_API_URL}/setup/database`, { method: 'POST' });
+    const dbStatus = dbResponse.status;
+
+    // If DB is not initialized → redirect to /initialize
+    if (dbStatus === 422) {
+      if (pathname !== '/initialize') {
         return NextResponse.redirect(`${HOMEURL}/initialize`);
       }
-  
-      if (dbStatus === 400) {
-        // 2. If database returns 400, check if the initial user exists
-        const userResponse = await fetch(`${APIURL}/api/user/initial-user`, { method: 'POST' });
-        const userStatus = userResponse.status;
-  
-        if (userStatus !== 409 && !pathname.startsWith('/initialize/user')) {
-          // No initial user -> redirect to /initialize/user
+      return NextResponse.next(); // Allow access to /initialize
+    }
+
+    // DB initialized, check if user exists
+    if (dbStatus === 409) {
+      const userResponse = await fetch(`${INTERNAL_API_URL}/user/initial-user`, { method: 'POST' });
+      const userStatus = userResponse.status;
+
+      // If user not created → redirect to /initialize/user
+      if (userStatus !== 409) {
+        if (!pathname.startsWith('/initialize/user')) {
           return NextResponse.redirect(`${HOMEURL}/initialize/user`);
         }
+        return NextResponse.next(); // Allow access to /initialize/user
       }
-  
-      // Otherwise, everything is okay, continue
+
+      // 🔒 Prevent returning to init routes post-setup
+      if (
+        pathname === '/initialize' ||
+        pathname.startsWith('/initialize/user')
+      ) {
+        return NextResponse.redirect(`${HOMEURL}/`);
+      }
+
+      // DB and user setup complete → allow any other route
       return NextResponse.next();
-  
-    } catch (error) {
-      console.error('Middleware error:', error);
-      return NextResponse.next(); // Fail safe: don't block users if middleware errors
     }
+
+    return NextResponse.next();
+  } catch (error) {
+    console.error('Middleware error:', error);
+    return NextResponse.next(); // Fail-safe
   }
+}

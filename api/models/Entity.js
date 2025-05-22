@@ -7,7 +7,6 @@ const Field = require('./partials/EntityField');
 const { toSnakeCase, mapMySQLError } = require('../util/helpers');
 const { NotFoundError, AppError, ConflictError } = require('./utility/Errors');
 const { fieldTypeToMySQLType } = require('../util/constants');
-const logger = require('./utility/Logger');
 
 // ==================================================
 // ================= Entity Class ===================

@@ -17,6 +17,9 @@ services:
     build:
       context: .
       dockerfile: api/Dockerfile
+    volumes:
+      - ./api:/app/api
+      - /app/api/node_modules
     env_file:
       - api/.env
     ports:
@@ -31,6 +34,9 @@ services:
     build:
       context: .
       dockerfile: ui/Dockerfile
+    volumes:
+      - ./ui:/app/ui
+      - /app/ui/node_modules
     ports:
       - "3000:3000"
     env_file:

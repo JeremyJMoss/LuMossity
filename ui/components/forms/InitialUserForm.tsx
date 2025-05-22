@@ -3,8 +3,7 @@ import { useState } from "react";
 import FormButton from "../buttons/FormButton";
 const APIURL = process.env.NEXT_PUBLIC_API_URL;
 
-const InitializationForm = () => {
-    const [getStartedPressed, setGetStartedPressed] = useState<boolean>(false);
+const InitializationUserForm = () => {
 
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
@@ -13,7 +12,7 @@ const InitializationForm = () => {
         invalid_fields: []
     });
 
-    const submitInitializationConfig = async (e: React.FormEvent<HTMLFormElement>) => {
+    const submitInitialUser = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setIsSubmitting(true);
         const form = e.currentTarget;
@@ -83,42 +82,37 @@ const InitializationForm = () => {
 
     return (
         <>
-            { !getStartedPressed &&
-                <div className="flex justify-center">
-                    <button onClick={() => setGetStartedPressed(true)} className="bg-sunlight-deep hover:bg-sunlight font-semibold px-6 py-2 rounded">
-                        Get Started
-                    </button>
-                </div>
-            }
             { error.message &&
                 <div className="bg-red-300 max-w-xl mx-auto text-center mb-5 rounded py-2">
                     <p>{error.message}</p>
                 </div>
             }
-            { getStartedPressed && 
-                <form className="max-w-xl mx-auto flex flex-col gap-3" onSubmit={submitInitializationConfig} method="POST" action={APIURL + '/api/setup/database'}>
-                    <div className={inputContainerClassNames}>
-                        <label htmlFor="dbName">Database Name:</label>
-                        <input id="dbName" name="database" type="text" className={getInputClassNames('database')}/>
-                    </div>
-                    <div className={inputContainerClassNames}>
-                        <label htmlFor="dbUser">Database User:</label>
-                        <input id="dbUser" name="user" type="text" className={getInputClassNames('user')}/>
-                    </div>
-                    <div className={inputContainerClassNames}>
-                        <label htmlFor="dbPassword">Database Password:</label>
-                        <input id="dbPassword" name="password" type="password" className={getInputClassNames('password')}/>
-                    </div>
-                    <div className="flex justify-center">
-                        <FormButton
-                        buttonText="Connect"
-                        isSubmitting={isSubmitting}/>
-                    </div>
-                    
-                </form>
-            }
+            <form className="max-w-xl mx-auto flex flex-col gap-3" onSubmit={submitInitialUser} method="POST" action={APIURL + '/api/user/initial-user'}>
+                <div className={inputContainerClassNames}>
+                    <label htmlFor="firstName">First Name:</label>
+                    <input id="firstName" name="first_name" type="text" minLength={1} className={getInputClassNames('first_name')}/>
+                </div>
+                <div className={inputContainerClassNames}>
+                    <label htmlFor="lastName">Last Name:</label>
+                    <input id="lastName" name="last_name" type="text" minLength={1} className={getInputClassNames('last_name')}/>
+                </div>
+                <div className={inputContainerClassNames}>
+                    <label htmlFor="emailAddress">Email Address:</label>
+                    <input id="emailAddress" name="email" type="email" minLength={1} className={getInputClassNames('email')}/>
+                </div>
+                <div className={inputContainerClassNames}>
+                    <label htmlFor="password">Password:</label>
+                    <input id="password" name="password" type="password" minLength={10} className={getInputClassNames('password')}/>
+                </div>
+                <div className="flex justify-center">
+                    <FormButton
+                    buttonText="Submit"
+                    isSubmitting={isSubmitting}/>
+                </div>
+                
+            </form>
         </>
     )
 }
 
-export default InitializationForm;
+export default InitializationUserForm;
