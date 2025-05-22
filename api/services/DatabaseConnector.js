@@ -2,6 +2,7 @@ const { mapMySQLError } = require('../util/helpers');
 const DatabaseConfigManager = require('./DatabaseConfigManager');
 const mysql = require('mysql2/promise');
 const {AppError} = require('../models/utility/Errors');
+const logger = require('../models/utility/Logger');
 
 class DatabaseConnector {
 
@@ -18,6 +19,7 @@ class DatabaseConnector {
             const config = DatabaseConfigManager.getConfig();
             return await mysql.createConnection(config);
         } catch (err) {
+            logger.error(err);
             const {message, status_code} = mapMySQLError(err);
 
             throw new AppError(message, status_code);
@@ -55,6 +57,7 @@ class DatabaseConnector {
                 throw err;
             }
 
+            logger.error(err);
             const {message, statusCode} = mapMySQLError(err);
 
             throw new AppError(message, statusCode);
@@ -82,7 +85,9 @@ class DatabaseConnector {
         try {
             return await mysql.createConnection({ host, user, password });
         } catch (err) {
+            logger.error(err);
             const {message, status_code} = mapMySQLError(err);
+            
             throw new AppError(message, status_code);
         }
     }

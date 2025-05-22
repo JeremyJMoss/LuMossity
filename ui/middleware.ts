@@ -1,7 +1,7 @@
 // middleware.js
 
 import { NextRequest, NextResponse } from 'next/server';
-const APIURL = process.env.NEXT_PUBLIC_API_URL;
+const APIURL = 'http://api:4000';
 const HOMEURL = process.env.NEXT_PUBLIC_HOME_URL;
 
 export async function middleware(req: NextRequest) {
