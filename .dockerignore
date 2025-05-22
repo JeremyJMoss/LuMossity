@@ -1,3 +1,6 @@
 /api/logs/*
 /api/config/*
 /api/.env.example
+/ui/.env.example
+.env.example
+
