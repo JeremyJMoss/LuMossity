@@ -91,12 +91,12 @@ const InitializationForm = () => {
                 </div>
             }
             { error.message &&
-                <div className="bg-red-300 max-w-xl mx-auto text-center mb-5 rounded py-2">
-                    <p>{error.message}</p>
+                <div className="bg-red-300 max-w-xl mx-auto text-center mb-5 rounded py-2 px-10">
+                    <p className="font-semibold">{error.message}</p>
                 </div>
             }
             { getStartedPressed && 
-                <form className="max-w-xl mx-auto flex flex-col gap-3" onSubmit={submitInitializationConfig} method="POST" action={APIURL + '/api/setup/database'}>
+                <form className="max-w-xl mx-auto flex flex-col gap-3" onSubmit={submitInitializationConfig} method="POST" action={APIURL + '/setup/database'}>
                     <div className={inputContainerClassNames}>
                         <label htmlFor="dbName">Database Name:</label>
                         <input id="dbName" name="database" type="text" className={getInputClassNames('database')}/>

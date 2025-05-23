@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { INTERNAL_API_URL } from './constants/constants';
+import { access } from 'fs';
 
 const HOMEURL = process.env.NEXT_PUBLIC_HOME_URL;
 
@@ -39,8 +40,8 @@ export async function middleware(req: NextRequest) {
         return NextResponse.redirect(`${HOMEURL}/`);
       }
 
-      const access_token = req.cookies.get('access_token');
-      const refresh_token = req.cookies.get('refresh_token');
+      const access_token = req.cookies.get('accessToken');
+      const refresh_token = req.cookies.get('refreshToken');
 
       if (!access_token && !refresh_token && pathname !== '/login') {
         return NextResponse.redirect(`${HOMEURL}/login`);
@@ -51,6 +52,24 @@ export async function middleware(req: NextRequest) {
         const redirectUrl = new URL(`${HOMEURL}/auth/refresh`);
         redirectUrl.searchParams.set('redirect', pathname);
         return NextResponse.redirect(redirectUrl);
+      }
+
+      if (access_token) {
+        const authCheck = await fetch(`${INTERNAL_API_URL}/auth/verify`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${access_token.value}`,
+            },
+        });
+
+        if ( !authCheck.ok && pathname !== '/login' ) {
+            return NextResponse.redirect(`${HOMEURL}/login`);
+        }
+
+        if (authCheck.ok && pathname === '/login') {
+            return NextResponse.redirect(`${HOMEURL}`);
+        }
       }
     }
 

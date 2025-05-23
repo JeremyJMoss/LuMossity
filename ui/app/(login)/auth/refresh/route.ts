@@ -1,38 +1,37 @@
 import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
 import { INTERNAL_API_URL } from '@/constants/constants';
 
 export async function GET(req: Request) {
   const cookie_store = await cookies();
-  const refreshToken = cookie_store.get('refresh_token')?.value;
+  const refresh_token = cookie_store.get('refreshToken')?.value;
 
-  if (!refreshToken) {
-    return redirect('/login');
+  if (!refresh_token) {
+    return Response.redirect(new URL('/login', req.url));
   }
 
   const res = await fetch(`${INTERNAL_API_URL}/auth/refresh`, {
     method: 'POST',
     headers: {
-      Cookie: `refresh_token=${refreshToken}`,
+      cookie: `refreshToken=${refresh_token}`,
     },
-    credentials: 'include',
   });
 
   if (!res.ok) {
-    return redirect('/login');
+    return Response.redirect(new URL('/login', req.url));
   }
 
-  // Parse and set access_token from backend's Set-Cookie response
   const setCookie = res.headers.get('set-cookie');
+  const redirectUrl = new URL(req.url).searchParams.get('redirect') || '/';
+
   if (setCookie) {
     return new Response(null, {
       status: 302,
       headers: {
         'Set-Cookie': setCookie,
-        Location: req.url.split('?redirect=')[1] || '/',
+        Location: redirectUrl,
       },
     });
   }
 
-  return redirect(req.url.split('?redirect=')[1] || '/');
+  return Response.redirect(new URL(redirectUrl, req.url));
 }

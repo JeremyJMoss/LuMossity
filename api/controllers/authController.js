@@ -23,8 +23,8 @@ module.exports.refreshAccessToken = ( req, res, next ) => {
             role: user.role
         });
 
-        res.headers('Set-Cookie', [
-            cookie.serialize('accessToken', tokens.access_token, {
+        res.setHeader('Set-Cookie', [
+            cookie.serialize('accessToken', access_token, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
                 sameSite: 'lax',
@@ -53,7 +53,7 @@ module.exports.loginUser = async (req, res, next) => {
 
         const tokens = await user.login(password);
 
-        res.headers('Set-Cookie', [
+        res.setHeader('Set-Cookie', [
             cookie.serialize('refreshToken', tokens.refresh_token, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
@@ -76,6 +76,20 @@ module.exports.loginUser = async (req, res, next) => {
         });
 
     } catch (err) {
+        next(err);
+    }
+}
+
+module.exports.verifyAccessToken = async (req, res, next) => {
+    const token = req.headers.authorization?.split(' ')[1];
+
+    try {
+        const decoded = AuthService.verifyJwtToken('access', token);
+        if (!decoded) {
+            throw new AuthenticationError('Invalid token');
+        }
+        res.status(200).json({});
+    } catch {
         next(err);
     }
 }

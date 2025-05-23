@@ -1,6 +1,4 @@
 import "@/app/globals.css";
-import { AuthProvider } from "@/context/providers/AuthProvider";
-
 
 export default function RootLayout({
   children,
@@ -10,9 +8,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased flex min-h-screen">
-        <AuthProvider>
-            {children}
-        </AuthProvider>
+        <main className="bg-sunlight-soft w-full">
+          {children}
+        </main>
       </body>
     </html>
   );

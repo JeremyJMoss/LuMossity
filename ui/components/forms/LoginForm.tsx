@@ -3,8 +3,7 @@ import { useState } from "react";
 import FormButton from "../buttons/FormButton";
 const APIURL = process.env.NEXT_PUBLIC_API_URL;
 
-const InitializationUserForm = () => {
-
+const LoginForm = () => {
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
     const [ error, setError ] = useState<{ message: string; invalid_fields: string[] }>({
@@ -12,7 +11,7 @@ const InitializationUserForm = () => {
         invalid_fields: []
     });
 
-    const submitInitialUser = async (e: React.FormEvent<HTMLFormElement>) => {
+    const loginUser = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setIsSubmitting(true);
         const form = e.currentTarget;
@@ -26,12 +25,13 @@ const InitializationUserForm = () => {
                 headers: {
                     "Content-Type": "application/json",
                 },
+                credentials: "include"
             });
 
             const result = await response.json();
 
             if (!response.ok) {
-                const { error, issues } = result;
+                const { error, issues = [] } = result;
 
                 const compiledErrors: string[] = [];
                 for (const issue of issues) {
@@ -68,7 +68,7 @@ const InitializationUserForm = () => {
     let inputContainerClassNames = 'flex justify-between items-center text-lg text-moss-dark';
 
     const getInputClassNames = (field_name : string) => {
-        let inputClassNames = 'bg-neutral-clay w-1/2 rounded px-3 py-2';
+        let inputClassNames = 'bg-neutral-clay w-3/4 rounded px-3 py-2';
 
         const errorBorderClass = 'border-red-500 border';
 
@@ -83,36 +83,27 @@ const InitializationUserForm = () => {
     return (
         <>
             { error.message &&
-                <div className="bg-red-300 max-w-xl mx-auto text-center mb-5 rounded py-2 px-10">
-                    <p className="font-semibold">{error.message}</p>
-                </div>
+                    <div className="bg-red-300 max-w-2xl mx-auto text-center mb-2 rounded py-2 px-10">
+                        <p className="font-semibold">{error.message}</p>
+                    </div>
             }
-            <form className="max-w-xl mx-auto flex flex-col gap-3" onSubmit={submitInitialUser} method="POST" action={APIURL + '/user/initial-user'}>
-                <div className={inputContainerClassNames}>
-                    <label htmlFor="firstName">First Name:</label>
-                    <input id="firstName" name="first_name" type="text" minLength={1} className={getInputClassNames('first_name')}/>
-                </div>
-                <div className={inputContainerClassNames}>
-                    <label htmlFor="lastName">Last Name:</label>
-                    <input id="lastName" name="last_name" type="text" minLength={1} className={getInputClassNames('last_name')}/>
-                </div>
+            <form className="max-w-2xl mx-auto flex flex-col gap-3 min-w-xl" onSubmit={loginUser} method="POST" action={APIURL + '/auth/login'}>
                 <div className={inputContainerClassNames}>
                     <label htmlFor="emailAddress">Email Address:</label>
                     <input id="emailAddress" name="email" type="email" minLength={1} className={getInputClassNames('email')}/>
                 </div>
                 <div className={inputContainerClassNames}>
                     <label htmlFor="password">Password:</label>
-                    <input id="password" name="password" type="password" minLength={10} className={getInputClassNames('password')}/>
+                    <input id="password" name="password" type="password" minLength={1} className={getInputClassNames('password')}/>
                 </div>
                 <div className="flex justify-center">
                     <FormButton
                     buttonText="Submit"
                     isSubmitting={isSubmitting}/>
                 </div>
-                
             </form>
         </>
     )
 }
 
-export default InitializationUserForm;
+export default LoginForm;
