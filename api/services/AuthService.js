@@ -55,13 +55,15 @@ class AuthService {
         }
 
         let expiresIn = '1d';
+        let secret = process.env.ACCESS_JWT_SECRET;
         if (type === "refresh") {
             expiresIn = '7d';
+            secret = process.env.REFRESH_JWT_SECRET;
         }
 
         const token = jwt.sign(
             info,
-            process.env.JWT_SECRET,
+            secret,
             { expiresIn }
         );
 
@@ -72,11 +74,17 @@ class AuthService {
      * Verifies that the token passed in is a valid token.
      * @static
      * @method
+     * @param {string} type - Either refresh or access
      * @param {string} token - JWT token to verify.
      * @returns {Object|null} Information stored in valid JWT token.
+     * @throws {AppError} Type is not access or refresh
      */
-    static verifyJwtToken (token) {
-        const secret = process.env.JWT_SECRET;
+    static verifyJwtToken (type, token) {
+        if (type !== 'refresh' && type !== 'access') {
+            throw new AppError('Type must be either "refresh" or "access"', 500);
+        }
+
+        const secret = type === 'refresh' ? process.env.REFRESH_JWT_SECRET : process.env.ACCESS_JWT_SECRET;
 
         try {
             const payload = jwt.verify(token, secret);

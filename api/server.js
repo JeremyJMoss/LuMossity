@@ -1,10 +1,12 @@
 const express = require("express");
 const bodyParser = require('body-parser');
 const cors = require("cors");
+const cookie_parser = require("cookie-parser");
 const logger = require("./models/utility/Logger");
 const setupRouter = require('./routes/setup');
 const entityRouter = require('./routes/entity');
 const userRouter = require('./routes/user');
+const authRouter = require('./routes/auth');
 const addExtensions = require('./middleware/extensions');
 const notFoundHandler = require('./middleware/notFoundHandler');
 const errorHandler = require('./middleware/errorHandler');
@@ -15,10 +17,15 @@ require('./events/loadExtensionEngine');
 
 const server = express();
 
-server.use(cors());
+server.use(cors({
+    origin: 'http://localhost:3000',
+    credentials: true,
+}));
 server.use(bodyParser.json());
+server.use(cookie_parser());
 
 server.use(addExtensions);
+server.use('/api/auth', authRouter);
 server.use('/api/setup', setupRouter);
 server.use('/api/user', userRouter);
 server.use('/api/entities', entityRouter);

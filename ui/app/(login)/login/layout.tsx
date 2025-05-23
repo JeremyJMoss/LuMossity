@@ -1,7 +1,4 @@
 import "@/app/globals.css";
-import "@/components/AdminSidebar";
-import AdminSidebar from "@/components/AdminSidebar";
-import AdminTopbar from "@/components/AdminTopbar";
 import { AuthProvider } from "@/context/providers/AuthProvider";
 
 
@@ -14,11 +11,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="antialiased flex min-h-screen">
         <AuthProvider>
-          <AdminSidebar/>
-          <main className="bg-sunlight-soft w-full">
-            <AdminTopbar/>
             {children}
-          </main>
         </AuthProvider>
       </body>
     </html>

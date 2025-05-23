@@ -17,7 +17,7 @@ const authenticate = (requiredRole = null) => {
             }
 
             const token = authHeader.split(' ')[1];
-            const decoded = verifyJwtToken(token);
+            const decoded = verifyJwtToken('access', token);
 
             if (!decoded || !decoded.userId) {
                 logger.debug(`Request sent from ${req.ip} with invalid or expired token.`);

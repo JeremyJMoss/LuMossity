@@ -1,8 +1,8 @@
 const User = require('../models/User');
 const { refreshTokenMaxAge } = require('../util/constants');
 const { validateBodySchema } = require('../util/validation');
-const { ConflictError, AuthenticationError } = require('../models/utility/Errors');
-const { createUserSchema, loginUserSchema } = require('../schemas/userSchema');
+const { ConflictError } = require('../models/utility/Errors');
+const { createUserSchema } = require('../schemas/userSchema');
 
 // ==================================================
 // ====================== Read ======================
@@ -97,41 +97,6 @@ module.exports.deleteUser = async (req, res, next) => {
         res.status(204).json({
             success: true
         });
-    } catch (err) {
-        next(err);
-    }
-}
-
-
-// ==================================================
-// ================= Authentication =================
-// ==================================================
-module.exports.loginUser = async (req, res, next) => {
-    try {
-        validateBodySchema(loginUserSchema, req.body);
-
-        const {email, password} = req.body;
-
-        const user = await User.getUserBy('email', email);
-
-        if (user === null) {
-            throw new AuthenticationError('Email or password was invalid');
-        }
-
-        const tokens = await user.login(password);
-
-        res.cookie('refreshToken', tokens.refresh_token, {
-            httpOnly: true,
-            secure: true,
-            sameSite: 'Strict',
-            maxAge: refreshTokenMaxAge
-        });
-
-        return res.status(200).json({
-            success: true,
-            access_token: tokens.access_token
-        });
-
     } catch (err) {
         next(err);
     }
