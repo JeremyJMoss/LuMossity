@@ -18,7 +18,7 @@ class Logger {
     constructor(options = {}) {
         const {
             logDirectory = path.resolve(__dirname, "../../logs"),
-            level = process.env.NODE_ENV === "dev" ? "debug" : "info",
+            level = process.env.NODE_ENV === "development" ? "debug" : "info",
             maxFiles = "14d",
             maxSize = "20m",
         } = options;
