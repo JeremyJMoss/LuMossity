@@ -10,13 +10,14 @@ const logger = require('../models/utility/Logger');
 const authenticate = (requiredRole = null) => {
     return async (req, res, next) => {
         try {
-            const access_token = req.cookies?.accessToken;
-            if (!access_token) {
-                logger.debug(`Request sent from ${req.ip } has missing or invalid access token.`);
-                throw new AuthenticationError('Missing or invalid access token');
+            const authHeader = req.headers['authorization'];
+            if (!authHeader || !authHeader.startsWith('Bearer ')) {
+                logger.debug(`Request sent from ${req.ip } has missing or invalid Authorization header.`);
+                throw new AuthenticationError('Missing or invalid Authorization header');
             }
 
-            const decoded = verifyJwtToken('access', access_token);
+            const token = authHeader.split(' ')[1];
+            const decoded = verifyJwtToken('access', token);
 
             if (!decoded || !decoded.userId) {
                 logger.debug(`Request sent from ${req.ip} with invalid or expired token.`);
