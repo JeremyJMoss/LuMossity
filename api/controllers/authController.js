@@ -27,14 +27,14 @@ module.exports.refreshAccessToken = ( req, res, next ) => {
             cookie.serialize('accessToken', access_token, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
-                sameSite: 'lax',
+                sameSite: 'none',
                 maxAge: accessTokenMaxAge,
                 path: '/'
             }),
             cookie.serialize('refreshToken', refresh_token, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
-                sameSite: 'lax',
+                sameSite: 'none',
                 maxAge: refreshTokenMaxAge,
                 path: '/'
             })
@@ -64,14 +64,14 @@ module.exports.loginUser = async (req, res, next) => {
             cookie.serialize('refreshToken', tokens.refresh_token, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
-                sameSite: 'lax',
+                sameSite: 'none',
                 maxAge: refreshTokenMaxAge,
                 path: '/'
             }),
             cookie.serialize('accessToken', tokens.access_token, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
-                sameSite: 'lax',
+                sameSite: 'none',
                 maxAge: accessTokenMaxAge,
                 path: '/'
             })
@@ -92,12 +92,9 @@ module.exports.verifyAccessToken = async (req, res, next) => {
     try {
         const decoded = AuthService.verifyJwtToken('access', token);
         if (!decoded) {
-            return res.status(200).json({
-                valid: false
-            });
+            throw new AuthenticationError('Invalid or expired token');
         }
         res.status(200).json({
-            valid: true,
             expiry: decoded.exp
         });
     } catch {

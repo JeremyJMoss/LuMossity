@@ -54,7 +54,7 @@ class AuthService {
             throw new AppError('Type must be either "refresh" or "access"', 500);
         }
 
-        let expiresIn = '1d';
+        let expiresIn = '15m';
         let secret = process.env.ACCESS_JWT_SECRET;
         if (type === "refresh") {
             expiresIn = '7d';

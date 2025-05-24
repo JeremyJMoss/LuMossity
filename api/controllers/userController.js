@@ -1,5 +1,5 @@
 const User = require('../models/User');
-const { refreshTokenMaxAge } = require('../util/constants');
+const { refreshTokenMaxAge, accessTokenMaxAge } = require('../util/constants');
 const { validateBodySchema } = require('../util/validation');
 const { ConflictError } = require('../models/utility/Errors');
 const { createUserSchema } = require('../schemas/userSchema');
@@ -41,12 +41,22 @@ module.exports.createInitialUser = async (req, res, next) => {
 
         const tokens = await initUser.login( password );
 
-        res.cookie('refreshToken', tokens.refresh_token, {
-            httpOnly: true,
-            secure: true,
-            sameSite: 'Strict',
-            maxAge: refreshTokenMaxAge
-        });
+        res.setHeader('Set-Cookie', [
+            cookie.serialize('refreshToken', tokens.refresh_token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'none',
+                maxAge: refreshTokenMaxAge,
+                path: '/'
+            }),
+            cookie.serialize('accessToken', tokens.access_token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'none',
+                maxAge: accessTokenMaxAge,
+                path: '/'
+            })
+        ]);
 
         return res.status(200).json({
             access_token: tokens.access_token
@@ -67,12 +77,22 @@ module.exports.createUser = async (req, res, next) => {
 
         const tokens = await newUser.login( password );
 
-        res.cookie('refreshToken', tokens.refresh_token, {
-            httpOnly: true,
-            secure: true,
-            sameSite: 'Strict',
-            maxAge: refreshTokenMaxAge
-        });
+        res.setHeader('Set-Cookie', [
+            cookie.serialize('refreshToken', tokens.refresh_token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'none',
+                maxAge: refreshTokenMaxAge,
+                path: '/'
+            }),
+            cookie.serialize('accessToken', tokens.access_token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'none',
+                maxAge: accessTokenMaxAge,
+                path: '/'
+            })
+        ]);
 
         return res.status(200).json({
             access_token: tokens.access_token

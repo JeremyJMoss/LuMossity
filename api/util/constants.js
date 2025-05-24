@@ -5,8 +5,8 @@ module.exports.typeConfigPath = path.resolve(__dirname, '..', 'seeds', 'field_ty
 module.exports.presetsPath = path.join(__dirname, '..', 'seeds', 'field_presets.json');
 module.exports.maxFailedLoginAttempts = 5;
 module.exports.lockoutBaseTime = 15 * 60;
-module.exports.refreshTokenMaxAge = 7 * 24 * 60 * 1000;
-module.exports.accessTokenMaxAge = 24 * 60 * 1000; 
+module.exports.refreshTokenMaxAge = 7 * 24 * 60 * 60;
+module.exports.accessTokenMaxAge = 15 * 60; 
 
 module.exports.fieldTypeToMySQLType = {
   text: 'VARCHAR(255)',
