@@ -5,7 +5,6 @@ module.exports = (err, req, res, next) => {
     const issues = err.issues || null;
 
     const err_obj = {
-        success: false,
         error: message,
     }
 

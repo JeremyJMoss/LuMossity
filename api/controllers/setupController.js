@@ -34,9 +34,7 @@ module.exports.initializeDatabase = async (req, res, next) => {
         dbConnection = await DatabaseConnector.getConnection();
         await DatabaseInitializer.setupTables(dbConnection);
 
-        return res.status(200).json({
-            success: true
-        });
+        return res.status(200).json();
     } catch(err) {
         next(err)
     } finally {

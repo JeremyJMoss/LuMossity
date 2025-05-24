@@ -30,6 +30,13 @@ module.exports.refreshAccessToken = ( req, res, next ) => {
                 sameSite: 'lax',
                 maxAge: accessTokenMaxAge,
                 path: '/'
+            }),
+            cookie.serialize('refreshToken', refresh_token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
+                maxAge: refreshTokenMaxAge,
+                path: '/'
             })
         ])
 
@@ -71,7 +78,6 @@ module.exports.loginUser = async (req, res, next) => {
         ]);
 
         return res.status(200).json({
-            success: true,
             access_token: tokens.access_token
         });
 
@@ -86,9 +92,14 @@ module.exports.verifyAccessToken = async (req, res, next) => {
     try {
         const decoded = AuthService.verifyJwtToken('access', token);
         if (!decoded) {
-            throw new AuthenticationError('Invalid token');
+            return res.status(200).json({
+                valid: false
+            });
         }
-        res.status(200).json({});
+        res.status(200).json({
+            valid: true,
+            expiry: decoded.exp
+        });
     } catch {
         next(err);
     }

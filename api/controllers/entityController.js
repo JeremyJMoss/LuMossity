@@ -24,7 +24,6 @@ module.exports.getAllEntities = async (req, res, next) => {
         const transformed_entities = await req.extensions.runEvent('core.entity.after.getAll.query', entities);
         
         res.status(200).json({
-            success: true,
             entities: transformed_entities
         });
     } catch (err) {
@@ -43,7 +42,6 @@ module.exports.getSingleEntity = async (req, res, next) => {
         }
 
         res.status(200).json({
-            success: true,
             entity: entity.toJSON()
         })
     } catch (err) {
@@ -65,9 +63,7 @@ module.exports.createEntity = async (req, res, next) => {
 
         await req.extensions.runEvent('core.entity.after.create');
 
-        return res.status(201).json({
-            success: true
-        })
+        return res.status(201).json();
     } catch (err) {
         next(err);
     }
@@ -92,7 +88,6 @@ module.exports.createEntityFields = async (req, res, next) => {
         await entity.sync();
 
         return res.status(200).json({
-            success: true,
             entity: entity.toJSON()
         });
 
@@ -123,9 +118,7 @@ module.exports.updateEntity = async (req, res, next) => {
 
         await req.extensions.runEvent('core.entity.after.update');
 
-        return res.status(200).json({
-            success: true
-        });
+        return res.status(200).json();
 
     } catch (err) {
         next(err);
@@ -151,7 +144,6 @@ module.exports.updateEntityFields = async ( req, res, next ) => {
         await entity.sync();
 
         return res.status(200).json({
-            success: true,
             entity: entity.toJSON()
         });
 
@@ -181,9 +173,7 @@ module.exports.deleteEntityFields = async (req, res, next) => {
 
         await entity.sync();
 
-        return res.status(204).json({
-            success: true
-        });
+        return res.status(204).json();
 
     } catch (err) {
         next(err)

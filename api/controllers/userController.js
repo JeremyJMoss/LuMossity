@@ -14,7 +14,6 @@ module.exports.getAllUsers = async (req, res, next) => {
         const users = await User.getAllUsers(page, limit);
 
         return res.status(200).json({
-            success: true,
             users
         })
     } catch (err) {
@@ -50,7 +49,6 @@ module.exports.createInitialUser = async (req, res, next) => {
         });
 
         return res.status(200).json({
-            success: true,
             access_token: tokens.access_token
         });
 
@@ -77,7 +75,6 @@ module.exports.createUser = async (req, res, next) => {
         });
 
         return res.status(200).json({
-            success: true,
             access_token: tokens.access_token
         });
 
@@ -94,9 +91,7 @@ module.exports.deleteUser = async (req, res, next) => {
 
     try {
         await User.deleteUser(user_id);
-        res.status(204).json({
-            success: true
-        });
+        res.status(204).json();
     } catch (err) {
         next(err);
     }
