@@ -27,14 +27,14 @@ module.exports.refreshAccessToken = ( req, res, next ) => {
             cookie.serialize('accessToken', access_token, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
-                sameSite: 'none',
+                sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
                 maxAge: accessTokenMaxAge,
                 path: '/'
             }),
             cookie.serialize('refreshToken', refresh_token, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
-                sameSite: 'none',
+                sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
                 maxAge: refreshTokenMaxAge,
                 path: '/'
             })
@@ -64,14 +64,14 @@ module.exports.loginUser = async (req, res, next) => {
             cookie.serialize('refreshToken', tokens.refresh_token, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
-                sameSite: 'none',
+                sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
                 maxAge: refreshTokenMaxAge,
                 path: '/'
             }),
             cookie.serialize('accessToken', tokens.access_token, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
-                sameSite: 'none',
+                sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
                 maxAge: accessTokenMaxAge,
                 path: '/'
             })

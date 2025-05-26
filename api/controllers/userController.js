@@ -45,14 +45,14 @@ module.exports.createInitialUser = async (req, res, next) => {
             cookie.serialize('refreshToken', tokens.refresh_token, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
-                sameSite: 'none',
+                sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
                 maxAge: refreshTokenMaxAge,
                 path: '/'
             }),
             cookie.serialize('accessToken', tokens.access_token, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
-                sameSite: 'none',
+                sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
                 maxAge: accessTokenMaxAge,
                 path: '/'
             })
@@ -81,14 +81,14 @@ module.exports.createUser = async (req, res, next) => {
             cookie.serialize('refreshToken', tokens.refresh_token, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
-                sameSite: 'none',
+                sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
                 maxAge: refreshTokenMaxAge,
                 path: '/'
             }),
             cookie.serialize('accessToken', tokens.access_token, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
-                sameSite: 'none',
+                sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
                 maxAge: accessTokenMaxAge,
                 path: '/'
             })
