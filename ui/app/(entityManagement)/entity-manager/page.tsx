@@ -1,6 +1,8 @@
 const EntityManagement = () => {
   return (
-    <div>EntityManagement</div>
+    <>
+      hello
+    </>
   )
 }
 
