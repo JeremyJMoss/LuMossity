@@ -1,7 +1,7 @@
 import "@/app/globals.css";
 import "@/components/AdminSidebar";
 import AdminSidebar from "@/components/AdminSidebar";
-
+import AdminTopbar from "@/components/AdminTopbar";
 
 export default function RootLayout({
   children,
@@ -11,7 +11,10 @@ export default function RootLayout({
   return (
     <>
       <AdminSidebar/>
-     {children}
+      <main className="bg-sunlight-soft w-full">
+        <AdminTopbar/>
+        {children}
+      </main>
     </>
   );
 }

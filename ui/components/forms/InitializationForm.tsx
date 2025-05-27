@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import FormButton from "../buttons/FormButton";
+import CallToActionButton from "../buttons/CallToActionButton";
 const APIURL = process.env.NEXT_PUBLIC_API_URL;
 
 const InitializationForm = () => {
@@ -85,9 +86,9 @@ const InitializationForm = () => {
         <>
             { !getStartedPressed &&
                 <div className="flex justify-center">
-                    <button onClick={() => setGetStartedPressed(true)} className="bg-sunlight-deep hover:bg-sunlight font-semibold px-6 py-2 rounded">
+                    <CallToActionButton onClick={() => setGetStartedPressed(true)} className="px-6 py-2">
                         Get Started
-                    </button>
+                    </CallToActionButton>
                 </div>
             }
             { error.message &&
