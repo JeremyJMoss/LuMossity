@@ -5,7 +5,7 @@ type CTAButtonProps = {
 }
 
 const CallToActionButton = ({onClick, className = '', children}: CTAButtonProps) => {
-    const baseClasses = "bg-sunlight-deep hover:bg-sunlight font-semibold rounded";
+    const baseClasses = "bg-moss text-white hover:bg-moss-dark transition-colors font-semibold rounded";
     const classes = className ? baseClasses + ' ' + className : baseClasses;
 
   return (

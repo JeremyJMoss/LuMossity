@@ -1,4 +1,4 @@
-const FormButton: React.FC<{buttonText: string, isSubmitting: boolean}> = ({ buttonText, isSubmitting }) => {
+const SecondaryFormButton: React.FC<{buttonText: string, isSubmitting: boolean}> = ({ buttonText, isSubmitting }) => {
 
     return (
         <>
@@ -16,4 +16,4 @@ const FormButton: React.FC<{buttonText: string, isSubmitting: boolean}> = ({ but
     )
 }
 
-export default FormButton
+export default SecondaryFormButton

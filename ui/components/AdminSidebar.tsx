@@ -41,15 +41,14 @@ const sidebarLinks = [
 ];
 
 function AdminSidebar() {
-  const {isCollapsed, setIsCollapsed, setActiveSubmenu, activeSubmenu, setSelectedMenuItem, selectedMenuItem} = useSidebar();
+  const {setActiveSubmenu, activeSubmenu, setSelectedMenuItem, selectedMenuItem} = useSidebar();
 
-  const imageSize = isCollapsed ? 40 : 60;
-  const sidebarBackground = isCollapsed ? 'bg-neutral-clay' : 'bg-neutral-beige';
+  const imageSize = 60;
+  const sidebarBackground = 'bg-neutral-clay';
 
   const handleBtnClick = (e: React.MouseEvent, submenu: string | null, menuItem : string) => {
     e.preventDefault();
     setSelectedMenuItem(menuItem);
-    setIsCollapsed(true);
     setActiveSubmenu(submenu);
   };
 
@@ -63,7 +62,7 @@ function AdminSidebar() {
           </MenuLink>
           <div className="flex flex-col h-full">
               <div className="flex flex-col gap-3">
-                {!isCollapsed && <h2 className="text-md font-semibold">Control Panel</h2>}
+                <h2 className="text-md font-semibold">Control Panel</h2>
                 <div className="flex flex-col text-sm gap-3">
                   {sidebarLinks.map(({label, href, menuItem, icon: Icon, hasSubmenu, submenu}) => {
                     return (
@@ -74,7 +73,7 @@ function AdminSidebar() {
                         className="flex gap-2 items-center whitespace-nowrap"
                         menuItem={menuItem}>
                         <Icon strokeWidth={2}/>
-                        {!isCollapsed && <span>{label}</span>}
+                        <span>{label}</span>
                       </MenuLink> :
                       <SubMenuLink
                         label={label}

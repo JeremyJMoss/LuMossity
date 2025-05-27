@@ -10,10 +10,9 @@ interface Entity {
     entity_key: string
 }
 
-type Entities = Entity[];
 
 const StudioSubmenu = () => {
-    const [submenuItems, setSubmenuItems] = useState<Entities | []>([]);
+    const [entities, setEntities] = useState<Entity[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string>('');
     const router = useRouter();
@@ -30,7 +29,7 @@ const StudioSubmenu = () => {
 
             const response = await request.json();
 
-            setSubmenuItems(response.entities);
+            setEntities(response.entities);
 
         } catch (err) {
             setError('Failed to load menu items');
@@ -44,44 +43,36 @@ const StudioSubmenu = () => {
         getEntities();
     }, [])
 
-    const retryFetchMenu = () => {
-        getEntities();
-    }
-
-    const handleGoToStudio = (e: React.MouseEvent, href: string) => {
-
-        router.push(href);
-    }
-
     return (
         <>
             <h2 className="whitespace-nowrap text-lg border-b border-solid border-gray-300 pb-3 font-medium mb-4">Entity Studio</h2>
             <div className="flex flex-col items-center gap-2">
-                {submenuItems.length > 0 && !loading && !error &&
-                    submenuItems.map((entity) => {
-                        return (
-                            <Link href={`/entity/${entity.entity_key}`} key={entity.entity_key}>{entity.entity_name}</Link>
-                        )
-                    })
+                {loading && <LoadingSpinner width="30px" height="30px"/> }
+                {!loading && error && 
+                    <div className="menu-error text-center mb">
+                        <p className="text-xs text-red-500 mb-2">{error}</p>
+                        <button onClick={getEntities} className="text-xs bg-moss-light px-3 py-1 rounded font-semibold">Refresh</button>
+                    </div>
                 }
-                {submenuItems.length === 0 && !loading && !error &&
+                {entities.length > 0 && !loading && !error &&
                     <>
-                        <p className="text-sm text-center">No entities yet...</p>
-                        <CallToActionButton className="text-sm px-3 py-2" onClick={(e) => handleGoToStudio(e, "/entity-manager")}>
-                            Get Started
+                        {entities.map((entity) => {
+                            return (
+                                <Link href={`/entity/${entity.entity_key}`} key={entity.entity_key}>{entity.entity_name}</Link>
+                            )
+                        })}
+                        <CallToActionButton className="text-sm px-3 py-2" onClick={() => router.push("/entity-studio/create")}>
+                            Add Entity
                         </CallToActionButton>
                     </>
                 }
-                {loading &&
-                    <LoadingSpinner
-                    width="30px"
-                    height="30px"/> 
-                }
-                {error && 
-                    <div className="menu-error text-center mb">
-                        <p className="text-xs text-red-500 mb-2">{error}</p>
-                        <button onClick={retryFetchMenu} className="text-xs bg-moss-light px-3 py-1 rounded font-semibold">Refresh</button>
-                    </div>
+                {entities.length === 0 && !loading && !error &&
+                    <>
+                        <p className="text-sm text-center">No entities yet...</p>
+                        <CallToActionButton className="text-sm px-3 py-2" onClick={() => router.push("/entity-studio/create")}>
+                            Get Started
+                        </CallToActionButton>
+                    </>
                 }
             </div>
         </>

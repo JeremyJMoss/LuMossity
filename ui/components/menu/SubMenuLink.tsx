@@ -10,14 +10,14 @@ type SubMenuLinkProps = {
 }
 
 const SubMenuLink = ({label, onClick, className = '', icon: Icon, menuItem}: SubMenuLinkProps) => {
-    const {isCollapsed, selectedMenuItem} = useSidebar();
+    const {selectedMenuItem} = useSidebar();
 
-    const classNames = menuItem === selectedMenuItem ? className + ' ' + 'bg-sunlight rounded' : className;
+    const classNames = menuItem === selectedMenuItem ? className + ' ' + 'bg-moss-light rounded' : className;
 
     return (
         <button onClick={onClick} className={classNames}>
             <Icon strokeWidth={2}/>
-            {!isCollapsed && <span>{label}</span>}
+            <span>{label}</span>
         </button>
     )
 }

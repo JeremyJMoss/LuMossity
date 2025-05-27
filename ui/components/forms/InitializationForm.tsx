@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import FormButton from "../buttons/FormButton";
+import SecondaryFormButton from "../buttons/SecondaryFormButton";
 import CallToActionButton from "../buttons/CallToActionButton";
 const APIURL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -111,7 +111,7 @@ const InitializationForm = () => {
                         <input id="dbPassword" name="password" type="password" className={getInputClassNames('password')}/>
                     </div>
                     <div className="flex justify-center">
-                        <FormButton
+                        <SecondaryFormButton
                         buttonText="Connect"
                         isSubmitting={isSubmitting}/>
                     </div>

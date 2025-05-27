@@ -1,9 +1,8 @@
 "use client";
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 
 type SidebarContextType = {
-  isCollapsed: boolean;
-  setIsCollapsed: (value: boolean) => void;
   activeSubmenu: string | null;
   setActiveSubmenu: (value: string | null) => void;
   selectedMenuItem: string | null;
@@ -15,52 +14,45 @@ type SidebarContextType = {
 const SidebarContext = createContext<SidebarContextType | undefined>(undefined);
 
 export const SidebarProvider = ({ children }: { children: React.ReactNode }) => {
-  const [isCollapsed, setIsCollapsedState] = useState(false);
-  const [activeSubmenu, setActiveSubmenuState] = useState<string | null>(null);
-  const [selectedItem, setSelectedItemState] = useState<string | null>(null);
-  const [selectedSubItem, setSelectedSubItemState] = useState<string | null>(null);
+  const [activeSubmenu, setActiveSubmenu] = useState<string | null>(null);
+  const [selectedMenuItem, setSelectedMenuItem] = useState<string | null>(null);
+  const [selectedSubMenuItem, setSelectedSubMenuItem] = useState<string | null>(null);
 
-  // Load from localStorage
+  const pathname = usePathname();
+
+  // Update sidebar state based on pathname
   useEffect(() => {
-    const storedCollapsed = localStorage.getItem("sidebarCollapsed");
-    const storedSubmenu = localStorage.getItem("activeSubmenu");
-    const storedItem = localStorage.getItem("selectedItem");
-    const storedSubItem = localStorage.getItem("selectedSubItem");
+    if (pathname.includes('/entity-manager')) {
+      setActiveSubmenu('manager');
+      setSelectedMenuItem('entity-manager');
+    } else if (pathname.includes('/entity-studio')) {
+      setActiveSubmenu('studio');
+      setSelectedMenuItem('entity-studio');
+    } else if (pathname.includes('/settings')) {
+      setActiveSubmenu(null);
+      setSelectedMenuItem('settings');
+    } else {
+      setActiveSubmenu(null);
+      setSelectedMenuItem(null);
+    }
+  }, [pathname]);
 
-    if (storedCollapsed !== null) setIsCollapsedState(storedCollapsed === "true");
-    if (storedSubmenu) setActiveSubmenuState(storedSubmenu);
-    if (storedItem) setSelectedItemState(storedItem);
-    if (storedSubItem) setSelectedItemState(storedSubItem);
-  }, []);
-
-  // Sync to localStorage
-  useEffect(() => {
-    localStorage.setItem("sidebarCollapsed", String(isCollapsed));
-  }, [isCollapsed]);
-
+  // Persist state to localStorage (optional)
   useEffect(() => {
     localStorage.setItem("activeSubmenu", activeSubmenu ?? "");
-  }, [activeSubmenu]);
-
-  useEffect(() => {
-    localStorage.setItem("selectedItem", selectedItem ?? "");
-  }, [selectedItem]);
-
-  useEffect(() => {
-    localStorage.setItem("selectedSubItem", selectedSubItem ?? "");
-  }, [selectedSubItem]);
+    localStorage.setItem("selectedMenuItem", selectedMenuItem ?? "");
+    localStorage.setItem("selectedSubMenuItem", selectedSubMenuItem ?? "");
+  }, [activeSubmenu, selectedMenuItem, selectedSubMenuItem]);
 
   return (
     <SidebarContext.Provider
       value={{
-        isCollapsed,
-        setIsCollapsed: setIsCollapsedState,
         activeSubmenu,
-        setActiveSubmenu: setActiveSubmenuState,
-        selectedMenuItem: selectedItem,
-        setSelectedMenuItem: setSelectedItemState,
-        selectedSubMenuItem: selectedSubItem,
-        setSelectedSubMenuItem: setSelectedSubItemState
+        setActiveSubmenu,
+        selectedMenuItem,
+        setSelectedMenuItem,
+        selectedSubMenuItem,
+        setSelectedSubMenuItem
       }}
     >
       {children}
@@ -68,9 +60,10 @@ export const SidebarProvider = ({ children }: { children: React.ReactNode }) => 
   );
 };
 
-// Hook to use sidebar context
 export const useSidebar = () => {
   const context = useContext(SidebarContext);
-  if (!context) throw new Error("useSidebar must be used within a SidebarProvider");
+  if (!context) {
+    throw new Error("useSidebar must be used within a SidebarProvider");
+  }
   return context;
 };
