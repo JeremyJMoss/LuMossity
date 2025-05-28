@@ -14,28 +14,49 @@ const CreateEntity = () => {
     invalid_fields: []
   });
 
-  const createEntity = () => {
-    setIsSubmitting(true);
-    setError({
-      message: '',
-      invalid_fields: []
-    })
-    try {
-      
-    } catch (err: any) {
+  const createEntity = (e: React.FormEvent) => {
+    e.preventDefault();
+    const sendCreateEntity = async () => {
+      setIsSubmitting(true);
       setError({
-        message: err.message,
+        message: '',
         invalid_fields: []
       })
-    } finally {
-      setIsSubmitting(false);
+
+      try {
+        const request = await fetch( `${process.env.NEXT_PUBLIC_API_URL}/entities/create`, {
+            method: "POST",
+            credentials: "include"
+          }
+        )
+
+        if (!request.ok) {
+          const response = await request.json();
+          setError({
+            message: response.error,
+            invalid_fields: response.issues?.map((issue: {path: string, message: string}) => {
+              return issue.path;
+            })
+          })
+        }
+
+      } catch (err: any) {
+        setError({
+          message: err.message,
+          invalid_fields: []
+        })
+      } finally {
+        setIsSubmitting(false);
+      }
     }
+
+    sendCreateEntity()
   }
 
   return (
     <div className="px-10 py-5 flex flex-col gap-5 max-w-lg">
       <h1 className="text-2xl font-semibold">Create Entity</h1>
-      <form className="border border-gray-300 p-5 rounded-lg shadow-md flex flex-col gap-4">
+      <form className="border border-gray-300 p-5 rounded-lg shadow-md flex flex-col gap-4" onSubmit={(e) => createEntity(e)}>
         
         {/* Entity Name Field */}
         <div className="flex flex-col gap-1">

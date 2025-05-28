@@ -6,20 +6,24 @@ const { loginUserSchema } =  require('../schemas/authSchema');
 const { refreshTokenMaxAge, accessTokenMaxAge } = require('../util/constants');
 const cookie = require("cookie");
 
-module.exports.refreshAccessToken = ( req, res, next ) => {
+module.exports.refreshAccessToken = async ( req, res, next ) => {
     try {
         const refresh_token = req.cookies?.refreshToken;
 
         if ( !refresh_token ) throw new AuthenticationError("No refresh token sent in request");
 
-        const user = AuthService.verifyJwtToken('refresh', refresh_token);
+        const verified_user = AuthService.verifyJwtToken('refresh', refresh_token);
 
-        if (!user) {
+        if (!verified_user) {
             throw new AuthorizationError("Invalid or expired token");
         }
 
+        const userInDB = await User.getUserBy('id', verified_user.userId);
+
+        const user = userInDB.toJSON();
+
         const access_token = AuthService.createJwtToken('access', {
-            userId: user.userId, 
+            userId: user.id,
             role: user.role
         });
 
