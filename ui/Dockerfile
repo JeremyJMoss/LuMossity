@@ -1,6 +1,8 @@
 FROM node:23
 
-COPY . .
+WORKDIR /app
+
+COPY ui ./ui
 
 WORKDIR /app/ui
 
