@@ -1,7 +1,11 @@
 {
   "name": "lumossity",
   "private": true,
-  "workspaces": ["api", "ui", "extensions/*"],
+  "workspaces": [
+    "api",
+    "ui",
+    "extensions/*"
+  ],
   "scripts": {
     "dev": "concurrently \"npm:dev:*\"",
     "dev:ui": "npm --workspace ui run dev",

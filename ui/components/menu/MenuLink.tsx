@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useSidebar } from "@/context/SidebarContext";
+import { useSidebar } from "@/state_management/SidebarContext";
 
 type LinkProps = {
     children: React.ReactNode,

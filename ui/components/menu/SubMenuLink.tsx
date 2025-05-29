@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react"
-import { useSidebar } from "@/context/SidebarContext"
+import { useSidebar } from "@/state_management/SidebarContext"
 
 type SubMenuLinkProps = {
     label: string;

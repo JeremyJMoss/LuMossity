@@ -6,7 +6,7 @@ import StudioSubmenu from "./submenus/StudioSubmenu";
 import ManagerSubmenu from "./submenus/ManagerSubmenu";
 import MenuLink from "./menu/MenuLink";
 import SubMenuLink from "./menu/SubMenuLink";
-import { useSidebar } from "@/context/SidebarContext";
+import { useSidebar } from "@/state_management/SidebarContext";
 
 const submenuMap: Record<string, React.ReactNode> = {
   "manager": <ManagerSubmenu />,

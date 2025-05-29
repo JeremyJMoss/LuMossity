@@ -1,7 +1,8 @@
 "use client";
 import PrimaryFormButton from "@/components/buttons/PrimaryFormButton";
-import { useState } from "react";
-import { redirect } from "next/navigation";
+import { useState, useEffect} from "react";
+import { useRouter } from "next/navigation";
+import { useSideMenuStore } from "@/state_management/SidebarStore";
 
 type APIErrorResponse = {
   message: string;
@@ -15,71 +16,85 @@ type APIIssue = {
 
 const CreateEntity = () => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [createdEntity, setCreatedEntity] = useState<string>('');
+
   const [error, setError] = useState<APIErrorResponse>({
     message: '',
     invalid_fields: []
   });
 
-  const createEntity = (e: React.FormEvent<HTMLFormElement>) => {
-    
-    const sendCreateEntity = async (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
+  const fetchSidebarItems = useSideMenuStore((state) => (state.fetchItems));
+  const router = useRouter();
 
-      const formData = new FormData(e.currentTarget);
-      const name = formData.get("name");
-      const entity_key = formData.get("entity_key");
+  // move to the created entity page to add fields
+  useEffect(() => {
+    if (createdEntity) {
+      router.push(`/entity-studio/entity/${createdEntity}`);
+    }
+  }, [createdEntity])
 
-      setIsSubmitting(true);
+  const sendCreateEntity = async (formData: FormData) => {
+
+    const name = formData.get("name");
+    const entity_key = formData.get("entity_key");
+
+    setIsSubmitting(true);
+    setError({
+      message: '',
+      invalid_fields: []
+    })
+
+    try {
+      const request = await fetch( `${process.env.NEXT_PUBLIC_API_URL}/entities/create`, {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name,
+            entity_key,
+          }),
+        }
+      )
+
+      if (!request.ok) {
+        const error = await request.json();
+
+        setError({
+          message: error.message,
+          invalid_fields: error.issues?.map((issue: APIIssue) => {
+            return issue.path;
+          }) ?? []
+        })
+
+        return;
+      }
+
+      const response = await request.json();
+
+      if (response.entity_key) {
+        const entity_key = response.entity_key;
+        await fetchSidebarItems();
+        setCreatedEntity(entity_key);
+      } else {
+        window.location.reload();
+      }
+
+    } catch (err: any) {
       setError({
-        message: '',
+        message: err.message,
         invalid_fields: []
       })
-
-      try {
-        const request = await fetch( `${process.env.NEXT_PUBLIC_API_URL}/entities/create`, {
-            method: "POST",
-            credentials: "include",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              name,
-              entity_key,
-            }),
-          }
-        )
-
-        if (!request.ok) {
-          const error = await request.json();
-          setError({
-            message: error.message,
-            invalid_fields: error.issues?.map((issue: APIIssue) => {
-              return issue.path;
-            }) ?? []
-          })
-          return;
-        }
-
-        const response = await request.json();
-
-        if (response.entity_key) {
-          const entity_key = response.entity_key;
-          redirect(`/entity-studio/${entity_key}`);
-        } else {
-          window.location.reload();
-        }
-
-      } catch (err: any) {
-        setError({
-          message: err.message,
-          invalid_fields: []
-        })
-      } finally {
-        setIsSubmitting(false);
-      }
+    } finally {
+      setIsSubmitting(false);
     }
+  }
 
-    sendCreateEntity(e);
+  const createEntity = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const formData = new FormData(e.currentTarget); 
+    sendCreateEntity(formData);
   }
 
   const getInputClassNames = (field_name : string) => {
@@ -95,7 +110,6 @@ const CreateEntity = () => {
       }
 
       return inputClassNames;
-
   }
 
   return (

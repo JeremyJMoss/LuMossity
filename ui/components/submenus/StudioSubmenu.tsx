@@ -1,49 +1,31 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import Link from "next/link";
 import CallToActionButton from "../buttons/CallToActionButton";
 import { useRouter } from "next/navigation";
-
-interface Entity {
-    entity_name: string,
-    entity_key: string
-}
-
+import { useSideMenuStore } from "@/state_management/SidebarStore";
+import { shallow } from "zustand/shallow";
+import { useStoreWithEqualityFn } from "zustand/traditional";
 
 const StudioSubmenu = () => {
-    const [entities, setEntities] = useState<Entity[]>([]);
-    const [loading, setLoading] = useState<boolean>(true);
-    const [error, setError] = useState<string>('');
+
+    const {entities, getEntities, error, loading} = useStoreWithEqualityFn(
+        useSideMenuStore,
+        (state) => ({
+            entities: state.items,
+            getEntities: state.fetchItems,
+            error: state.fetchError,
+            loading: state.isLoading
+        }), 
+        shallow
+    );
+
     const router = useRouter();
-
-    const getEntities = async () => {
-        setError('');
-        setLoading(true);
-        try {
-            const request = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/entities/all`);
-    
-            if (!request.ok) {
-                setError('Failed to load menu items');
-            }
-
-            const response = await request.json();
-
-            console.log(response);
-
-            setEntities(response.entities);
-
-        } catch (err) {
-            setError('Failed to load menu items');
-        } finally {
-            setLoading(false);
-        }
-    
-    }
 
     useEffect(() => {
         getEntities();
-    }, [])
+    }, [getEntities])
 
     return (
         <>
@@ -57,16 +39,16 @@ const StudioSubmenu = () => {
                     </div>
                 }
                 {entities.length > 0 && !loading && !error &&
-                    <>
+                    <div className="flex flex-col gap-2">
                         {entities.map((entity) => {
                             return (
-                                <Link href={`/entity-studio/entity/${entity.entity_key}`} key={entity.entity_key}>{entity.entity_name}</Link>
+                                <Link className="whitespace-nowrap" href={`/entity-studio/entity/${entity.entity_key}`} key={entity.entity_key}>{entity.entity_name}</Link>
                             )
                         })}
-                        <CallToActionButton className="text-sm px-3 py-2" onClick={() => router.push("/entity-studio/create")}>
-                            Add Entity
-                        </CallToActionButton>
-                    </>
+                        <button className="text-left cursor-pointer text-moss whitespace-nowrap" onClick={() => router.push("/entity-studio/create")}>
+                            + Create new entity
+                        </button>
+                    </div>
                 }
                 {entities.length === 0 && !loading && !error &&
                     <>
