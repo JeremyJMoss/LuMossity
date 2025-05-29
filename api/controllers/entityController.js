@@ -2,6 +2,7 @@
 // =============== Module Dependencies ==============
 // ==================================================
 const Entity = require('../models/Entity');
+const Field = require('../models/partials/EntityField');
 const { validateBodySchema } = require('../util/validation');
 
 const { 
@@ -49,12 +50,28 @@ module.exports.getSingleEntity = async (req, res, next) => {
     }
 }
 
+module.exports.getFieldPresets = async (req, res, next) => {
+    try {
+        const field_presets = await Field.getFieldPresets();
+
+        if (!field_presets) {
+            throw new NotFoundError('No field presets found');
+        }
+
+        res.status(200).json({
+            field_presets
+        })
+    } catch (err) {
+        next (err);
+    }
+}
+
 // ==================================================
 // ===================== Create =====================
 // ==================================================
 module.exports.createEntity = async (req, res, next) => {
 
-    try{
+    try {
         validateBodySchema( createEntitySchema, req.body );
 
         const { name, entity_key = null } = req.body;
@@ -63,7 +80,9 @@ module.exports.createEntity = async (req, res, next) => {
 
         await req.extensions.runEvent('core.entity.after.create');
 
-        return res.status(201).json();
+        return res.status(201).json({
+            entity_key
+        });
     } catch (err) {
         next(err);
     }

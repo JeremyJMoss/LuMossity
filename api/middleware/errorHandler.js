@@ -5,7 +5,7 @@ module.exports = (err, req, res, next) => {
     const issues = err.issues || null;
 
     const err_obj = {
-        error: message,
+        message,
     }
 
     if (issues !== null) {

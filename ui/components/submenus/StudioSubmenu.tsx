@@ -29,6 +29,8 @@ const StudioSubmenu = () => {
 
             const response = await request.json();
 
+            console.log(response);
+
             setEntities(response.entities);
 
         } catch (err) {
@@ -58,7 +60,7 @@ const StudioSubmenu = () => {
                     <>
                         {entities.map((entity) => {
                             return (
-                                <Link href={`/entity/${entity.entity_key}`} key={entity.entity_key}>{entity.entity_name}</Link>
+                                <Link href={`/entity-studio/entity/${entity.entity_key}`} key={entity.entity_key}>{entity.entity_name}</Link>
                             )
                         })}
                         <CallToActionButton className="text-sm px-3 py-2" onClick={() => router.push("/entity-studio/create")}>

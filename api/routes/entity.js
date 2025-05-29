@@ -1,10 +1,12 @@
 const express = require ('express');
-const {createEntity, getAllEntities, getSingleEntity, updateEntity, updateEntityFields, createEntityFields, deleteEntityFields} = require('../controllers/entityController');
+const {createEntity, getAllEntities, getSingleEntity, updateEntity, updateEntityFields, createEntityFields, deleteEntityFields, getFieldPresets } = require('../controllers/entityController');
 const router = express.Router();
 const authenticate = require('../middleware/authMiddleware')
 
 //Get
 router.get('/all', getAllEntities);
+
+router.get('/field-presets', authenticate("superadmin"), getFieldPresets);
 
 router.get('/:entity_key', getSingleEntity);
 

@@ -262,14 +262,14 @@ class Entity {
 
                 const [fields] = await db.query('SELECT * FROM entities_structure');
 
-                const entity_groups = await entities.map(async entity => {
+                const entity_groups = await Promise.all( entities.map(async entity => {
                     const structure = await Promise.all( fields.filter(field => field.entity_id === entity.ID)
                     .map((field) => Field.create(field)));
                     return {
                         ...entity,
                         fields: structure
                     };
-                });
+                }));
             
                 return entity_groups;
             } catch (err) {

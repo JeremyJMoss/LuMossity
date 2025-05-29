@@ -405,6 +405,30 @@ class Field {
             throw new AppError(message, status_code);
         }
     }
+
+    /**
+     * Gets all field presets stored in the database
+     * @returns {Promise<Object>} all field presets
+     * @throws {A}
+     */
+    static async getFieldPresets() {
+        return await DatabaseConnector.withConnection(async db => {
+            try {
+               const [rows] = await db.query(
+                   `SELECT *
+                   FROM field_presets;`
+               );
+
+               return rows;
+
+           } catch (err) {
+   
+               const {message, status_code} = mapMySQLError(err);
+               
+               throw new AppError(message, status_code);
+           }
+       });
+    }
 }
 
 module.exports = Field;
