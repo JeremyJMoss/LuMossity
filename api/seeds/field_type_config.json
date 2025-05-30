@@ -603,36 +603,5 @@
             },
             "required": [ "label", "accept"]
         }
-    },
-    {
-        "field_type": "group",
-        "default_config_schema": {
-        "type": "object",
-        "properties": {
-            "label": {
-            "type": "string"
-            },
-            "fields": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "properties": {
-                "field_type": {
-                    "type": "string"
-                },
-                "config": {
-                    "type": "object"
-                }
-                },
-                "required": ["field_type", "config"]
-            }
-            },
-            "repeatable": {
-            "type": "boolean",
-            "default": false
-            }
-        },
-        "required": ["label", "fields"]
-        }
     }
 ]

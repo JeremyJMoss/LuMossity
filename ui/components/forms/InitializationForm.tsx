@@ -30,10 +30,9 @@ const InitializationForm = () => {
                 },
             });
 
-            const result = await response.json();
-
             if (!response.ok) {
-                const { error, issues } = result;
+                const result = await response.json();
+                const { message, issues } = result;
 
                 const compiledErrors: string[] = [];
                 for (const issue of issues) {
@@ -44,7 +43,7 @@ const InitializationForm = () => {
                 }
     
                 setError({
-                    message: error || "Something went wrong.",
+                    message: message || "Something went wrong.",
                     invalid_fields: compiledErrors,
                 });
     
@@ -57,6 +56,7 @@ const InitializationForm = () => {
             window.location.reload();
     
         } catch (err: unknown) {
+            console.error(err);
             setError({
                 message: "A network error occurred. Please try again.",
                 invalid_fields: [],
@@ -112,8 +112,9 @@ const InitializationForm = () => {
                     </div>
                     <div className="flex justify-center">
                         <SecondaryFormButton
-                        buttonText="Connect"
-                        isSubmitting={isSubmitting}/>
+                        isSubmitting={isSubmitting}>
+                            Connect
+                        </SecondaryFormButton>
                     </div>
                     
                 </form>

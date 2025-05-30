@@ -70,7 +70,7 @@ function AdminSidebar() {
                       <MenuLink 
                         href={href} 
                         key={label} 
-                        className="flex gap-2 items-center whitespace-nowrap"
+                        className="flex gap-2 items-center whitespace-nowrap p-1"
                         menuItem={menuItem}>
                         <Icon strokeWidth={2}/>
                         <span>{label}</span>
@@ -79,7 +79,7 @@ function AdminSidebar() {
                         label={label}
                         key={label}
                         onClick={e => handleBtnClick(e, submenu, menuItem)}
-                        className="flex gap-2 items-center whitespace-nowrap"
+                        className="flex gap-2 items-center whitespace-nowrap p-1"
                         icon={Icon}
                         menuItem={menuItem}/>
                   )

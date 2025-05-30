@@ -1,7 +1,6 @@
 "use client";
 import FieldConfigurationSection from "@/components/FieldConfigurationSection";
 import AddFieldsModal from "@/components/modals/AddFieldsModal";
-import UpdateEntityForm from "@/components/forms/UpdateEntityForm";
 import { notFound, useParams } from 'next/navigation';
 import { useEffect, useState } from "react";
 
@@ -54,8 +53,8 @@ const EntityFieldsPage = ()  => {
                 <FieldConfigurationSection
                     fields={entity.fields}
                     fieldReset={getEntity}
-                    onAddFieldsClick={() => setAddFieldsModalOpen(true)}/>
-                <UpdateEntityForm/>
+                    onAddFieldsClick={() => setAddFieldsModalOpen(true)}
+                />
             </div>
         </div>
         {

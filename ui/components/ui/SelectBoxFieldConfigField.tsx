@@ -1,0 +1,103 @@
+"use client";
+import { useState } from "react";
+
+type SelectBoxOption = {
+    value: string;
+    label: string;
+}
+
+type SelectBoxFieldConfigFieldProps = {
+    selectBoxOptions: SelectBoxOption[],
+    onChange: (value: SelectBoxOption[]) => void
+}
+
+const SelectBoxFieldConfigField = ({selectBoxOptions, onChange}: SelectBoxFieldConfigFieldProps) => {
+    const [option, setOption] = useState<SelectBoxOption>({
+        value: '',
+        label: ''
+    });
+
+    const handleInputChange = (type: string, value: string) => {
+        if (type === 'value'){
+            setOption((prev) => ({
+                ...prev,
+                value: value
+            }))
+        } else {
+            setOption((prev) => ({
+                ...prev,
+                label: value
+            }))
+        }
+    }
+
+    const addOption = () => {
+        const newSelectBoxOptions = [
+            ...selectBoxOptions,
+            option
+        ];
+
+        onChange(newSelectBoxOptions);
+        setOption({
+            value: '',
+            label: ''
+        })
+    }
+
+    const removeOption = (value: string) => {
+        const filteredOptions = selectBoxOptions.filter(option => option.value !== value);
+        console.log(filteredOptions);
+        onChange(filteredOptions);
+    }
+
+    return (
+        <div className="flex flex-col p-4 border-moss-dark border gap-4 rounded">
+            <h2 className="font-semibold text-lg">Select Options</h2>
+            <div>
+                { selectBoxOptions.length > 0 &&
+                    <div className="flex items-center gap-3 flex-wrap">
+                        {selectBoxOptions.map(({label, value}) => (
+                            <div key={value} className="flex justify-between items-center bg-sunlight-soft gap-3 px-4 py-1 rounded-3xl">
+                                <span className="font-medium">{label}</span>
+                                <button
+                                type="button"
+                                onClick={() => removeOption(value)}
+                                className="text-red-500 hover:text-red-700 cursor-pointer font-semibold"
+                                >
+                                ✕
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                }
+                <div className="flex gap-4 items-center">
+                    <div className="flex flex-col gap-2">
+                        <label htmlFor="selectOptionLabel" className="font-semibold text-sm">Label</label>
+                        <input type="text" className="border border-gray-400 bg-stone-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-moss-light rounded" name="select_option_label" id="selectOptionLabel" value={option.label} onChange={(e) => handleInputChange('label', e.currentTarget.value)}/>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                        <label htmlFor="selectOptionValue" className="font-semibold text-sm">Value</label>
+                        <input 
+                            type="text" 
+                            className="border border-gray-400 bg-stone-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-moss-light rounded" 
+                            name="select_option_value" 
+                            id="selectOptionValue" 
+                            value={option.value} 
+                            onChange={(e) => handleInputChange('value', e.currentTarget.value)}/>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={addOption}
+                        className="text-sm text-moss hover:underline self-end mb-3 cursor-pointer"
+                    >
+                        + Add Option
+                    </button>
+                </div>
+
+                
+            </div>
+        </div>
+    )
+}
+
+export default SelectBoxFieldConfigField

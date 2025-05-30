@@ -76,8 +76,8 @@ class DatabaseInitializer {
 
             await dbConnection.execute(`CREATE TABLE IF NOT EXISTS field_presets (
                 ID INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
-                name VARCHAR(255) NOT NULL,
-                field_type VARCHAR(50) UNIQUE NOT NULL,
+                name VARCHAR(255) UNIQUE NOT NULL,
+                field_type VARCHAR(50) NOT NULL,
                 config JSON NOT NULL
             )`);
 

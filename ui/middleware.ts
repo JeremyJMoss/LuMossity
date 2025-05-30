@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { INTERNAL_API_URL } from './constants/constants';
-import { access } from 'fs';
 
 const HOMEURL = process.env.NEXT_PUBLIC_HOME_URL;
 
@@ -29,8 +28,12 @@ export async function middleware(req: NextRequest) {
       const userResponse = await fetch(`${INTERNAL_API_URL}/user/initial-user`, { method: 'POST' });
       const userStatus = userResponse.status;
 
-      if (userStatus !== 409 && !pathname.startsWith('/initialize/user')) {
-        return NextResponse.redirect(`${HOMEURL}/initialize/user`);
+      if (userStatus !== 409) {
+        if (!pathname.startsWith('/initialize/user')) {
+            return NextResponse.redirect(`${HOMEURL}/initialize/user`);
+        } else {
+          return NextResponse.next();
+        }
       }
 
       if (

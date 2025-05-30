@@ -3,7 +3,7 @@
 // ==================================================
 const DatabaseConnector = require("../../services/DatabaseConnector");
 const { validateFieldConfig } = require( "../../util/validation");
-const { mapMySQLError } = require( "../../util/helpers");
+const { mapMySQLError, fieldTypesToFieldObjects } = require( "../../util/helpers");
 const { AppError, ConflictError } = require( "../utility/Errors");
 const { fieldTypeToMySQLType, fieldTypeToMySQLCastType } = require("../../util/constants");
 const DatabaseConfigManager = require("../../services/DatabaseConfigManager");
@@ -414,12 +414,19 @@ class Field {
     static async getFieldPresets() {
         return await DatabaseConnector.withConnection(async db => {
             try {
-               const [rows] = await db.query(
+               const [presets] = await db.query(
                    `SELECT *
                    FROM field_presets;`
                );
 
-               return rows;
+               const [types] = await db.query(
+                    `SELECT *
+                    FROM field_types;`
+               );
+
+               fieldTypesToFieldObjects(types);
+
+               return presets;
 
            } catch (err) {
    

@@ -42,7 +42,7 @@ const StudioSubmenu = () => {
                     <div className="flex flex-col gap-2">
                         {entities.map((entity) => {
                             return (
-                                <Link className="whitespace-nowrap" href={`/entity-studio/entity/${entity.entity_key}`} key={entity.entity_key}>{entity.entity_name}</Link>
+                                <Link className="whitespace-nowrap hover:bg-moss-light/25 px-3 rounded py-1" href={`/entity-studio/entity/${entity.entity_key}`} key={entity.entity_key}>{entity.entity_name}</Link>
                             )
                         })}
                         <button className="text-left cursor-pointer text-moss whitespace-nowrap" onClick={() => router.push("/entity-studio/create")}>

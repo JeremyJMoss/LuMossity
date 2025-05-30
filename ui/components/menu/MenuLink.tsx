@@ -22,7 +22,12 @@ const MenuLink = ({children, href, className = '', menuItem}: LinkProps) => {
         router.push(href);
     }
 
-    const classNames = menuItem !== '' && menuItem === selectedMenuItem ? className + ' ' + 'bg-moss-light' : className;
+    let classNames = className;
+
+    if (menuItem !== '') {
+        classNames += menuItem === selectedMenuItem ? ' bg-moss-light rounded' : ' hover:bg-moss-light/25 rounded';
+    }
+
 
     return (
         <Link href={href} className={classNames} onClick={(e) => handleClick(e, href, menuItem)}>{children}</Link>

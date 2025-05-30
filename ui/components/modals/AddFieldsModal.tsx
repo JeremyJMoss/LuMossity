@@ -5,6 +5,7 @@ import LoadingSpinner from "../ui/LoadingSpinner";
 import CallToActionButton from "../buttons/CallToActionButton";
 import PrimaryFormButton from "../buttons/PrimaryFormButton";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
+import SelectBoxFieldConfigField from "../ui/SelectBoxFieldConfigField";
 
 type Props = {
   entityKey: string;
@@ -15,7 +16,13 @@ type Props = {
 type FieldPreset = {
     name: string;
     ID: number;
+    field_type: string;
     config: any
+}
+
+type SelectBoxOption = {
+    value: string;
+    label: string;
 }
 
 const AddFieldModal = ({ entityKey, onClose, onSuccess }: Props) => {
@@ -25,6 +32,11 @@ const AddFieldModal = ({ entityKey, onClose, onSuccess }: Props) => {
     const [fieldConfigurations, setFieldConfigurations] = useState<FieldPreset[]>([]);
     const [step, setStep] = useState<number>(1);
     const [databaseColumnSelected, setDatabaseColumnSelected] = useState(false);
+    const [selectBoxOptions, setSelectBoxOptions] = useState<SelectBoxOption[]>([]);
+    
+    const currentSelectedField = fieldConfigurations.find(config => config.ID === fieldConfig) ?? null;
+    const currentFieldConfiguration = currentSelectedField?.config;
+    const field_type = currentSelectedField?.field_type;
 
     const modalRef = useRef<HTMLDivElement | null>(null);
 
@@ -48,6 +60,7 @@ const AddFieldModal = ({ entityKey, onClose, onSuccess }: Props) => {
 
             const response = await request.json();
 
+            console.log(response);
             setFieldConfigurations(response.field_presets);
             setError('');
 
@@ -81,7 +94,7 @@ const AddFieldModal = ({ entityKey, onClose, onSuccess }: Props) => {
 
 
     return (   
-        <div role="dialog" aria-model="true" className="fixed inset-0 bg-moss-dark/50 flex items-center justify-center z-50" onClick={onClose}>
+        <div role="dialog" aria-modal="true" className="fixed inset-0 bg-moss-dark/50 flex items-center justify-center z-50" onClick={onClose}>
             <div ref={modalRef} className="bg-white rounded-lg p-6 w-full max-w-4xl shadow-lg flex flex-col gap-5" onClick={(e) => e.stopPropagation()}>
                 <h3 className="text-lg font-semibold">Add New Field</h3>
                     { step === 1 &&
@@ -116,10 +129,10 @@ const AddFieldModal = ({ entityKey, onClose, onSuccess }: Props) => {
                     }
                     { step === 2 &&
                         <>
-                            {fieldConfig !== null && fieldConfigurations.find(config => config.ID === fieldConfig)?.config &&
-                                <form onSubmit={handleSubmit}>
+                            {fieldConfig && currentFieldConfiguration &&
+                                <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                                     <div className="grid grid-cols-3 gap-5 items-center">
-                                        <div>
+                                        <div className="flex flex-col gap-2">
                                             <label className="font-semibold text-sm" htmlFor="uniqueFieldName">Unique Field Name</label>
                                             <input 
                                                 className="border border-gray-400 bg-stone-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-moss-light rounded"
@@ -128,41 +141,79 @@ const AddFieldModal = ({ entityKey, onClose, onSuccess }: Props) => {
                                                 id="uniqueFieldName"
                                             />
                                         </div>
-                                        {Object.entries(fieldConfigurations.find(config => config.ID === fieldConfig)!.config).map(([key, def_val]) => {
+                                        {Object.entries(currentFieldConfiguration).map(([key, def_val]) => {
+                                            if ((field_type === 'select' || field_type === 'radio') && ['displayType', 'options', 'multiple', 'sort', 'entity'].includes(key)){
+                                                return;
+                                            }
+                                            if (field_type === 'checkbox' && key === 'checked') {
+                                                return;
+                                            }
+                                            if ((field_type === 'image' || field_type === 'file') && key === 'accept') {
+                                                return;
+                                            }
                                             return (
-                                                <div className="flex flex-col" key={key}>
-                                                    <label className="font-semibold text-sm" htmlFor={key}>{key[0].toUpperCase() + key.slice(1)}</label>
+                                                <div className="flex flex-col gap-2" key={key}>
+                                                    <label className="font-semibold text-sm" htmlFor={key}>{key[0].toUpperCase() + key.slice(1)}</label>    
                                                     <input 
                                                         className="border border-gray-400 bg-stone-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-moss-light rounded"
                                                         id={key} type="text" 
-                                                        defaultValue={String(def_val ?? "")}
+                                                        placeholder={String(def_val ?? "")}
                                                         name={key}
                                                     />
                                                 </div>
                                             )
                                         })}
-                                        <div className="flex items-center gap-4">
-                                            <div>
-                                                <label className="font-semibold text-sm" htmlFor="isDbColumn">DB Column</label>
-                                                <p className="text-xs font-medium">(setup database column<br/> or just metadata)</p>
-                                            </div>
-                                            <input type="checkbox" onChange={(e) => setDatabaseColumnSelected((prev) => !prev)} name="is_db_column" id="isDbColumn" value="true" checked={databaseColumnSelected}/>
-                                        </div>
-                                        {!databaseColumnSelected && 
-                                            <div className="flex items-center gap-4">
-                                                <div>
-                                                    <label className="font-semibold text-sm" htmlFor="isQueryable">Queryable</label>
-                                                    <p className="text-xs font-medium">(Metadata will be used in <br/>single search queries)</p>
+                                    </div>
+                                    {(field_type === 'select' || field_type === 'radio') && currentFieldConfiguration.options &&
+                                        <SelectBoxFieldConfigField
+                                            selectBoxOptions={selectBoxOptions}
+                                            onChange={setSelectBoxOptions}/>
+                                    }
+                                    <div className="p-4 border-moss-dark border flex flex-col gap-4 rounded">
+                                        <h2 className="font-semibold text-lg">Options</h2>
+                                        
+                                        <div className="grid grid-cols-2 items-center w-3/4 gap-4">
+                                            {field_type === 'select' && currentFieldConfiguration.sort !== undefined &&
+                                                <div className="flex flex-col gap-1">
+                                                    <div className="flex gap-3">
+                                                        <label className="font-semibold text-sm" htmlFor="sortOptions">Sort Options</label>
+                                                        <input type="checkbox" name="sort_options" id="sortOptions"/>
+                                                    </div>
+                                                    <p className="text-xs text-gray-500">Sort select options</p>
                                                 </div>
-                                                <input type="checkbox" name="is_queryable" id="isQueryable" value="true"/>
+                                            }
+                                            { field_type === 'checkbox' && currentFieldConfiguration.checked !== undefined &&
+                                                <div className="flex flex-col gap-1">
+                                                    <div className="flex gap-3">
+                                                        <label className="font-semibold text-sm" htmlFor="isChecked">Checked</label>
+                                                        <input type="checkbox" name="is_checked" id="isChecked"/>
+                                                    </div>
+                                                    <p className="text-xs text-gray-500">Field checked by default</p>
+                                                </div>
+                                            }
+                                            <div className="flex flex-col gap-1">
+                                                <div className="flex gap-3">
+                                                    <label className="font-semibold text-sm" htmlFor="isDbColumn">DB Column</label>
+                                                    <input type="checkbox" onChange={(e) => setDatabaseColumnSelected((prev) => !prev)} name="is_db_column" id="isDbColumn" value="true" checked={databaseColumnSelected}/>
+                                                </div>
+                                                <p className="text-xs text-gray-500">Setup directly in database table</p>
                                             </div>
-                                        }
-                                        <div className="flex items-center gap-4">
-                                            <div>
-                                                <label className="font-semibold text-sm" htmlFor="isRequired">Required</label>
-                                                <p className="text-xs font-medium">(Data is required)</p>
+                                            {!databaseColumnSelected && 
+                                                <div className="flex flex-col gap-1">
+                                                    <div className="flex gap-3">
+                                                        <label className="font-semibold text-sm" htmlFor="isQueryable">Queryable</label>
+                                                        <input type="checkbox" name="is_queryable" id="isQueryable" value="true"/>
+                                                    </div>
+                                                    <p className="text-xs text-gray-500">Metadata will be used in single search queries</p>
+                                                </div>
+                                            }
+                                            <div className="flex flex-col gap-1">
+                                                <div className="flex gap-3">
+                                                    <label className="font-semibold text-sm" htmlFor="isRequired">Required</label>
+                                                    <input type="checkbox" name="is_required" id="isRequired" value="true"/>
+                                                </div>
+                                                <p className="text-xs text-gray-500">Data is required</p>
                                             </div>
-                                            <input type="checkbox" name="is_required" id="isRequired" value="true"/>
                                         </div>
                                     </div>
                                     <div className="flex justify-between mt-10">

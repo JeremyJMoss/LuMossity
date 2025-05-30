@@ -61,3 +61,52 @@ module.exports.mapMySQLError = (err) => {
 
     return errorMap[err.code] || fallback;
 }
+
+module.exports.convertPascalCaseToTitle = (pascalCaseTitle) => {
+    const result = str.replace(/([A-Z])/g, ' $1').trim();
+    
+    return result.charAt(0).toUpperCase() + result.slice(1);
+}
+
+module.exports.fieldTypesToFieldObjects = (field_types) => {
+    const fields = field_types.map((field_type) => {
+        const name = field_type.name;
+        const config = field_type.config.properties;
+        const required = new Set(field_type.config.required || []);
+        const fieldConfigs = [];
+
+        for (let [property, value] of Object.entries(config)) {
+            let type = '';
+            let options = [];
+            switch(value.type){
+                case "string":
+                    type = "text";
+                    break;
+                case "boolean":
+                    type = "checkbox";
+                    break;
+                case "integer":
+                case "number":
+                    type = "number";
+                    break;
+                case "array":
+                    type = "create_options";
+                    break;
+                case "enum":
+                    type = "select";
+                    options = value;
+                    break;
+                case "object":
+                    break;
+
+            }
+            fieldConfigs.push({
+                "label": this.convertPascalCaseToTitle(property),
+            })
+        }
+
+        return field_type;
+    })
+
+    return fields;
+}

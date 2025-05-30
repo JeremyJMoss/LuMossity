@@ -39,6 +39,7 @@ const FieldConfigurationSection = ({fields, fieldReset, onAddFieldsClick}: Field
               <th className="px-4 py-2 text-left border-b whitespace-nowrap">Required</th>
               <th className="px-4 py-2 text-left border-b whitespace-nowrap">DB Column</th>
               <th className="px-4 py-2 text-left border-b whitespace-nowrap">Queryable</th>
+              <th className="px-4 py-2 text-left border-b whitespace-nowrap">Extra Config</th>
               <th className="px-4 py-2 text-left border-b whitespace-nowrap">Actions</th>
             </tr>
           </thead>
@@ -55,6 +56,15 @@ const FieldConfigurationSection = ({fields, fieldReset, onAddFieldsClick}: Field
                 </td>
                 <td className="px-4 py-2 border-b whitespace-nowrap">
                   {field.is_db_column ? "N/A" : (field.is_queryable ? "Yes" : "No")}
+                </td>
+                <td className="px-4 py-2 border-b whitespace-nowrap">
+                  <button
+                    type="button"
+                    className="text-sunlight hover:underline"
+                    onClick={() => {}}
+                  >
+                    Modify
+                  </button>
                 </td>
                 <td className="px-4 py-2 border-b whitespace-nowrap space-x-2">
                   <button

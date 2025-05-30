@@ -12,7 +12,7 @@ type SubMenuLinkProps = {
 const SubMenuLink = ({label, onClick, className = '', icon: Icon, menuItem}: SubMenuLinkProps) => {
     const {selectedMenuItem} = useSidebar();
 
-    const classNames = menuItem === selectedMenuItem ? className + ' ' + 'bg-moss-light rounded' : className;
+    const classNames = menuItem === selectedMenuItem ? className + ' bg-moss-light rounded' : className + ' hover:bg-moss-light/25 rounded';
 
     return (
         <button onClick={onClick} className={classNames}>

@@ -98,8 +98,9 @@ const LoginForm = () => {
                 </div>
                 <div className="flex justify-center">
                     <SecondaryFormButton
-                    buttonText="Submit"
-                    isSubmitting={isSubmitting}/>
+                    isSubmitting={isSubmitting}>
+                        Submit
+                    </SecondaryFormButton>
                 </div>
             </form>
         </>
