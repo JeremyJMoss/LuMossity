@@ -7,6 +7,7 @@ const setupRouter = require('./routes/setup');
 const entityRouter = require('./routes/entity');
 const userRouter = require('./routes/user');
 const authRouter = require('./routes/auth');
+const fieldTypeRouter = require('./routes/field_types');
 const addExtensions = require('./middleware/extensions');
 const notFoundHandler = require('./middleware/notFoundHandler');
 const errorHandler = require('./middleware/errorHandler');
@@ -29,6 +30,7 @@ server.use('/api/auth', authRouter);
 server.use('/api/setup', setupRouter);
 server.use('/api/user', userRouter);
 server.use('/api/entities', entityRouter);
+server.use('/api/field-types', fieldTypeRouter);
 server.use(notFoundHandler);
 server.use(errorHandler);
 

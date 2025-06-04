@@ -71,7 +71,8 @@ class DatabaseInitializer {
             await dbConnection.execute(`CREATE TABLE IF NOT EXISTS field_types (
                 ID INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
                 name VARCHAR(255) NOT NULL UNIQUE,
-                config JSON NOT NULL
+                config JSON NOT NULL,
+                fields JSON NOT NULL
             )`)
 
             await dbConnection.execute(`CREATE TABLE IF NOT EXISTS field_presets (
@@ -86,12 +87,13 @@ class DatabaseInitializer {
 
                 for (const type of type_config) {
                     await dbConnection.execute(
-                        `INSERT INTO field_types (name, config)
-                        VALUES (?, ?)
-                        ON DUPLICATE KEY UPDATE config = VALUES(config)`,
+                        `INSERT INTO field_types (name, config, fields)
+                        VALUES (?, ?, ?)
+                        ON DUPLICATE KEY UPDATE config = VALUES(config), fields = VALUES(fields)`,
                         [
                             type.field_type,
-                            JSON.stringify(type.default_config_schema)
+                            JSON.stringify(type.default_config_schema),
+                            JSON.stringify(type.fields)
                         ]
                     );
                 }

@@ -2,7 +2,6 @@
 // =============== Module Dependencies ==============
 // ==================================================
 const Entity = require('../models/Entity');
-const Field = require('../models/partials/EntityField');
 const { validateBodySchema } = require('../util/validation');
 
 const { 
@@ -47,22 +46,6 @@ module.exports.getSingleEntity = async (req, res, next) => {
         })
     } catch (err) {
         next(err);
-    }
-}
-
-module.exports.getFieldPresets = async (req, res, next) => {
-    try {
-        const field_presets = await Field.getFieldPresets();
-
-        if (!field_presets) {
-            throw new NotFoundError('No field presets found');
-        }
-
-        res.status(200).json({
-            field_presets
-        })
-    } catch (err) {
-        next (err);
     }
 }
 

@@ -7,6 +7,7 @@ const { mapMySQLError, fieldTypesToFieldObjects } = require( "../../util/helpers
 const { AppError, ConflictError } = require( "../utility/Errors");
 const { fieldTypeToMySQLType, fieldTypeToMySQLCastType } = require("../../util/constants");
 const DatabaseConfigManager = require("../../services/DatabaseConfigManager");
+const { logger } = require("../utility/Logger");
 
 // ==================================================
 // ================== Field Class ===================
@@ -419,24 +420,45 @@ class Field {
                    FROM field_presets;`
                );
 
-               const [types] = await db.query(
-                    `SELECT *
-                    FROM field_types;`
-               );
-
-               const variable = fieldTypesToFieldObjects(types);
-               
-               console.dir(variable, { depth: null });
-
                return presets;
 
            } catch (err) {
+                logger.error(err, {
+                    class: "Field",
+                    method: "getFieldPresets"
+                });
    
-               const {message, status_code} = mapMySQLError(err);
-               
-               throw new AppError(message, status_code);
+                const {message, status_code} = mapMySQLError(err);
+                
+                throw new AppError(message, status_code);
            }
        });
+    }
+
+    static async getFieldSetup( field_type ) {
+        return await DatabaseConnector.withConnection(async db => {
+            try {
+                const [field_setup] = await db.query(
+                    `SELECT fields
+                    FROM field_types 
+                    WHERE name = ?
+                    LIMIT 1`,
+                    field_type
+                )
+
+                return field_setup[0];
+
+            } catch (err) {
+                logger.error(err, {
+                    class: "Field",
+                    method: "getFieldSetup"
+                });
+
+                const {message, status_code} = mapMySQLError(err);
+               
+                throw new AppError(message, status_code);
+            }
+        })
     }
 }
 

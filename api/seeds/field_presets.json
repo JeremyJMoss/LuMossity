@@ -228,14 +228,5 @@
             "entityOptionTitle": "title",
             "displayType": "selectbox"
         }
-    },
-    {
-        "name": "Group",
-        "field_type": "group",
-        "config": {
-            "label": "SubItems",
-            "repeatable": "true",
-            "fields": []
-        }
     }
 ]

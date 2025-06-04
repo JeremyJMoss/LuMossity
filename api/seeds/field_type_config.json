@@ -23,6 +23,32 @@
             "required": [
                 "label"
             ]
+        },
+        "fields": {
+            "label": {
+                "label": "Label",
+                "inputType": "text",
+                "required": true,
+                "defaultValue": ""
+            },
+            "placeholder": {
+                "label": "Placeholder",
+                "inputType": "text",
+                "required": false,
+                "defaultValue": ""
+            },
+            "maxLength": {
+                "label": "Maximum Length",
+                "inputType": "number",
+                "required": false,
+                "defaultValue": null
+            },
+            "minLength": {
+                "label": "Minimum Length",
+                "inputType": "number",
+                "required": false,
+                "defaultValue": null
+            }
         }
     },
     {
@@ -47,6 +73,26 @@
             "required": [
                 "label"
             ]
+        },
+        "fields": {
+            "label": {
+                "label": "Label",
+                "inputType": "text",
+                "required": true,
+                "defaultValue": ""
+            },
+            "placeholder": {
+                "label": "Placeholder",
+                "inputType": "text",
+                "required": false,
+                "defaultValue": ""
+            },
+            "rows": {
+                "label": "Rows",
+                "inputType": "number",
+                "required": false,
+                "defaultValue": 5
+            }
         }
     },
     {
@@ -67,6 +113,20 @@
             "required": [
                 "label"
             ]
+        },
+        "fields": {
+            "label": {
+                "label": "Label",
+                "inputType": "text",
+                "required": true,
+                "defaultValue": ""
+            },
+            "placeholder": {
+                "label": "Placeholder",
+                "inputType": "text",
+                "required": false,
+                "defaultValue": ""
+            }
         }
     },
     {
@@ -94,6 +154,32 @@
             "required": [
                 "label"
             ]
+        },
+        "fields": {
+            "label": {
+                "label": "Label",
+                "inputType": "text",
+                "required": true,
+                "defaultValue": ""
+            },
+            "min": {
+                "label": "Min",
+                "inputType": "number",
+                "required": false,
+                "defaultValue": 0
+            },
+            "max": {
+                "label": "Max",
+                "inputType": "number",
+                "required": false,
+                "defaultValue": null
+            },
+            "step": {
+                "label": "Step",
+                "inputType": "number",
+                "required": false,
+                "defaultValue": 1
+            }
         }
     },
     {
@@ -121,6 +207,32 @@
             "required": [
                 "label"
             ]
+        },
+        "fields": {
+            "label": {
+                "label": "Label",
+                "inputType": "text",
+                "required": true,
+                "defaultValue": ""
+            },
+            "min": {
+                "label": "Min",
+                "inputType": "number",
+                "required": false,
+                "defaultValue": 0
+            },
+            "max": {
+                "label": "Max",
+                "inputType": "number",
+                "required": false,
+                "defaultValue": null
+            },
+            "step": {
+                "label": "Step",
+                "inputType": "number",
+                "required": false,
+                "defaultValue": 0.01
+            }
         }
     },
     {
@@ -152,15 +264,32 @@
                 "checked": {
                     "type": "boolean",
                     "default": false
-                },
-                "required": {
-                    "type": "boolean"
                 }
             },
             "required": [
                 "label",
                 "options"
             ]
+        },
+        "fields": {
+            "label": {
+                "label": "Label",
+                "inputType": "text",
+                "required": true,
+                "defaultValue": ""
+            },
+            "options": {
+                "label": "Checkbox Options",
+                "inputType": "create_options",
+                "required": true,
+                "defaultValue": null
+            },
+            "checked": {
+                "label": "Checked",
+                "inputType": "checkbox",
+                "required": true,
+                "defaultValue": false
+            }
         }
     },
     {
@@ -197,6 +326,20 @@
                 "label",
                 "options"
             ]
+        },
+        "fields": {
+            "label": {
+                "label": "Label",
+                "inputType": "text",
+                "required": true,
+                "defaultValue": ""
+            },
+            "options": {
+                "label": "Radio Options",
+                "inputType": "create_options",
+                "required": false,
+                "defaultValue": null
+            }
         }
     },
     {
@@ -217,6 +360,20 @@
             "required": [
                 "label"
             ]
+        },
+        "fields": {
+            "label": {
+                "label": "Label",
+                "inputType": "text",
+                "required": true,
+                "defaultValue": ""
+            },
+            "placeholder": {
+                "label": "Placeholder",
+                "inputType": "text",
+                "required": false,
+                "defaultValue": ""
+            }
         }
     },
     {
@@ -240,6 +397,26 @@
             "required": [
                 "label"
             ]
+        },
+        "fields": {
+            "label": {
+                "label": "Label",
+                "inputType": "text",
+                "required": true,
+                "defaultValue": ""
+            },
+            "maxLength": {
+                "label": "Maximum Length",
+                "inputType": "number",
+                "required": false,
+                "defaultValue": null
+            },
+            "minLength": {
+                "label": "Minimum Length",
+                "inputType": "number",
+                "required": false,
+                "defaultValue": 0
+            }
         }
     },
     {
@@ -261,6 +438,20 @@
             "required": [
                 "label"
             ]
+        },
+        "fields": {
+            "label": {
+                "label": "Label",
+                "inputType": "text",
+                "required": true,
+                "defaultValue": ""
+            },
+            "defaultToday": {
+                "label": "Default Today's Date",
+                "inputType": "checkbox",
+                "required": true,
+                "defaultValue": true
+            }
         }
     },
     {
@@ -278,6 +469,14 @@
             "required": [
                 "label"
             ]
+        },
+        "fields": {
+            "label": {
+                "label": "Label",
+                "inputType": "text",
+                "required": true,
+                "defaultValue": ""
+            }
         }
     },
     {
@@ -297,6 +496,20 @@
                 }
             },
             "required": ["label"]
+        },
+        "fields": {
+            "label": {
+                "label": "Label",
+                "inputType": "text",
+                "required": true,
+                "defaultValue": ""
+            },
+            "defaultToday": {
+                "label": "Default Today's Date",
+                "inputType": "checkbox",
+                "required": true,
+                "defaultValue": true
+            }
         }
     },
     {
@@ -381,6 +594,89 @@
                    "required": ["options"]
             },
             "additionalProperties": false
+        },
+        "fields": {
+            "label": {
+                "label": "Label",
+                "inputType": "text",
+                "required": true,
+                "defaultValue": ""
+            },
+            "entity": {
+                "label": "Entity Select Box",
+                "inputType": "checkbox",
+                "required": true,
+                "defaultValue": false
+            },
+            "entityType": {
+                "label": "Entity Type",
+                "inputType": "select_special",
+                "required": true,
+                "defaultValue": false,
+                "options_render": "entity",
+                "conditionRender": {
+                    "entity": true
+                }
+            },
+            "sort": {
+                "label": "Sort Options",
+                "inputType": "checkbox",
+                "required": true,
+                "defaultValue": false
+            },
+            "sortType": {
+                "label": "Sort Direction",
+                "inputType": "select",
+                "required": true,
+                "defaultValue": "asc",
+                "options": [
+                    {
+                        "label": "Ascending",
+                        "value": "asc"
+                    },
+                    {
+                        "label": "Descending",
+                        "value": "desc"
+                    }
+                ],
+                "conditionRender": {
+                    "sort": true
+                }
+            },
+            "multiple": {
+                "label": "Select Multiple",
+                "inputType": "checkbox",
+                "required": true,
+                "defaultValue": false
+            },
+            "displayType": {
+                "label": "Display Type",
+                "inputType": "select",
+                "defaultValue": "selectbox",
+                "options": [
+                    {
+                        "label": "Select",
+                        "value": "selectbox"
+                    },
+                    {
+                        "label": "Inline Checkboxes",
+                        "value": "checkbox-inline"
+                    },
+                    {
+                        "label": "Checkboxes",
+                        "value": "checkboxes"
+                    }
+                ]
+            },
+            "options": {
+                "label": "Select Options",
+                "inputType": "create_options",
+                "required": true,
+                "defaultValue": null,
+                "conditionRender": {
+                    "entity": false
+                }
+            }
         }
     },
     {
@@ -405,6 +701,32 @@
             "required": [
                 "label"
             ]
+        },
+        "fields": {
+            "label": {
+                "label": "Label",
+                "inputType": "text",
+                "required": true,
+                "defaultValue": ""
+            },
+            "onLabel": {
+                "label": "On Label",
+                "inputType": "text",
+                "required": true,
+                "defaultValue": "On"
+            },
+            "offLabel": {
+                "label": "Off Label",
+                "inputType": "text",
+                "required": true,
+                "defaultValue": "Off"
+            },
+            "defaultState": {
+                "label": "Default State",
+                "inputType": "checkbox",
+                "required": true,
+                "defaultValue": false
+            }
         }
     },
     {
@@ -434,6 +756,46 @@
                 "label",
                 "accept"
             ]
+        },
+        "fields": {
+            "label": {
+                "label": "Label",
+                "inputType": "text",
+                "required": true,
+                "defaultValue": ""
+            },
+            "accept": {
+                "label": "Label",
+                "inputType": "multi-select",
+                "required": true,
+                "defaultValue": [],
+                "options": [
+                    {
+                        "label": ".png",
+                        "value": "image/png"
+                    },
+                    {
+                        "label": ".jpg",
+                        "value": "image/jpeg"
+                    },
+                    {
+                        "label": ".svg",
+                        "value": "image/svg+xml"
+                    },
+                    {
+                        "label": ".tiff",
+                        "value": "image/tiff"
+                    },
+                    {
+                        "label": ".gif",
+                        "value": "image/gif"
+                    },
+                    {
+                        "label": ".webp",
+                        "value": "image/webp"
+                    }
+                ]
+            }
         }
     },
     {
@@ -465,6 +827,62 @@
                 }
             },
             "required": [ "label", "accept"]
+        },
+        "fields": {
+            "label": {
+                "label": "Label",
+                "inputType": "text",
+                "required": true,
+                "defaultValue": ""
+            },
+            "accept": {
+                "label": "Accept",
+                "inputType": "multi_select",
+                "required": true,
+                "defaultValue": [],
+                "options": [
+                    {
+                        "label": ".html",
+                        "value": "text/html"
+                    },
+                    {
+                        "label": ".pdf",
+                        "value": "application/pdf"
+                    },
+                    {
+                        "label": ".csv",
+                        "value": "text/csv"
+                    },
+                    {
+                        "label": ".txt",
+                        "value": "text/plain"
+                    },
+                    {
+                        "label": ".pptx",
+                        "value": "application/vnd.ms-powerpoint"
+                    },
+                    {
+                        "label": ".doc",
+                        "value": "application/msword"
+                    },
+                    {
+                        "label": ".docx",
+                        "value": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    },
+                    {
+                        "label": ".zip",
+                        "value": "application/x-zip-compressed"
+                    },
+                    {
+                        "label": ".xls",
+                        "value": "application/vnd.ms-excel"
+                    },
+                    {
+                        "label": ".xlsx",
+                        "value": "vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    }
+                ]
+            }
         }
     }
 ]

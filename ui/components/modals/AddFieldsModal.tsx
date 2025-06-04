@@ -3,9 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import CallToActionButton from "../buttons/CallToActionButton";
-import PrimaryFormButton from "../buttons/PrimaryFormButton";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
-import SelectBoxFieldConfigField from "../ui/SelectBoxFieldConfigField";
+import FieldConfigPage from "./FieldConfigPage";
 
 type Props = {
   entityKey: string;
@@ -20,23 +19,14 @@ type FieldPreset = {
     config: any
 }
 
-type SelectBoxOption = {
-    value: string;
-    label: string;
-}
-
 const AddFieldModal = ({ entityKey, onClose, onSuccess }: Props) => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<string>('');
     const [fieldConfig, setFieldConfig] = useState<number | null>(null);
     const [fieldConfigurations, setFieldConfigurations] = useState<FieldPreset[]>([]);
     const [step, setStep] = useState<number>(1);
-    const [databaseColumnSelected, setDatabaseColumnSelected] = useState(false);
-    const [selectBoxOptions, setSelectBoxOptions] = useState<SelectBoxOption[]>([]);
-    
-    const currentSelectedField = fieldConfigurations.find(config => config.ID === fieldConfig) ?? null;
-    const currentFieldConfiguration = currentSelectedField?.config;
-    const field_type = currentSelectedField?.field_type;
+
+    const field_type = fieldConfigurations.find(config => config.ID === fieldConfig)?.field_type ?? null;
 
     const modalRef = useRef<HTMLDivElement | null>(null);
 
@@ -48,7 +38,7 @@ const AddFieldModal = ({ entityKey, onClose, onSuccess }: Props) => {
         setIsLoading(true);
         setError('');
         try {
-            const request = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/entities/field-presets`, {
+            const request = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/field-types/field-presets`, {
                 credentials: "include"
             })
 
@@ -60,7 +50,6 @@ const AddFieldModal = ({ entityKey, onClose, onSuccess }: Props) => {
 
             const response = await request.json();
 
-            console.log(response);
             setFieldConfigurations(response.field_presets);
             setError('');
 
@@ -74,24 +63,6 @@ const AddFieldModal = ({ entityKey, onClose, onSuccess }: Props) => {
     useEffect(() => {
         loadFieldConfigurations();
     },[])
-
-    const addField = async (formData: FormData) => {
-        console.log(formData);
-    }  
-
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        const formData = new FormData(e.currentTarget);
-        const checkboxNames = ['is_db_column', 'is_queryable', 'is_required'];
-
-        checkboxNames.forEach(name => {
-            if (!formData.has(name)) {
-                formData.append(name, 'false'); // or '0' depending on your backend expectation
-            }
-        });
-        addField(formData);
-    }
-
 
     return (   
         <div role="dialog" aria-modal="true" className="fixed inset-0 bg-moss-dark/50 flex items-center justify-center z-50" onClick={onClose}>
@@ -118,7 +89,7 @@ const AddFieldModal = ({ entityKey, onClose, onSuccess }: Props) => {
                             </div>
                             <div className="flex justify-end">
                                 <CallToActionButton
-                                    onClick={(e) => setStep(2)}
+                                    onClick={() => setStep(2)}
                                     className="px-3 py-2"
                                     isDisabled={isDisabled}
                                 >
@@ -127,112 +98,10 @@ const AddFieldModal = ({ entityKey, onClose, onSuccess }: Props) => {
                             </div>
                         </>
                     }
-                    { step === 2 &&
-                        <>
-                            {fieldConfig && currentFieldConfiguration &&
-                                <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                                    <div className="grid grid-cols-3 gap-5 items-center">
-                                        <div className="flex flex-col gap-2">
-                                            <label className="font-semibold text-sm" htmlFor="uniqueFieldName">Unique Field Name</label>
-                                            <input 
-                                                className="border border-gray-400 bg-stone-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-moss-light rounded"
-                                                type="text" 
-                                                name="field_name" 
-                                                id="uniqueFieldName"
-                                            />
-                                        </div>
-                                        {Object.entries(currentFieldConfiguration).map(([key, def_val]) => {
-                                            if ((field_type === 'select' || field_type === 'radio') && ['displayType', 'options', 'multiple', 'sort', 'entity'].includes(key)){
-                                                return;
-                                            }
-                                            if (field_type === 'checkbox' && key === 'checked') {
-                                                return;
-                                            }
-                                            if ((field_type === 'image' || field_type === 'file') && key === 'accept') {
-                                                return;
-                                            }
-                                            return (
-                                                <div className="flex flex-col gap-2" key={key}>
-                                                    <label className="font-semibold text-sm" htmlFor={key}>{key[0].toUpperCase() + key.slice(1)}</label>    
-                                                    <input 
-                                                        className="border border-gray-400 bg-stone-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-moss-light rounded"
-                                                        id={key} type="text" 
-                                                        placeholder={String(def_val ?? "")}
-                                                        name={key}
-                                                    />
-                                                </div>
-                                            )
-                                        })}
-                                    </div>
-                                    {(field_type === 'select' || field_type === 'radio') && currentFieldConfiguration.options &&
-                                        <SelectBoxFieldConfigField
-                                            selectBoxOptions={selectBoxOptions}
-                                            onChange={setSelectBoxOptions}/>
-                                    }
-                                    <div className="p-4 border-moss-dark border flex flex-col gap-4 rounded">
-                                        <h2 className="font-semibold text-lg">Options</h2>
-                                        
-                                        <div className="grid grid-cols-2 items-center w-3/4 gap-4">
-                                            {field_type === 'select' && currentFieldConfiguration.sort !== undefined &&
-                                                <div className="flex flex-col gap-1">
-                                                    <div className="flex gap-3">
-                                                        <label className="font-semibold text-sm" htmlFor="sortOptions">Sort Options</label>
-                                                        <input type="checkbox" name="sort_options" id="sortOptions"/>
-                                                    </div>
-                                                    <p className="text-xs text-gray-500">Sort select options</p>
-                                                </div>
-                                            }
-                                            { field_type === 'checkbox' && currentFieldConfiguration.checked !== undefined &&
-                                                <div className="flex flex-col gap-1">
-                                                    <div className="flex gap-3">
-                                                        <label className="font-semibold text-sm" htmlFor="isChecked">Checked</label>
-                                                        <input type="checkbox" name="is_checked" id="isChecked"/>
-                                                    </div>
-                                                    <p className="text-xs text-gray-500">Field checked by default</p>
-                                                </div>
-                                            }
-                                            <div className="flex flex-col gap-1">
-                                                <div className="flex gap-3">
-                                                    <label className="font-semibold text-sm" htmlFor="isDbColumn">DB Column</label>
-                                                    <input type="checkbox" onChange={(e) => setDatabaseColumnSelected((prev) => !prev)} name="is_db_column" id="isDbColumn" value="true" checked={databaseColumnSelected}/>
-                                                </div>
-                                                <p className="text-xs text-gray-500">Setup directly in database table</p>
-                                            </div>
-                                            {!databaseColumnSelected && 
-                                                <div className="flex flex-col gap-1">
-                                                    <div className="flex gap-3">
-                                                        <label className="font-semibold text-sm" htmlFor="isQueryable">Queryable</label>
-                                                        <input type="checkbox" name="is_queryable" id="isQueryable" value="true"/>
-                                                    </div>
-                                                    <p className="text-xs text-gray-500">Metadata will be used in single search queries</p>
-                                                </div>
-                                            }
-                                            <div className="flex flex-col gap-1">
-                                                <div className="flex gap-3">
-                                                    <label className="font-semibold text-sm" htmlFor="isRequired">Required</label>
-                                                    <input type="checkbox" name="is_required" id="isRequired" value="true"/>
-                                                </div>
-                                                <p className="text-xs text-gray-500">Data is required</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="flex justify-between mt-10">
-                                        <CallToActionButton
-                                            type="secondary"
-                                            onClick={() => setStep(1)}
-                                            className="px-3 py-2"
-                                        >
-                                            Back
-                                        </CallToActionButton>
-                                        <PrimaryFormButton
-                                            isSubmitting={false}
-                                            className="px-3 py-2">
-                                            Submit
-                                        </PrimaryFormButton>
-                                    </div>
-                                </form>
-                            }
-                        </>
+                    { step === 2 && field_type &&
+                        <FieldConfigPage
+                        setStep={setStep}
+                        fieldType={field_type}/>
                     }
             </div>
         </div>
