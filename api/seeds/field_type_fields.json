@@ -1,0 +1,429 @@
+[
+    {
+        "field_type": "text",
+        "fields": {
+            "label": {
+                "label": "Label",
+                "inputType": "text",
+                "required": true,
+                "defaultValue": ""
+            },
+            "placeholder": {
+                "label": "Placeholder",
+                "inputType": "text",
+                "required": false,
+                "defaultValue": ""
+            },
+            "maxLength": {
+                "label": "Maximum Length",
+                "inputType": "number",
+                "required": false,
+                "defaultValue": null
+            },
+            "minLength": {
+                "label": "Minimum Length",
+                "inputType": "number",
+                "required": false,
+                "defaultValue": null
+            }
+        }
+    },
+    {
+        "field_type": "textarea",
+        "fields": {
+            "label": {
+                "label": "Label",
+                "inputType": "text",
+                "required": true,
+                "defaultValue": ""
+            },
+            "placeholder": {
+                "label": "Placeholder",
+                "inputType": "text",
+                "required": false,
+                "defaultValue": ""
+            },
+            "rows": {
+                "label": "Rows",
+                "inputType": "number",
+                "required": false,
+                "defaultValue": 5
+            }
+        }
+    },
+    {
+        "field_type": "email",
+        "fields": {
+            "label": {
+                "label": "Label",
+                "inputType": "text",
+                "required": true,
+                "defaultValue": ""
+            },
+            "placeholder": {
+                "label": "Placeholder",
+                "inputType": "text",
+                "required": false,
+                "defaultValue": ""
+            }
+        }
+    },
+    {
+        "field_type": "integer",
+        "fields": {
+            "label": {
+                "label": "Label",
+                "inputType": "text",
+                "required": true,
+                "defaultValue": ""
+            },
+            "min": {
+                "label": "Min",
+                "inputType": "number",
+                "required": false,
+                "defaultValue": 0
+            },
+            "max": {
+                "label": "Max",
+                "inputType": "number",
+                "required": false,
+                "defaultValue": null
+            },
+            "step": {
+                "label": "Step",
+                "inputType": "number",
+                "required": false,
+                "defaultValue": 1
+            }
+        }
+    },
+    {
+        "field_type": "float",
+        "fields": {
+            "label": {
+                "label": "Label",
+                "inputType": "text",
+                "required": true,
+                "defaultValue": ""
+            },
+            "min": {
+                "label": "Min",
+                "inputType": "number",
+                "required": false,
+                "defaultValue": 0
+            },
+            "max": {
+                "label": "Max",
+                "inputType": "number",
+                "required": false,
+                "defaultValue": null
+            },
+            "step": {
+                "label": "Step",
+                "inputType": "number",
+                "required": false,
+                "defaultValue": 0.01
+            }
+        }
+    },
+    {
+        "field_type": "checkbox",
+        "fields": {
+            "label": {
+                "label": "Label",
+                "inputType": "text",
+                "required": true,
+                "defaultValue": ""
+            },
+            "options": {
+                "label": "Checkbox Options",
+                "inputType": "create_options",
+                "required": true,
+                "defaultValue": null
+            },
+            "checked": {
+                "label": "Checked",
+                "inputType": "checkbox",
+                "required": true,
+                "defaultValue": false
+            }
+        }
+    },
+    {
+        "field_type": "radio",
+        "fields": {
+            "label": {
+                "label": "Label",
+                "inputType": "text",
+                "required": true,
+                "defaultValue": ""
+            },
+            "options": {
+                "label": "Radio Options",
+                "inputType": "create_options",
+                "required": false,
+                "defaultValue": null
+            }
+        }
+    },
+    {
+        "field_type": "tel",
+        "fields": {
+            "label": {
+                "label": "Label",
+                "inputType": "text",
+                "required": true,
+                "defaultValue": ""
+            },
+            "placeholder": {
+                "label": "Placeholder",
+                "inputType": "text",
+                "required": false,
+                "defaultValue": ""
+            }
+        }
+    },
+    {
+        "field_type": "password",
+        "fields": {
+            "label": {
+                "label": "Label",
+                "inputType": "text",
+                "required": true,
+                "defaultValue": ""
+            },
+            "maxLength": {
+                "label": "Maximum Length",
+                "inputType": "number",
+                "required": false,
+                "defaultValue": null
+            },
+            "minLength": {
+                "label": "Minimum Length",
+                "inputType": "number",
+                "required": false,
+                "defaultValue": 0
+            }
+        }
+    },
+    {
+        "field_type": "date",
+        "fields": {
+            "label": {
+                "label": "Label",
+                "inputType": "text",
+                "required": true,
+                "defaultValue": ""
+            },
+            "defaultToday": {
+                "label": "Default Today's Date",
+                "inputType": "checkbox",
+                "required": true,
+                "defaultValue": true
+            }
+        }
+    },
+    {
+        "field_type": "time",
+        "field": {
+            "label": {
+                "label": "Label",
+                "inputType": "text",
+                "required": true,
+                "defaultValue": ""
+            },
+        }
+    },
+    {
+        "field_type": "datetime",
+        "fields": {
+            "label": {
+                "label": "Label",
+                "inputType": "text",
+                "required": true,
+                "defaultValue": ""
+            },
+            "defaultToday": {
+                "label": "Default Today's Date",
+                "inputType": "checkbox",
+                "required": true,
+                "defaultValue": true
+            }
+        }
+    },
+    {
+        "field_type": "select",
+        "fields": {
+            "label": {
+                "label": "Label",
+                "inputType": "text",
+                "required": true,
+                "defaultValue": ""
+            },
+            "entity": {
+                "label": "Entity Select Box",
+                "inputType": "checkbox",
+                "required": true,
+                "defaultValue": false
+            },
+            "entityType": {
+                "label": "Entity Type",
+                "inputType": "select_special",
+                "required": true,
+                "defaultValue": false,
+                "options_render": "entity",
+                "conditionRender": {
+                    "entity": true
+                }
+            },
+            "sort": {
+                "label": "Sort Options",
+                "inputType": "checkbox",
+                "required": true,
+                "defaultValue": false
+            },
+            "sortType": {
+                "label": "Sort Direction",
+                "inputType": "select",
+                "required": true,
+                "defaultValue": "asc",
+                "options": [
+                    {
+                        "label": "Ascending",
+                        "value": "asc"
+                    },
+                    {
+                        "label": "Descending",
+                        "value": "desc"
+                    }
+                ],
+                "conditionRender": {
+                    "sort": true
+                }
+            },
+            "multiple": {
+                "label": "Select Multiple",
+                "inputType": "checkbox",
+                "required": true,
+                "defaultValue": false
+            },
+            "displayType": {
+                "label": "Display Type",
+                "inputType": "select",
+                "defaultValue": "selectbox",
+                "options": [
+                    {
+                        "label": "Select",
+                        "value": "selectbox"
+                    },
+                    {
+                        "label": "Inline Checkboxes",
+                        "value": "checkbox-inline"
+                    },
+                    {
+                        "label": "Checkboxes",
+                        "value": "checkboxes"
+                    }
+                ]
+            },
+            "options": {
+                "label": "Select Options",
+                "inputType": "create_options",
+                "required": true,
+                "defaultValue": null,
+                "conditionRender": {
+                    "entity": false
+                }
+            }
+        }
+    },
+    {
+        "field_type": "switch",
+        "fields": {
+            "label": {
+                "label": "Label",
+                "inputType": "text",
+                "required": true,
+                "defaultValue": ""
+            },
+            "onLabel": {
+                "label": "On Label",
+                "inputType": "text",
+                "required": true,
+                "defaultValue": "On"
+            },
+            "offLabel": {
+                "label": "Off Label",
+                "inputType": "text",
+                "required": true,
+                "defaultValue": "Off"
+            },
+            "defaultState": {
+                "label": "Default State",
+                "inputType": "checkbox",
+                "required": true,
+                "defaultValue": false
+            }
+        }
+    },
+    {
+        "field_type": "image",
+        "default_config_schema": {
+            "type": "object",
+            "properties": {
+                "label": {
+                    "type": "string"
+                },
+                "accept": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "enum": [
+                            "image/png",
+                            "image/jpeg",
+                            "image/svg+xml",
+                            "image/tiff",
+                            "image/gif",
+                            "image/webp"
+                        ]
+                    }
+                }
+            },
+            "required": [
+                "label",
+                "accept"
+            ]
+        }
+    },
+    {
+        "field_type": "file",
+        "default_config_schema": {
+            "type": "object",
+            "properties": {
+                "label": {
+                    "type": "string"
+                },
+                "accept": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "enum": [
+                            "text/html",
+                            "application/pdf",
+                            "text/csv",
+                            "text/plain",
+                            "application/vnd.ms-powerpoint",
+                            "application/msword",
+                            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                            "application/zip",
+                            "application/x-zip-compressed",
+                            "application/vnd.ms-excel",
+                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                        ]
+                    }
+                }
+            },
+            "required": [ "label", "accept"]
+        }
+    }
+]

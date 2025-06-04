@@ -62,51 +62,68 @@ module.exports.mapMySQLError = (err) => {
     return errorMap[err.code] || fallback;
 }
 
-module.exports.convertPascalCaseToTitle = (pascalCaseTitle) => {
-    const result = str.replace(/([A-Z])/g, ' $1').trim();
+const convertPascalCaseToTitle = (pascalCaseTitle) => {
+    const result = pascalCaseTitle.replace(/([A-Z])/g, ' $1').trim();
     
     return result.charAt(0).toUpperCase() + result.slice(1);
 }
 
-module.exports.fieldTypesToFieldObjects = (field_types) => {
-    const fields = field_types.map((field_type) => {
-        const name = field_type.name;
-        const config = field_type.config.properties;
-        const required = new Set(field_type.config.required || []);
+module.exports.fieldTypesToFieldObjects = function(field_types) {
+    const fields = field_types.map(({name, config}) => {
+        const default_config_schema = config.properties;
+        const required = new Set(config.required || []);
         const fieldConfigs = [];
 
-        for (let [property, value] of Object.entries(config)) {
-            let type = '';
+        for (const [property, schema] of Object.entries(default_config_schema)) {
+            let inputType = "text";
             let options = [];
-            switch(value.type){
+            let defaultValue = schema.default ?? null;
+            let enumOptions = schema.enum ?? null;
+
+            switch (schema.type) {
                 case "string":
-                    type = "text";
+                    inputType = enumOptions ? "select" : "text";
+                    if (enumOptions) {
+                        options = enumOptions.map(opt => ({ label: opt, value: opt }));
+                    }
                     break;
                 case "boolean":
-                    type = "checkbox";
+                    inputType = "checkbox";
                     break;
                 case "integer":
                 case "number":
-                    type = "number";
+                    inputType = "number";
                     break;
                 case "array":
-                    type = "create_options";
-                    break;
-                case "enum":
-                    type = "select";
-                    options = value;
+                    if (schema.items && schema.items.enum) {
+                        inputType = "multi_select";
+                        options = schema.items.enum.map(opt => ({ label: opt, value: opt }));
+                    } else {
+                        inputType = "create_options";
+                    }
                     break;
                 case "object":
+                    inputType = "object"; // placeholder for complex/nested objects
                     break;
-
+                default:
+                    inputType = "text";
             }
+
             fieldConfigs.push({
-                "label": this.convertPascalCaseToTitle(property),
-            })
+                key: property,
+                label: convertPascalCaseToTitle(property),
+                type: inputType,
+                required: required.has(property),
+                defaultValue,
+                options: options.length ? options : undefined,
+            });
         }
 
-        return field_type;
-    })
+        return {
+            name,
+            fields: fieldConfigs,
+        };
+    });
 
     return fields;
-}
+};

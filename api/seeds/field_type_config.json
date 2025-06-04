@@ -310,144 +310,8 @@
                 "entity": {
                     "type": "boolean"
                 },
-                "entityQueryOptions": {
-                    "type": "object",
-                    "properties": {
-                        "limit": {
-                            "type": "integer",
-                            "minimum": 1
-                        },
-                        "offset": {
-                            "type": "integer",
-                            "minimum": 0
-                        },
-                        "orderBy": {
-                            "type": "string"
-                        },
-                        "orderType": {
-                            "type": "string",
-                            "default": "asc",
-                            "enum": [
-                                "asc",
-                                "desc"
-                            ]
-                        },
-                        "where": {
-                            "type": "object",
-                            "description": "Key-value filters; supports operators like $like, $gt, $lt, $in, $or",
-                            "additionalProperties": {
-                                "anyOf": [
-                                    {
-                                        "type": [
-                                            "string",
-                                            "number",
-                                            "boolean"
-                                        ]
-                                    },
-                                    {
-                                        "type": "object",
-                                        "properties": {
-                                            "$like": {
-                                                "type": "string"
-                                            },
-                                            "$gt": {
-                                                "type": "number"
-                                            },
-                                            "$lt": {
-                                                "type": "number"
-                                            },
-                                            "$gte": {
-                                                "type": "number"
-                                            },
-                                            "$lte": {
-                                                "type": "number"
-                                            },
-                                            "$ne": {
-                                                "type": [
-                                                    "string",
-                                                    "number",
-                                                    "boolean"
-                                                ]
-                                            },
-                                            "$in": {
-                                                "type": "array",
-                                                "items": {
-                                                    "type": [
-                                                        "string",
-                                                        "number",
-                                                        "boolean"
-                                                    ]
-                                                }
-                                            },
-                                            "$or": {
-                                                "type": "array",
-                                                "items": {
-                                                    "type": "object",
-                                                    "additionalProperties": {
-                                                        "anyOf": [
-                                                            {
-                                                                "type": [
-                                                                    "string",
-                                                                    "number",
-                                                                    "boolean"
-                                                                ]
-                                                            },
-                                                            {
-                                                                "type": "object",
-                                                                "properties": {
-                                                                    "$like": {
-                                                                        "type": "string"
-                                                                    },
-                                                                    "$gt": {
-                                                                        "type": "number"
-                                                                    },
-                                                                    "$lt": {
-                                                                        "type": "number"
-                                                                    },
-                                                                    "$gte": {
-                                                                        "type": "number"
-                                                                    },
-                                                                    "$lte": {
-                                                                        "type": "number"
-                                                                    },
-                                                                    "$ne": {
-                                                                        "type": [
-                                                                            "string",
-                                                                            "number",
-                                                                            "boolean"
-                                                                        ]
-                                                                    },
-                                                                    "$in": {
-                                                                        "type": "array",
-                                                                        "items": {
-                                                                            "type": [
-                                                                                "string",
-                                                                                "number",
-                                                                                "boolean"
-                                                                            ]
-                                                                        }
-                                                                    }
-                                                                },
-                                                                "additionalProperties": false
-                                                            }
-                                                        ]
-                                                    }
-                                                }
-                                            }
-                                        },
-                                        "additionalProperties": false
-                                    }
-                                ]
-                            }
-                        }
-                    },
-                    "additionalProperties": false
-                },
                 "entityType": {
                     "type": "integer"
-                },
-                "entityOptionTitle": {
-                    "type": "string"
                 },
                 "sort": {
                     "type": "boolean",
@@ -510,8 +374,7 @@
             },
             "then": {
                 "required": [
-                    "entityType",
-                    "entityOptionTitle"
+                    "entityType"
                 ]
             },
             "else": {

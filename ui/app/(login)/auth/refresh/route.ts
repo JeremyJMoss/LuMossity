@@ -17,6 +17,8 @@ export async function GET(req: Request) {
   });
 
   if (!res.ok) {
+    cookie_store.delete('refreshToken');
+
     return Response.redirect(new URL('/login', req.url));
   }
 

@@ -424,7 +424,9 @@ class Field {
                     FROM field_types;`
                );
 
-               fieldTypesToFieldObjects(types);
+               const variable = fieldTypesToFieldObjects(types);
+               
+               console.dir(variable, { depth: null });
 
                return presets;
 
