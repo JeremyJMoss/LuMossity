@@ -4,7 +4,7 @@ const {validateBodySchema} = require('../util/validation');
 const User = require('../models/User');
 const { loginUserSchema } =  require('../schemas/authSchema');
 const { refreshTokenMaxAge, accessTokenMaxAge } = require('../util/constants');
-const cookie = require("cookie");
+const cookie = require('cookie');
 
 module.exports.refreshAccessToken = async ( req, res, next ) => {
     try {

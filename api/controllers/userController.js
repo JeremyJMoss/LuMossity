@@ -3,7 +3,7 @@ const { refreshTokenMaxAge, accessTokenMaxAge } = require('../util/constants');
 const { validateBodySchema } = require('../util/validation');
 const { ConflictError } = require('../models/utility/Errors');
 const { createUserSchema } = require('../schemas/userSchema');
-const { cookie } = require("cookie");
+const cookie = require('cookie');
 
 // ==================================================
 // ====================== Read ======================

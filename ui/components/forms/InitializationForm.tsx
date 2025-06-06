@@ -30,9 +30,17 @@ const InitializationForm = () => {
                 },
             });
 
+            const contentType = response.headers.get("content-type");
+
             if (!response.ok) {
-                const result = await response.json();
-                const { message, issues } = result;
+                let result;
+                if (contentType?.includes("application/json")) {
+                    result = await response.json();
+                } else {
+                    result = { message: await response.text(), issues: [] };
+                }
+
+                const { message, issues = [] } = result;
 
                 const compiledErrors: string[] = [];
                 for (const issue of issues) {
