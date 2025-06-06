@@ -103,51 +103,21 @@
         "field_type": "select",
         "config": {
             "label": "Choose Options",
-            "displayType": "checkbox-inline",
-            "sort": true,
-            "options": [
-                {
-                    "label": "Option A",
-                    "value": "a"
-                },
-                {
-                    "label": "Option B",
-                    "value": "b"
-                },
-                {
-                    "label": "Option C",
-                    "value": "c"
-                }
-            ]
+            "displayType": "checkbox-inline"
         }
     },
     {
         "name": "Checkbox",
         "field_type": "checkbox",
         "config": {
-            "label": "Option",
-            "checked": false
+            "label": "Option"
         }
     },
     {
         "name": "Radio Buttons",
         "field_type": "radio",
         "config": {
-            "label": "Choose option",
-            "options": [
-                {
-                    "label": "Option A",
-                    "value": "a"
-                },
-                {
-                    "label": "Option B",
-                    "value": "b"
-                },
-                {
-                    "label": "Option C",
-                    "value": "c"
-                }
-            ]
+            "label": "Choose option"
         }
     },
     {
@@ -166,16 +136,6 @@
         "config": {
             "label": "Select Title",
             "placeholder": "Choose an Option",
-            "options": [
-                {
-                    "label": "Option 1",
-                    "value": "option1"
-                },
-                {
-                    "label": "Option 2",
-                    "value": "option2"
-                }
-            ],
             "displayType": "selectbox"
         }
     },
@@ -184,48 +144,31 @@
         "field_type": "select",
         "config": {
             "label": "Choose multiple options",
-            "options": [
-                {
-                    "label": "Option 1",
-                    "value": "option1"
-                },
-                {
-                    "label": "Option 2",
-                    "value": "option2"
-                }
-            ],
             "displayType": "selectbox",
-            "multiple": true
+            "multiple": true,
+            "entity": false
         }
     },
     {
         "name": "Image Upload",
         "field_type": "image",
         "config": {
-            "label": "Upload Image",
-            "accept": [
-                "image/png",
-                "image/jpeg"
-            ]
+            "label": "Upload Image"
         }
     },
     {
         "name": "File Upload",
         "field_type": "file",
         "config": {
-            "label": "Upload File",
-            "accept": [
-                "text/pdf"
-            ]
+            "label": "Upload File"
         }
     },
     {
         "name": "Entity Reference",
         "field_type": "select",
         "config": {
-            "label": "Select Related Item",
+            "label": "Select Related Entity",
             "entity": true,
-            "entityOptionTitle": "title",
             "displayType": "selectbox"
         }
     }

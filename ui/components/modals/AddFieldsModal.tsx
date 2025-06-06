@@ -27,6 +27,7 @@ const AddFieldModal = ({ entityKey, onClose, onSuccess }: Props) => {
     const [step, setStep] = useState<number>(1);
 
     const field_type = fieldConfigurations.find(config => config.ID === fieldConfig)?.field_type ?? null;
+    const fieldPresetConfig = fieldConfigurations.find(config => config.ID === fieldConfig)?.config ?? null;
 
     const modalRef = useRef<HTMLDivElement | null>(null);
 
@@ -66,7 +67,7 @@ const AddFieldModal = ({ entityKey, onClose, onSuccess }: Props) => {
 
     return (   
         <div role="dialog" aria-modal="true" className="fixed inset-0 bg-moss-dark/50 flex items-center justify-center z-50" onClick={onClose}>
-            <div ref={modalRef} className="bg-white rounded-lg p-6 w-full max-w-4xl shadow-lg flex flex-col gap-5" onClick={(e) => e.stopPropagation()}>
+            <div ref={modalRef} className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-lg flex flex-col gap-5" onClick={(e) => e.stopPropagation()}>
                 <h3 className="text-lg font-semibold">Add New Field</h3>
                     { step === 1 &&
                         <>
@@ -101,7 +102,8 @@ const AddFieldModal = ({ entityKey, onClose, onSuccess }: Props) => {
                     { step === 2 && field_type &&
                         <FieldConfigPage
                         setStep={setStep}
-                        fieldType={field_type}/>
+                        fieldType={field_type}
+                        fieldPresetConfig={fieldPresetConfig}/>
                     }
             </div>
         </div>

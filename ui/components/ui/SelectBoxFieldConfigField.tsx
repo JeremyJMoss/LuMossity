@@ -9,9 +9,10 @@ type SelectBoxOption = {
 type SelectBoxFieldConfigFieldProps = {
     selectBoxOptions: SelectBoxOption[],
     onChange: (value: SelectBoxOption[]) => void
+    title: string
 }
 
-const SelectBoxFieldConfigField = ({selectBoxOptions, onChange}: SelectBoxFieldConfigFieldProps) => {
+const SelectBoxFieldConfigField = ({selectBoxOptions, onChange, title}: SelectBoxFieldConfigFieldProps) => {
     const [option, setOption] = useState<SelectBoxOption>({
         value: '',
         label: ''
@@ -52,8 +53,8 @@ const SelectBoxFieldConfigField = ({selectBoxOptions, onChange}: SelectBoxFieldC
 
     return (
         <div className="flex flex-col p-4 border-moss-dark border gap-4 rounded">
-            <h2 className="font-semibold text-lg">Select Options</h2>
-            <div>
+            <h2 className="font-semibold text-lg">{title}</h2>
+            <div className="flex flex-col gap-4">
                 { selectBoxOptions.length > 0 &&
                     <div className="flex items-center gap-3 flex-wrap">
                         {selectBoxOptions.map(({label, value}) => (

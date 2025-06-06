@@ -80,3 +80,23 @@
     transform: rotate(360deg);
   }
 }
+
+.scrollbar-moss {
+  scrollbar-width: thin;
+  scrollbar-color: #658b63 #f5f5f5; /* thumb color, track color */
+}
+
+.scrollbar-moss::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scrollbar-moss::-webkit-scrollbar-track {
+  background: #f5f5f5;
+  border-radius: 6px;
+}
+
+.scrollbar-moss::-webkit-scrollbar-thumb {
+  background-color: #658b63; /* moss-dark */
+  border-radius: 6px;
+  border: 2px solid #f5f5f5;
+}

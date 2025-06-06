@@ -765,7 +765,7 @@
                 "defaultValue": ""
             },
             "accept": {
-                "label": "Label",
+                "label": "Acceptable Types",
                 "inputType": "multi-select",
                 "required": true,
                 "defaultValue": [],
@@ -836,8 +836,8 @@
                 "defaultValue": ""
             },
             "accept": {
-                "label": "Accept",
-                "inputType": "multi_select",
+                "label": "Acceptable Types",
+                "inputType": "multi-select",
                 "required": true,
                 "defaultValue": [],
                 "options": [
