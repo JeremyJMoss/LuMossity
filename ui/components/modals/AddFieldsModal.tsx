@@ -1,11 +1,13 @@
 "use client";
-
-import { useState, useEffect, useRef } from "react";
+//----------Dependencies----------//
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import CallToActionButton from "../buttons/CallToActionButton";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import FieldConfigPage from "./FieldConfigPage";
+//----------End Dependencies----------//
 
+//----------Types----------//
 type Props = {
   entityKey: string;
   onClose: () => void;
@@ -18,23 +20,37 @@ type FieldPreset = {
     field_type: string;
     config: any
 }
+//----------End Types----------//
 
 const AddFieldModal = ({ entityKey, onClose, onSuccess }: Props) => {
+    //----------State----------//
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<string>('');
     const [fieldConfig, setFieldConfig] = useState<number | null>(null);
     const [fieldConfigurations, setFieldConfigurations] = useState<FieldPreset[]>([]);
     const [step, setStep] = useState<number>(1);
-
-    const field_type = fieldConfigurations.find(config => config.ID === fieldConfig)?.field_type ?? null;
-    const fieldPresetConfig = fieldConfigurations.find(config => config.ID === fieldConfig)?.config ?? null;
-
     const modalRef = useRef<HTMLDivElement | null>(null);
+    //----------End State----------//
 
+    //----------Derived State----------//
+    const field_type = useMemo(() => fieldConfigurations.find(config => config.ID === fieldConfig)?.field_type ?? null, [fieldConfig, fieldConfigurations]);
+    const fieldPresetConfig = useMemo(() => fieldConfigurations.find(config => config.ID === fieldConfig)?.config ?? null, [fieldConfig, fieldConfigurations]);
+    const isDisabled = fieldConfig === null;
+    //----------End Derived State----------//
+
+    //----------Effects----------//
     useFocusTrap(modalRef, true);
 
-    const isDisabled = fieldConfig === null;
+    useEffect(() => {
+        loadFieldConfigurations();
+    },[])
+    //----------End Effects----------//
 
+    //----------Handlers----------//
+    const handleChooseFieldType = useCallback((id: number) => () => setFieldConfig(id), []);
+    //----------End Handlers----------//
+
+    //----------API Calls----------//
     const loadFieldConfigurations = async () => {
         setIsLoading(true);
         setError('');
@@ -60,10 +76,21 @@ const AddFieldModal = ({ entityKey, onClose, onSuccess }: Props) => {
             setIsLoading(false);
         }
     }
+    //----------End API Calls----------//
 
-    useEffect(() => {
-        loadFieldConfigurations();
-    },[])
+    //----------Renderers----------//
+    const fieldButtons = useMemo(() => {
+        return fieldConfigurations.map((config) => (
+            <button
+                key={config.ID}
+                onClick={handleChooseFieldType(config.ID)}
+                className={`p-4 border rounded cursor-pointer transition ${fieldConfig === config.ID ? "border-moss bg-moss-light/50" : "border-gray-300 hover:border-moss"}`}
+                >
+                <h4 className="font-semibold">{config.name}</h4>
+            </button>
+        ))
+    }, [fieldConfigurations, fieldConfig])
+    //----------End Renderers----------//
 
     return (   
         <div role="dialog" aria-modal="true" className="fixed inset-0 bg-moss-dark/50 flex items-center justify-center z-50" onClick={onClose}>
@@ -78,15 +105,7 @@ const AddFieldModal = ({ entityKey, onClose, onSuccess }: Props) => {
                                 </div>
                             }
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                                {!isLoading && fieldConfigurations.length > 0 && fieldConfigurations.map((config) => (
-                                    <button
-                                        key={config.ID}
-                                        onClick={() => setFieldConfig(config.ID)}
-                                        className={`p-4 border rounded cursor-pointer transition ${fieldConfig === config.ID ? "border-moss bg-moss-light/50" : "border-gray-300 hover:border-moss"}`}
-                                        >
-                                        <h4 className="font-semibold">{config.name}</h4>
-                                    </button>
-                                ))}
+                                {!isLoading && fieldButtons}
                             </div>
                             <div className="flex justify-end">
                                 <CallToActionButton
@@ -101,9 +120,10 @@ const AddFieldModal = ({ entityKey, onClose, onSuccess }: Props) => {
                     }
                     { step === 2 && field_type &&
                         <FieldConfigPage
-                        setStep={setStep}
-                        fieldType={field_type}
-                        fieldPresetConfig={fieldPresetConfig}/>
+                            setStep={setStep}
+                            fieldType={field_type}
+                            fieldPresetConfig={fieldPresetConfig}
+                        />
                     }
             </div>
         </div>

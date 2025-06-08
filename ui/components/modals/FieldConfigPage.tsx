@@ -1,10 +1,14 @@
-import { useState, useEffect } from "react";
+"use client";
+//----------Dependencies----------//
+import { useState, useEffect, useCallback } from "react";
 import CallToActionButton from "../buttons/CallToActionButton";
 import PrimaryFormButton from "../buttons/PrimaryFormButton";
 import LoadingSpinner from "../ui/LoadingSpinner";
-import SelectBoxFieldConfigField from "../ui/SelectBoxFieldConfigField";
+import SelectBoxFieldConfigField from "./partials/SelectBoxFieldConfigField";
 import MultiSelect from "./partials/MultiSelect";
+//----------End Dependencies----------//
 
+//----------Types----------//
 type SelectBoxOption = {
     value: string;
     label: string;
@@ -30,8 +34,39 @@ type FieldConfig = {
   conditionRender?: Record<string, boolean>,
   options_render?: string
 }
+//----------End Types----------//
+
+//----------Constants----------//
+const extraFormDataFields: Record<string, FieldConfig> = {
+    field_name: {
+        label: 'Unique Field Name',
+        inputType: 'text',
+        defaultValue: '',
+        required: true
+    },
+    is_required: {
+        label: 'Required',
+        inputType: 'checkbox',
+        defaultValue: false,
+        required: true
+    },
+    is_db_column: {
+        label: 'Db Column',
+        inputType: 'checkbox',
+        defaultValue: false,
+        required: true
+    },
+    is_queryable: {
+        label: 'Queryable',
+        inputType: 'checkbox',
+        defaultValue: false,
+        required: true
+    }
+};
+//----------End Constants----------//
 
 const FieldConfigPage = ({setStep, fieldType, fieldPresetConfig}: FieldConfigPageProps) => {
+    //----------State----------//
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<string>('');
     const [databaseColumnSelected, setDatabaseColumnSelected] = useState(false);
@@ -39,7 +74,16 @@ const FieldConfigPage = ({setStep, fieldType, fieldPresetConfig}: FieldConfigPag
     const [checkboxStates, setCheckboxStates] = useState<Record<string, boolean>>({});
     const [selectBoxOptions, setSelectBoxOptions] = useState<Record<string, SelectBoxOption[]>>({});
     const [multiSelectedOptions, setMultiSelectedOptions] = useState<Record<string, SelectBoxOption[]>>({});
+    const [fetchedSelectSpecialFields, setFetchedSelectSpecialFields] = useState<Set<string>>(new Set());
+    //----------End State----------//
 
+    //----------Effects----------//
+    useEffect(() => {
+        loadFields();
+    },[fieldType])
+    //----------End Effects----------//
+
+    //----------Helpers----------//
     const shouldRenderInput = (config: FieldConfig) => {
         let renderState = true;
         if (config.conditionRender !== undefined) {
@@ -53,6 +97,162 @@ const FieldConfigPage = ({setStep, fieldType, fieldPresetConfig}: FieldConfigPag
         return renderState;
     }
 
+    const getMergedFieldValues = (formData: FormData, fieldPresetConfig: any) => {
+      const checkboxFieldKeys = Object.entries(fieldSetup)
+        .filter(([_, config]) => config.inputType === 'checkbox')
+        .map(([key]) => key);
+
+        Object.entries(fieldPresetConfig).forEach(([field_key, preset]) => {
+            if (!formData.has(field_key)) {
+                formData.append(field_key, preset as string);
+            }
+        })
+
+        const checkboxNames = ['is_db_column', 'is_queryable', 'is_required'];
+        const allCheckboxNames = [...checkboxFieldKeys, ...checkboxNames];
+        
+
+        allCheckboxNames.forEach(name => {
+            if (!formData.has(name)) {
+                formData.append(name, 'false');
+            }
+        });
+
+        return formData;
+    }
+
+    const parseFormData = (formData: FormData) => {
+      const result: Record<string, any> = {};
+
+      const fullFieldSetup = {...fieldSetup, ...extraFormDataFields}
+
+      for (const [key, config] of Object.entries(fullFieldSetup)) {
+        let rawValue = formData.get(key);
+
+        switch (config.inputType) {
+          case 'checkbox':
+            result[key] = rawValue === 'true';
+            break;
+          case 'number':
+          case 'select_special':
+            result[key] = rawValue !== null ? Number(rawValue) : config.defaultValue;
+            break;
+          case 'multi-select':
+            try {
+              result[key] = rawValue ? JSON.parse(rawValue as string) : [];
+            } catch {
+              result[key] = [];
+            }
+            break;
+          default:
+            const value = rawValue ?? config.defaultValue;
+            if (value !== null) {
+              result[key] = value;
+            }
+            break;
+        }
+      }
+
+      return result;
+    };
+    //----------End Helpers----------//
+
+    //----------Handlers----------//
+    const handleCheckboxChange = useCallback((field_key: string) => {
+      setCheckboxStates(prev => ({
+        ...prev,
+        [field_key]: !prev[field_key],
+      }));
+    }, []);
+
+    const createCheckboxHandler = useCallback(
+      (field_key: string) => () => handleCheckboxChange(field_key),
+      [handleCheckboxChange]
+    );
+
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        const formData = new FormData(e.currentTarget);
+
+        const mergedFormData = getMergedFieldValues(formData, fieldPresetConfig);
+        
+        addField(mergedFormData);
+    }
+    //----------End Handlers----------//
+
+    //----------API Calls----------//
+    const loadFields = async () => {
+        setIsLoading(true);
+        setError('');
+        try {
+            const request = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/field-types/${fieldType}/field-setup`, {
+                credentials: "include"
+            })
+
+            if (!request.ok) {
+                const error = await request.json();
+                setError(error.message);
+                return;
+            }
+
+            const response = await request.json();
+
+            setFieldSetup(response.field_setup.fields);
+            const defaultCheckboxStates: Record<string, boolean> = {}
+    
+            Object.entries(response.field_setup.fields as Record<string, FieldConfig>).forEach(([field_key, config]) => {
+                if (config.inputType === 'checkbox'){
+                    defaultCheckboxStates[field_key] = fieldPresetConfig[field_key] ?? config.defaultValue;
+                }
+            })
+    
+            setCheckboxStates(defaultCheckboxStates);
+
+            setError('');
+
+        } catch (err: any) {
+            setError(err.message);
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
+    const fetchSelectSpecialOptions = async (fieldKey: string, type: string) => {
+      try {
+        let data: {entities: any[]} = {entities: []};
+
+        if (type === 'entity') {
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/entities/all`, {
+            credentials: 'include',
+          });
+          
+          data = await res.json();
+        }
+
+        const formatted = data.entities?.map(item => ({
+          label: item.entity_name,
+          value: item.ID,
+        }));
+
+        setSelectBoxOptions(prev => ({
+          ...prev,
+          [fieldKey]: formatted,
+        }));
+
+        setFetchedSelectSpecialFields(prev => new Set(prev).add(fieldKey));
+
+      } catch (err) {
+        console.error(`Error fetching select-special options for ${fieldKey}:`, err);
+      }
+    };
+
+    const addField = async (formData: FormData) => {
+        const parsedData = parseFormData(formData);
+        console.log(parsedData)
+    }
+    //----------End API Calls----------//
+
+    //----------Renderers----------//
     const renderTextInput = ([field_key, config]: [string, FieldConfig]) => {
         const label = <label className="font-semibold text-sm" htmlFor={field_key}>{config.label}</label>;
         
@@ -87,7 +287,7 @@ const FieldConfigPage = ({setStep, fieldType, fieldPresetConfig}: FieldConfigPag
             renderedSelect = 
                 <select className="border border-gray-400 bg-stone-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-moss-light rounded">
                     {config.options && config.options.map((option) => {
-                        return <option value={option.value}>{option.label}</option>
+                        return <option key={option.value} value={option.value}>{option.label}</option>
                     })}
                 </select>;
         } else if (config.inputType == 'multi-select' && config.options) {
@@ -102,6 +302,24 @@ const FieldConfigPage = ({setStep, fieldType, fieldPresetConfig}: FieldConfigPag
                     }))
                 }
             />
+        } else if (config.inputType == 'select_special' && config.options_render) {
+          if (!fetchedSelectSpecialFields.has(field_key)) {
+            fetchSelectSpecialOptions(field_key, config.options_render);
+          }
+
+          renderedSelect = (
+            <select
+              className="border border-gray-400 bg-stone-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-moss-light rounded"
+              name={field_key}
+              id={field_key}
+            >
+              {(selectBoxOptions[field_key] ?? []).map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          );
         }
 
         return ( renderState && renderedSelect &&
@@ -116,17 +334,17 @@ const FieldConfigPage = ({setStep, fieldType, fieldPresetConfig}: FieldConfigPag
         const renderState = shouldRenderInput(config);
         
         return renderState && (
-                    <SelectBoxFieldConfigField
-                    title={config.label}
-                    selectBoxOptions={selectBoxOptions[field_key] ?? []}
-                    onChange={(newOptions) => setSelectBoxOptions(prev => {
-                        return {
-                            ...prev,
-                            [field_key]: newOptions
-                        }
-                    })}
-                    key={field_key}
-                    />
+            <SelectBoxFieldConfigField
+            title={config.label}
+            selectBoxOptions={selectBoxOptions[field_key] ?? []}
+            onChange={(newOptions) => setSelectBoxOptions(prev => {
+                return {
+                    ...prev,
+                    [field_key]: newOptions
+                }
+            })}
+            key={field_key}
+            />
         )
     }
 
@@ -134,13 +352,6 @@ const FieldConfigPage = ({setStep, fieldType, fieldPresetConfig}: FieldConfigPag
         const renderState = shouldRenderInput(config);
 
         const checkboxValue = checkboxStates[field_key] ?? false;
-
-        const setCheckBox = (field_key: string) => {
-            setCheckboxStates(prev => ({
-                ...prev,
-                [field_key]: !prev[field_key]
-            }));
-        };
 
         const label = (
             <label className="font-semibold text-sm" htmlFor={field_key}>
@@ -151,9 +362,8 @@ const FieldConfigPage = ({setStep, fieldType, fieldPresetConfig}: FieldConfigPag
         const input = (
             <input
                 type={config.inputType}
-                required={config.required}
                 checked={checkboxValue}
-                onChange={() => setCheckBox(field_key)}
+                onChange={createCheckboxHandler(field_key)}
                 id={field_key}
             />
         );
@@ -167,64 +377,8 @@ const FieldConfigPage = ({setStep, fieldType, fieldPresetConfig}: FieldConfigPag
             )
         );
     };
+    //----------End Renderers----------//
 
-    const loadFields = async () => {
-        setIsLoading(true);
-        setError('');
-        try {
-            const request = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/field-types/${fieldType}/field-setup`, {
-                credentials: "include"
-            })
-
-            if (!request.ok) {
-                const error = await request.json();
-                setError(error.message);
-                return;
-            }
-
-            const response = await request.json();
-
-            setFieldSetup(response.field_setup.fields);
-            const defaultCheckboxStates: Record<string, boolean> = {}
-    
-            Object.entries(response.field_setup.fields as Record<string, FieldConfig>).forEach(([field_key, config]) => {
-                if (config.inputType === 'checkbox'){
-                    defaultCheckboxStates[field_key] = config.defaultValue;
-                }
-            })
-    
-            setCheckboxStates(defaultCheckboxStates);
-
-            setError('');
-
-        } catch (err: any) {
-            setError(err.message);
-        } finally {
-            setIsLoading(false);
-        }
-    }
-
-    useEffect(() => {
-        loadFields();
-    },[fieldType])
-
-    const addField = async (formData: FormData) => {
-        console.log(formData);
-    }  
-
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        const formData = new FormData(e.currentTarget);
-        const checkboxNames = ['is_db_column', 'is_queryable', 'is_required'];
-
-        checkboxNames.forEach(name => {
-            if (!formData.has(name)) {
-                formData.append(name, 'false');
-            }
-        });
-        addField(formData);
-    }
-    
     return (
       <>
         {isLoading && <LoadingSpinner width="40px" height="40px"/>}
@@ -243,6 +397,7 @@ const FieldConfigPage = ({setStep, fieldType, fieldPresetConfig}: FieldConfigPag
                         type="text" 
                         name="field_name" 
                         id="uniqueFieldName"
+                        required={true}
                     />
                 </div>
                 { 
@@ -254,7 +409,7 @@ const FieldConfigPage = ({setStep, fieldType, fieldPresetConfig}: FieldConfigPag
                 }
                 {
                     Object.entries(fieldSetup).filter(([_, config]) => {
-                        return ['select', 'multi-select'].includes(config.inputType);
+                        return ['select', 'multi-select', 'select_special'].includes(config.inputType);
                     }).map((field) => {
                         return renderSelectBox(field);
                     })

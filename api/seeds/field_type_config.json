@@ -581,7 +581,7 @@
                 "required": ["entity"],
                 "properties": {
                     "entity": {
-                    "const": true
+                        "const": true
                     }
                 }
             },
@@ -610,7 +610,7 @@
             },
             "entityType": {
                 "label": "Entity Type",
-                "inputType": "select_special",
+                "inputType": "select-special",
                 "required": true,
                 "defaultValue": false,
                 "options_render": "entity",

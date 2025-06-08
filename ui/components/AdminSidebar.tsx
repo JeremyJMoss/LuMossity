@@ -1,4 +1,5 @@
 "use client";
+//----------Dependencies----------//
 import Image from "next/image";
 import Logo from "@/public/lumossity_logo.png";
 import { Anvil, Boxes, Cog } from "lucide-react";
@@ -7,7 +8,10 @@ import ManagerSubmenu from "./submenus/ManagerSubmenu";
 import MenuLink from "./menu/MenuLink";
 import SubMenuLink from "./menu/SubMenuLink";
 import { useSidebar } from "@/state_management/SidebarContext";
+import { useCallback } from "react";
+//----------End Dependencies----------//
 
+//----------Constants----------//
 const submenuMap: Record<string, React.ReactNode> = {
   "manager": <ManagerSubmenu />,
   "studio": <StudioSubmenu />
@@ -40,56 +44,69 @@ const sidebarLinks = [
   },
 ];
 
+const imageSize = 60;
+//----------End Constants----------//
+
 function AdminSidebar() {
-  const {setActiveSubmenu, activeSubmenu, setSelectedMenuItem, selectedMenuItem} = useSidebar();
+  //----------State----------//
+  const {setActiveSubmenu, activeSubmenu, setSelectedMenuItem} = useSidebar();
+  //----------End State----------//
 
-  const imageSize = 60;
-  const sidebarBackground = 'bg-neutral-clay';
-
-  const handleBtnClick = (e: React.MouseEvent, submenu: string | null, menuItem : string) => {
+  //----------Handlers----------//
+  const handleBtnClick = useCallback((e: React.MouseEvent, submenu: string | null, menuItem : string) => {
     e.preventDefault();
     setSelectedMenuItem(menuItem);
     setActiveSubmenu(submenu);
-  };
+  }, [setSelectedMenuItem, setActiveSubmenu]);
+  //----------End Handlers----------//
 
   return (
     <>
-      <aside className={`${sidebarBackground} flex flex-col items-center gap-6 px-3 py-5`}>
+      <aside aria-label="Main Menu" className={`bg-neutral-clay flex flex-col items-center gap-6 px-3 py-5`}>
           <MenuLink 
             href="/"
-            menuItem="">
-            <Image src={Logo} width={imageSize} height={imageSize} alt="LuMossity Logo"/>
+            menuItem=""
+          >
+            <Image 
+              src={Logo} 
+              width={imageSize} 
+              height={imageSize} 
+              alt="LuMossity Logo"
+            />
           </MenuLink>
           <div className="flex flex-col h-full">
               <div className="flex flex-col gap-3">
                 <h2 className="text-md font-semibold">Control Panel</h2>
                 <div className="flex flex-col text-sm gap-3">
-                  {sidebarLinks.map(({label, href, menuItem, icon: Icon, hasSubmenu, submenu}) => {
-                    return (
-                      !hasSubmenu ? href &&
-                      <MenuLink 
-                        href={href} 
-                        key={label} 
-                        className="flex gap-2 items-center whitespace-nowrap p-1"
-                        menuItem={menuItem}>
-                        <Icon strokeWidth={2}/>
-                        <span>{label}</span>
-                      </MenuLink> :
+                  {sidebarLinks.map(({ label, href, ...rest }) => {
+                    if (!rest.hasSubmenu && !href) return null;
+                    return rest.hasSubmenu ? (
                       <SubMenuLink
+                        key={rest.menuItem}
                         label={label}
-                        key={label}
-                        onClick={e => handleBtnClick(e, submenu, menuItem)}
+                        onClick={(e) => handleBtnClick(e, rest.submenu, rest.menuItem)}
                         className="flex gap-2 items-center whitespace-nowrap p-1"
-                        icon={Icon}
-                        menuItem={menuItem}/>
-                  )
+                        icon={rest.icon}
+                        menuItem={rest.menuItem}
+                      />
+                    ) : (
+                      <MenuLink
+                        href={href!}
+                        key={rest.menuItem}
+                        className="flex gap-2 items-center whitespace-nowrap p-1"
+                        menuItem={rest.menuItem}
+                      >
+                        <rest.icon strokeWidth={2} />
+                        <span>{label}</span>
+                      </MenuLink>
+                    );
                   })}
                 </div>
               </div>
           </div>
       </aside>
       {activeSubmenu &&
-        <aside className="bg-neutral-beige border-solid border-x border-gray-300 flex flex-col items-center py-5 px-5">
+        <aside aria-label="Submenu" className="bg-neutral-beige border-solid border-x border-gray-300 flex flex-col items-center py-5 px-5">
           {submenuMap[activeSubmenu]}
         </aside>
       }

@@ -1,6 +1,10 @@
+"use client";
+//----------Dependencies----------//
 import type { LucideIcon } from "lucide-react"
 import { useSidebar } from "@/state_management/SidebarContext"
+//----------End Dependencies----------//
 
+//----------Types----------//
 type SubMenuLinkProps = {
     label: string;
     onClick: (e: React.MouseEvent) => any;
@@ -8,11 +12,20 @@ type SubMenuLinkProps = {
     className?: string;
     menuItem: string;
 }
+//----------End Types----------//
 
 const SubMenuLink = ({label, onClick, className = '', icon: Icon, menuItem}: SubMenuLinkProps) => {
+    //----------State----------//
     const {selectedMenuItem} = useSidebar();
+    //----------End State----------//
 
-    const classNames = menuItem === selectedMenuItem ? className + ' bg-moss-light rounded' : className + ' hover:bg-moss-light/25 rounded';
+    //----------Derived State----------//
+    let classNames = className;
+    classNames += 
+        menuItem === selectedMenuItem 
+        ? ' bg-moss-light rounded' 
+        : ' hover:bg-moss-light/25 rounded';
+    //----------End Derived State----------//
 
     return (
         <button onClick={onClick} className={classNames}>

@@ -1,20 +1,24 @@
+//----------Dependencies----------//
 import { create } from 'zustand';
+//----------End Dependencies----------//
 
+//----------Types----------//
 type SideMenuItem = {
     entity_name: string,
     entity_key: string
 }
 
-interface SideMenuState {
+type SideMenuState = {
   items: SideMenuItem[];
   fetchError: string;
   isLoading: boolean;
   fetchItems: () => Promise<void>;
 }
+//----------End Types----------//
 
+//----------Global State Object----------//
 export const useSideMenuStore = create<SideMenuState>((set) => ({
   items: [],
-
   fetchItems: async () => {
     set({isLoading: true});
     try {
@@ -32,8 +36,7 @@ export const useSideMenuStore = create<SideMenuState>((set) => ({
         set({isLoading: false});
     }
   },
-
   fetchError: '',
-
   isLoading: false
 }));
+//----------End Global State Object----------//
