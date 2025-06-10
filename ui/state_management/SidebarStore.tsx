@@ -17,7 +17,7 @@ type SideMenuState = {
 //----------End Types----------//
 
 //----------Global State Object----------//
-export const useSideMenuStore = create<SideMenuState>((set) => ({
+const useSideMenuStore = create<SideMenuState>((set) => ({
   items: [],
   fetchItems: async () => {
     set({isLoading: true});
@@ -40,3 +40,7 @@ export const useSideMenuStore = create<SideMenuState>((set) => ({
   isLoading: false
 }));
 //----------End Global State Object----------//
+
+//----------Exports----------//
+export {useSideMenuStore}
+//----------End Exports----------//

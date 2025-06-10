@@ -1,7 +1,9 @@
 "use client";
-
+//----------Dependencies----------//
 import CallToActionButton from "./buttons/CallToActionButton"
+//----------End Dependencies----------//
 
+//----------Types----------//
 type Field = {
     field_name: string;
     field_type: string;
@@ -15,8 +17,13 @@ type FieldConfigurationProps = {
     fieldReset: () => void,
     onAddFieldsClick: (e: React.MouseEvent) => void
 }
+//----------End Types----------//
 
 const FieldConfigurationSection = ({fields, fieldReset, onAddFieldsClick}: FieldConfigurationProps) => {
+  //----------Derived State----------//
+  const hasFields = fields.length > 0;
+  //----------End Derived State----------//
+
   return (
     <div className="border border-gray-300 p-5 rounded-lg shadow-md flex flex-col gap-4 bg-neutral-clay">
         <div className="flex gap-3 items-center">
@@ -44,7 +51,7 @@ const FieldConfigurationSection = ({fields, fieldReset, onAddFieldsClick}: Field
             </tr>
           </thead>
           <tbody>
-            {fields.length > 0 && fields.map((field) => (
+            {hasFields && fields.map((field) => (
               <tr key={field.field_name} className="bg-white hover:bg-gray-50">
                 <td className="px-4 py-2 border-b whitespace-nowrap">{field.field_name}</td>
                 <td className="px-4 py-2 border-b whitespace-nowrap">{field.field_type}</td>
@@ -84,7 +91,7 @@ const FieldConfigurationSection = ({fields, fieldReset, onAddFieldsClick}: Field
                 </td>
               </tr>
             ))}
-            {fields.length === 0 && (
+            {!hasFields && (
               <tr>
                 <td colSpan={4} className="text-center py-4 text-gray-500">
                   No fields yet. Add one to get started.
@@ -98,4 +105,6 @@ const FieldConfigurationSection = ({fields, fieldReset, onAddFieldsClick}: Field
   )
 }
 
+//----------Exports----------//
 export default FieldConfigurationSection
+//----------End Exports----------//
