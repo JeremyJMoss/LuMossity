@@ -1,16 +1,45 @@
 "use client";
+//----------Dependencies----------//
 import { useState } from "react";
 import SecondaryFormButton from "../buttons/SecondaryFormButton";
+//----------End Dependencies----------//
+
+//----------Types----------//
+type ErrorObject = {
+    message: string;
+    invalid_fields: string[]
+}
+//----------End Types----------//
+
+//----------Constants----------//
 const APIURL = process.env.NEXT_PUBLIC_API_URL;
+const inputContainerClassNames = 'flex justify-between items-center text-lg text-moss-dark';
+const errorBorderClass = 'border-red-500 border';
+//----------End Constants----------//
 
 const LoginForm = () => {
+    //----------State----------//
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
-    const [ error, setError ] = useState<{ message: string; invalid_fields: string[] }>({
+    const [ error, setError ] = useState<ErrorObject>({
         message: '',
         invalid_fields: []
     });
+    //----------End State----------//
 
+    //----------Derived State----------//
+    const getInputClassNames = (field_name : string) => {
+        let inputClassNames = 'bg-neutral-clay w-3/4 rounded px-3 py-2';
+
+        if (error.invalid_fields.includes(field_name)){
+            inputClassNames += ' ' + errorBorderClass;
+        }
+
+        return inputClassNames;
+    }
+    //----------End Derived State----------//
+
+    //----------API Calls----------//
     const loginUser = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setIsSubmitting(true);
@@ -32,18 +61,18 @@ const LoginForm = () => {
 
             if (!response.ok) {
                 let result;
-                if (contentType?.includes("application/json")) {
-                    result = await response.json();
-                } else {
-                    result = { message: await response.text(), issues: [] };
-                }
+
+                result = contentType?.includes("application/json") 
+                    ? await response.json() 
+                    : { message: await response.text(), issues: [] };
 
                 const { message, issues } = result;
 
                 const compiledErrors: string[] = [];
+
                 for (const issue of issues) {
                     const key = issue.path;
-                    if (!compiledErrors.includes(key)) {
+                    if ( !compiledErrors.includes(key) ) {
                         compiledErrors.push(key);
                     }
                 }
@@ -55,8 +84,7 @@ const LoginForm = () => {
     
                 return;
             }
-    
-            // Successful
+
             setError({ message: "", invalid_fields: [] });
 
             window.location.reload();
@@ -71,21 +99,7 @@ const LoginForm = () => {
             setIsSubmitting(false);
         }
     }
-
-    let inputContainerClassNames = 'flex justify-between items-center text-lg text-moss-dark';
-
-    const getInputClassNames = (field_name : string) => {
-        let inputClassNames = 'bg-neutral-clay w-3/4 rounded px-3 py-2';
-
-        const errorBorderClass = 'border-red-500 border';
-
-        if (error.invalid_fields.includes(field_name)){
-            inputClassNames += ' ' + errorBorderClass;
-        }
-
-        return inputClassNames;
-
-    }
+    //----------End API Calls----------//
 
     return (
         <>

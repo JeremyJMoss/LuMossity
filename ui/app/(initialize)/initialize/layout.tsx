@@ -1,10 +1,14 @@
+//----------Dependencies----------//
 import "@/app/globals.css";
+//----------End Dependencies----------//
 
-export default function InitLayout({
-    children,
-  }: Readonly<{
-    children: React.ReactNode;
-  }>) {
+//----------Types----------//
+type LayoutProps = {
+  children: React.ReactNode
+}
+//----------End Types----------//
+
+const Layout = ({children}: Readonly<LayoutProps>) => {
     return (
       <main className="bg-sunlight-soft w-full">
         <div className="max-w-xxl mx-auto text-center p-10">
@@ -16,4 +20,8 @@ export default function InitLayout({
         {children}
       </main>
     );
-  }
+}
+
+//----------Exports----------//
+export default Layout
+//----------End Exports----------//

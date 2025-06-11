@@ -1,4 +1,6 @@
+//----------Dependencies----------//
 import InitializationUserForm from "@/components/forms/InitialUserForm";
+//----------End Dependencies----------//
 
 const InitializeUser = () => {
   return (
@@ -6,4 +8,6 @@ const InitializeUser = () => {
   )
 }
 
-export default InitializeUser;
+//----------Exports----------//
+export default InitializeUser
+//----------End Exports----------//

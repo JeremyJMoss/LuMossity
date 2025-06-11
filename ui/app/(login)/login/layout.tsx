@@ -1,8 +1,10 @@
-export default function InitLayout({
-    children,
-  }: Readonly<{
-    children: React.ReactNode;
-  }>) {
+//----------Types----------//
+type LayoutProps = {
+  children: React.ReactNode
+}
+//----------End Types----------//
+
+const InitLayout = ({children}: Readonly<LayoutProps>) => {
   return (
     <>
         <main className="bg-sunlight-soft w-full">
@@ -11,3 +13,7 @@ export default function InitLayout({
     </>
   )
 }
+
+//----------Exports----------//
+export default InitLayout
+//----------End Exports----------//

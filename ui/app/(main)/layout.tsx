@@ -1,13 +1,17 @@
+//----------Dependencies----------//
 import "@/app/globals.css";
 import "@/components/AdminSidebar";
 import AdminSidebar from "@/components/AdminSidebar";
 import AdminTopbar from "@/components/AdminTopbar";
+//----------End Dependencies----------//
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+//----------Types----------//
+type LayoutProps = {
+  children: React.ReactNode
+}
+//----------End Types----------//
+
+const Layout = ({children}: Readonly<LayoutProps>) => {
   return (
     <>
       <AdminSidebar/>
@@ -18,3 +22,8 @@ export default function RootLayout({
     </>
   );
 }
+
+//----------Exports----------//
+export default Layout
+//----------End Exports----------//
+

@@ -1,4 +1,6 @@
+//----------Dependencies----------//
 import InitializationForm from "@/components/forms/InitializationForm";
+//----------End Dependencies----------//
 
 const InitializationPage = () => {
 
@@ -7,4 +9,6 @@ const InitializationPage = () => {
   )
 }
 
+//----------Exports----------//
 export default InitializationPage;
+//----------End Exports----------//

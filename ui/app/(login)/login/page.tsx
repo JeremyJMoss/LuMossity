@@ -1,4 +1,6 @@
+//----------Dependencies----------//
 import LoginForm from "@/components/forms/LoginForm";
+//----------End Dependencies----------//
 
 const Login = () => {
   return (
@@ -12,4 +14,6 @@ const Login = () => {
   )
 }
 
+//----------Exports----------//
 export default Login;
+//----------End Exports----------//
