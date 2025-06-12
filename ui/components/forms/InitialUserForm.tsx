@@ -1,16 +1,23 @@
 "use client";
+
+//----------Dependencies----------//
 import { useState } from "react";
 import SecondaryFormButton from "../buttons/SecondaryFormButton";
+//----------End Dependencies----------//
+
+//----------Constants----------//
 const APIURL = process.env.NEXT_PUBLIC_API_URL;
+//----------End Constans----------//
 
 const InitializationUserForm = () => {
-
+    //----------State----------//
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
     const [ error, setError ] = useState<{ message: string; invalid_fields: string[] }>({
         message: '',
         invalid_fields: []
     });
+    //----------End State----------//
 
     const submitInitialUser = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
