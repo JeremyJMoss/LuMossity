@@ -1,11 +1,15 @@
+//----------Dependencies----------//
 import "@/app/globals.css";
 import { SidebarProvider } from "@/state_management/SidebarContext";
+//----------End Dependencies----------//
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+//----------Types----------//
+type LayoutProps =  {
+  children: React.ReactNode
+}
+//----------End Types----------//
+
+const Layout = ({children}: Readonly<LayoutProps>) => {
   return (
     <html lang="en">
         <body className="antialiased flex min-h-screen">
@@ -16,3 +20,7 @@ export default function RootLayout({
     </html>
   );
 }
+
+//----------Exports----------//
+export default Layout
+//----------End Exports----------//
