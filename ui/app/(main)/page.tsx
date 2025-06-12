@@ -1,6 +1,8 @@
+//----------Dependencies----------//
 import AdminTopbar from "@/components/AdminTopbar";
+//----------Emd Dependencies----------//
 
-export default function Home() {
+const Home = () => {
   return (
     <main className="bg-sunlight-soft w-full">
       <AdminTopbar/>
@@ -13,3 +15,7 @@ export default function Home() {
     </main>
   );
 }
+
+//----------Exports----------//
+export default Home
+//----------End Exports----------//
