@@ -73,9 +73,6 @@ const FieldConfigPage = ({setStep, fieldType, fieldPresetConfig}: FieldConfigPag
         error, 
         data
     } = useFetch<{ field_setup: { fields: Record<string, FieldConfig> } }>(`${process.env.NEXT_PUBLIC_API_URL}/field-types/${fieldType}/field-setup`);
-    const {
-        callFetch
-    } = useFetch()
     const [databaseColumnSelected, setDatabaseColumnSelected] = useState(false);
     const [fieldSetup, setFieldSetup] = useState<Record<string, FieldConfig>>({});
     const [checkboxStates, setCheckboxStates] = useState<Record<string, boolean>>({});
