@@ -5,6 +5,7 @@ import LoadingSpinner from "../ui/LoadingSpinner";
 import CallToActionButton from "../buttons/CallToActionButton";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import FieldConfigPage from "./FieldConfigPage";
+import { useFetch } from "@/hooks/useFetch";
 //----------End Dependencies----------//
 
 //----------Types----------//
@@ -24,15 +25,15 @@ type FieldPreset = {
 
 const AddFieldModal = ({ entityKey, onClose, onSuccess }: Props) => {
     //----------State----------//
-    const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [error, setError] = useState<string>('');
+    const {loading: isLoading, error, data} = useFetch<{ field_presets: FieldPreset[]}>(`${process.env.NEXT_PUBLIC_API_URL}/field-types/field-presets`)
     const [fieldConfig, setFieldConfig] = useState<number | null>(null);
-    const [fieldConfigurations, setFieldConfigurations] = useState<FieldPreset[]>([]);
     const [step, setStep] = useState<number>(1);
     const modalRef = useRef<HTMLDivElement | null>(null);
     //----------End State----------//
 
     //----------Derived State----------//
+
+    const fieldConfigurations: FieldPreset[] = data?.field_presets ?? [];
     const field_type = useMemo(() => fieldConfigurations.find(config => config.ID === fieldConfig)?.field_type ?? null, [fieldConfig, fieldConfigurations]);
     const fieldPresetConfig = useMemo(() => fieldConfigurations.find(config => config.ID === fieldConfig)?.config ?? null, [fieldConfig, fieldConfigurations]);
     const isDisabled = fieldConfig === null;
@@ -40,43 +41,11 @@ const AddFieldModal = ({ entityKey, onClose, onSuccess }: Props) => {
 
     //----------Effects----------//
     useFocusTrap(modalRef, true);
-
-    useEffect(() => {
-        loadFieldConfigurations();
-    },[])
     //----------End Effects----------//
 
     //----------Handlers----------//
     const handleChooseFieldType = useCallback((id: number) => () => setFieldConfig(id), []);
     //----------End Handlers----------//
-
-    //----------API Calls----------//
-    const loadFieldConfigurations = async () => {
-        setIsLoading(true);
-        setError('');
-        try {
-            const request = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/field-types/field-presets`, {
-                credentials: "include"
-            })
-
-            if (!request.ok) {
-                const error = await request.json();
-                setError(error.message);
-                return;
-            }
-
-            const response = await request.json();
-
-            setFieldConfigurations(response.field_presets);
-            setError('');
-
-        } catch (err: any) {
-            setError(err.message);
-        } finally {
-            setIsLoading(false);
-        }
-    }
-    //----------End API Calls----------//
 
     //----------Renderers----------//
     const fieldButtons = useMemo(() => {
@@ -99,9 +68,9 @@ const AddFieldModal = ({ entityKey, onClose, onSuccess }: Props) => {
                     { step === 1 &&
                         <>
                             {isLoading && <LoadingSpinner width="40px" height="40px"/>}
-                            {error && 
+                            {error?.message && 
                                 <div className="bg-red-300 max-w-2xl mx-auto text-center mb-2 rounded py-2 px-10">
-                                    <p className="font-semibold">{error}</p>
+                                    <p className="font-semibold">{error.message}</p>
                                 </div>
                             }
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

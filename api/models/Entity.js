@@ -7,6 +7,7 @@ const Field = require('./partials/EntityField');
 const { toSnakeCase, mapMySQLError } = require('../util/helpers');
 const { NotFoundError, AppError, ConflictError } = require('./utility/Errors');
 const { fieldTypeToMySQLType } = require('../util/constants');
+const logger = require('./utility/Logger');
 
 // ==================================================
 // ================= Entity Class ===================
@@ -65,6 +66,11 @@ class Entity {
 
     async addField( config ) {
         try {
+            if (!config.field_config.order_index) {
+                const newOrderIndex = await this.#getNewOrderIndex();
+                config.field_config.order_index = newOrderIndex;
+            }
+
             const newField = await Field.create(config);
         
             // check if field already exists
@@ -132,6 +138,11 @@ class Entity {
                 return fields;
 
             } catch (err) {
+                logger.error(err, {
+                    class: "Entity",
+                    method: "retrieveFields"
+                })
+
                 const {message, status_code} = mapMySQLError(err);
                 throw new AppError(message, status_code);
             }
@@ -165,6 +176,11 @@ class Entity {
                 this.#fields = await this.retrieveFields();
 
             } catch (err) {
+                logger.error(err, {
+                    class: "Entity",
+                    method: "refreshFields"
+                })
+
                 if ( err instanceof AppError) {
                     throw err
                 }
@@ -205,6 +221,10 @@ class Entity {
                 await this.#cleanupRemovedFields(db, fields_to_delete);
 
             } catch (err) {
+                logger.error(err, {
+                    class: "Entity",
+                    method: "sync"
+                })
 
                 if (err instanceof AppError) {
                     throw err;
@@ -263,8 +283,11 @@ class Entity {
                 const [fields] = await db.query('SELECT * FROM entities_structure');
 
                 const entity_groups = await Promise.all( entities.map(async entity => {
-                    const structure = await Promise.all( fields.filter(field => field.entity_id === entity.ID)
-                    .map((field) => Field.create(field)));
+                    const structure = await Promise.all( 
+                        fields.filter(field => field.entity_id === entity.ID)
+                        .map((field) => Field.create(field))
+                    );
+
                     return {
                         ...entity,
                         fields: structure
@@ -273,6 +296,11 @@ class Entity {
             
                 return entity_groups;
             } catch (err) {
+                logger.error(err, {
+                    class: "Entity",
+                    method: "getAll"
+                })
+
                 const {message, status_code} = mapMySQLError(err)
                 throw new AppError( message, status_code );
             }
@@ -302,6 +330,11 @@ class Entity {
                 return entity;
 
             } catch (err) {
+                logger.error(err, {
+                    class: "Entity",
+                    method: "getEntityData"
+                })
+
                 if (err instanceof AppError) {
                     throw err;
                 }
@@ -354,6 +387,11 @@ class Entity {
                     )`
                 )
             } catch (err) {
+                logger.error(err, {
+                    class: "Entity",
+                    method: "#create"
+                })
+
                 if (err instanceof AppError){
                     throw err;
                 }
@@ -591,6 +629,29 @@ class Entity {
         results.forEach(r => {
             if (r.status === 'rejected') throw new ConflictError(r.reason);
         });
+    }
+
+    async #getNewOrderIndex() {
+        try {
+            return await DatabaseConnector.withConnection(async db => {
+                const [result] = await db.query(`SELECT MAX(order_index) AS maxIndex FROM entities_structure`);
+                // result.maxIndex will be null if no rows in the table
+                return result.maxIndex !== null ? result.maxIndex + 1 : 1;
+            });
+        } catch (err) {
+            logger.error(err, {
+                class: "Entity",
+                method: "#getNewOrderIndex"
+            })
+
+            if (err instanceof AppError){
+                throw err;
+            }
+
+            const {message, status_code} = mapMySQLError(err);
+            
+            throw new AppError(message, status_code);
+        }
     }
 
     toJSON() {

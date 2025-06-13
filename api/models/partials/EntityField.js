@@ -3,7 +3,7 @@
 // ==================================================
 const DatabaseConnector = require("../../services/DatabaseConnector");
 const { validateFieldConfig } = require( "../../util/validation");
-const { mapMySQLError, fieldTypesToFieldObjects } = require( "../../util/helpers");
+const { mapMySQLError } = require( "../../util/helpers");
 const { AppError, ConflictError } = require( "../utility/Errors");
 const { fieldTypeToMySQLType, fieldTypeToMySQLCastType } = require("../../util/constants");
 const DatabaseConfigManager = require("../../services/DatabaseConfigManager");

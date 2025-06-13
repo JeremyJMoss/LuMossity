@@ -1,9 +1,12 @@
 "use client";
+//----------Dependencies----------//
 import PrimaryFormButton from "@/components/buttons/PrimaryFormButton";
-import { useState, useEffect} from "react";
+import { useState, useEffect, useCallback} from "react";
 import { useRouter } from "next/navigation";
 import { useSideMenuStore } from "@/state_management/SidebarStore";
+//----------End Dependencies----------//
 
+//----------Types----------//
 type APIErrorResponse = {
   message: string;
   invalid_fields: string[]
@@ -13,8 +16,15 @@ type APIIssue = {
   path: string;
   message: string
 }
+//----------End Types----------//
+
+//----------Constants----------//
+const errorBorderClass = 'border-red-500 bg-rose-100';
+const noErrorClass = 'border-gray-400 bg-stone-50';
+//----------End Constants----------//
 
 const CreateEntity = () => {
+  //----------State----------//
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [createdEntity, setCreatedEntity] = useState<string>('');
 
@@ -25,14 +35,34 @@ const CreateEntity = () => {
 
   const fetchSidebarItems = useSideMenuStore((state) => (state.fetchItems));
   const router = useRouter();
+  //----------End State----------//
 
-  // move to the created entity page to add fields
-  useEffect(() => {
+  //----------Effects----------//
+  useEffect( () => {
+    // Move to the created entity page to add fields if entity has been created
     if (createdEntity) {
       router.push(`/entity-studio/entity/${createdEntity}`);
     }
-  }, [createdEntity])
+    
+  }, [createdEntity] )
+  //----------End Effects----------//
 
+  //----------Helpers----------//
+  const getInputClassNames = useCallback( ( field_name : string ) => {
+    let inputClassNames = 'border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-moss-light';
+
+    if ( error.invalid_fields.includes( field_name ) ) {
+        inputClassNames += ' ' + errorBorderClass;
+    } else {
+        inputClassNames += ' ' + noErrorClass;
+    }
+    return inputClassNames;
+
+  }, [error]);
+  //----------End Helpers----------//
+
+  
+  //----------API Calls----------//
   const sendCreateEntity = async (formData: FormData) => {
 
     const name = formData.get("name");
@@ -90,27 +120,15 @@ const CreateEntity = () => {
       setIsSubmitting(false);
     }
   }
+  //----------End API Calls----------//
 
-  const createEntity = (e: React.FormEvent<HTMLFormElement>) => {
+  //----------Handlers----------//
+  const handleCreateEntity = useCallback((e: React.FormEvent<HTMLFormElement>) => () => {
     e.preventDefault()
     const formData = new FormData(e.currentTarget); 
     sendCreateEntity(formData);
-  }
-
-  const getInputClassNames = (field_name : string) => {
-      let inputClassNames = 'border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-moss-light';
-
-      const errorBorderClass = 'border-red-500 bg-rose-100';
-      const noErrorClass = 'border-gray-400 bg-stone-50';
-
-      if (error.invalid_fields.includes(field_name)){
-          inputClassNames += ' ' + errorBorderClass;
-      } else {
-          inputClassNames += ' ' + noErrorClass;
-      }
-
-      return inputClassNames;
-  }
+  }, [sendCreateEntity])
+  //----------End Handlers----------//
 
   return (
     <div className="px-10 py-5 flex flex-col gap-5">
@@ -120,7 +138,7 @@ const CreateEntity = () => {
                   <p className="font-semibold">{error.message}</p>
               </div>
       }
-      <form className="border border-gray-300 p-5 rounded-lg shadow-md flex flex-col gap-4 bg-neutral-clay max-w-lg" onSubmit={(e) => createEntity(e)}>
+      <form className="border border-gray-300 p-5 rounded-lg shadow-md flex flex-col gap-4 bg-neutral-clay max-w-lg" onSubmit={handleCreateEntity}>
         
         {/* Entity Name Field */}
         <div className="flex flex-col gap-1">

@@ -17,8 +17,7 @@ const updateEntityFieldsSchema = z.object({
         is_db_column: z.boolean().optional(),
         is_required: z.boolean().optional(),
         is_queryable: z.boolean().optional(),
-        default_value: z.any().optional(),
-        order_index: z.number().positive().int()
+        order_index: z.number().positive().int().optional()
     })).nonempty()
 });
 
@@ -33,9 +32,7 @@ const createEntityFieldsSchema = z.object({
         field_config: z.object({}).passthrough(),
         is_db_column: z.boolean().optional(),
         is_required: z.boolean().optional(),
-        is_queryable: z.boolean().optional(),
-        default_value: z.any().optional(),
-        order_index: z.number().positive().int()
+        is_queryable: z.boolean().optional()
     }).strict()).nonempty()
 })
 

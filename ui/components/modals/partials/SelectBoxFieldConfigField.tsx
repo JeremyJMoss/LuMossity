@@ -28,14 +28,15 @@ const SelectBoxFieldConfigField = ({selectBoxOptions, onChange, title}: SelectBo
     const handleValueChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         setOption((prev) => ({
             ...prev,
-            value: e.currentTarget.value
+            value: e.target.value
         }))
     }, [setOption]);
 
     const handleLabelChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        console.log(e);
         setOption((prev) => ({
             ...prev,
-            label: e.currentTarget.value
+            label: e.target.value
         }))
     }, [setOption]);
 

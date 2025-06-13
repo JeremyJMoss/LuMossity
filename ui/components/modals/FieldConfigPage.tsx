@@ -6,6 +6,7 @@ import PrimaryFormButton from "../buttons/PrimaryFormButton";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import SelectBoxFieldConfigField from "./partials/SelectBoxFieldConfigField";
 import MultiSelect from "./partials/MultiSelect";
+import { useFetch } from "@/hooks/useFetch";
 //----------End Dependencies----------//
 
 //----------Types----------//
@@ -67,8 +68,14 @@ const extraFormDataFields: Record<string, FieldConfig> = {
 
 const FieldConfigPage = ({setStep, fieldType, fieldPresetConfig}: FieldConfigPageProps) => {
     //----------State----------//
-    const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [error, setError] = useState<string>('');
+    const {
+        loading: isLoading,
+        error, 
+        data
+    } = useFetch<{ field_setup: { fields: Record<string, FieldConfig> } }>(`${process.env.NEXT_PUBLIC_API_URL}/field-types/${fieldType}/field-setup`);
+    const {
+        callFetch
+    } = useFetch()
     const [databaseColumnSelected, setDatabaseColumnSelected] = useState(false);
     const [fieldSetup, setFieldSetup] = useState<Record<string, FieldConfig>>({});
     const [checkboxStates, setCheckboxStates] = useState<Record<string, boolean>>({});
@@ -79,8 +86,19 @@ const FieldConfigPage = ({setStep, fieldType, fieldPresetConfig}: FieldConfigPag
 
     //----------Effects----------//
     useEffect(() => {
-        loadFields();
-    },[fieldType])
+        if (data?.field_setup?.fields) {
+            setFieldSetup(data.field_setup.fields);
+            const defaultCheckboxStates: Record<string, boolean> = {}
+
+            Object.entries(data.field_setup.fields as Record<string, FieldConfig>).forEach(([field_key, config]) => {
+                if (config.inputType === 'checkbox'){
+                    defaultCheckboxStates[field_key] = fieldPresetConfig[field_key] ?? config.defaultValue;
+                }
+            })
+
+            setCheckboxStates(defaultCheckboxStates);
+        }
+    },[data, fieldPresetConfig])
     //----------End Effects----------//
 
     //----------Helpers----------//
@@ -134,6 +152,15 @@ const FieldConfigPage = ({setStep, fieldType, fieldPresetConfig}: FieldConfigPag
             result[key] = rawValue === 'true';
             break;
           case 'number':
+            if (rawValue !== null) {
+                const number = Number(rawValue);
+                if (number !== 0) {
+                    result[key] = number;
+                }
+            } else {
+                result[key] = config.defaultValue
+            }
+            break;
           case 'select_special':
             result[key] = rawValue !== null ? Number(rawValue) : config.defaultValue;
             break;
@@ -153,7 +180,22 @@ const FieldConfigPage = ({setStep, fieldType, fieldPresetConfig}: FieldConfigPag
         }
       }
 
-      return result;
+      const {
+        is_db_column,
+        is_required,
+        field_name,
+        is_queryable,
+        ...field_config
+      } = result;
+
+      return {
+        is_db_column: result.is_db_column,
+        is_required: result.is_required,
+        field_name: result.field_name,
+        is_queryable: result.is_queryable,
+        field_type: fieldType,
+        field_config: field_config
+      }
     };
     //----------End Helpers----------//
 
@@ -179,43 +221,6 @@ const FieldConfigPage = ({setStep, fieldType, fieldPresetConfig}: FieldConfigPag
         addField(mergedFormData);
     }
     //----------End Handlers----------//
-
-    //----------API Calls----------//
-    const loadFields = async () => {
-        setIsLoading(true);
-        setError('');
-        try {
-            const request = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/field-types/${fieldType}/field-setup`, {
-                credentials: "include"
-            })
-
-            if (!request.ok) {
-                const error = await request.json();
-                setError(error.message);
-                return;
-            }
-
-            const response = await request.json();
-
-            setFieldSetup(response.field_setup.fields);
-            const defaultCheckboxStates: Record<string, boolean> = {}
-    
-            Object.entries(response.field_setup.fields as Record<string, FieldConfig>).forEach(([field_key, config]) => {
-                if (config.inputType === 'checkbox'){
-                    defaultCheckboxStates[field_key] = fieldPresetConfig[field_key] ?? config.defaultValue;
-                }
-            })
-    
-            setCheckboxStates(defaultCheckboxStates);
-
-            setError('');
-
-        } catch (err: any) {
-            setError(err.message);
-        } finally {
-            setIsLoading(false);
-        }
-    }
 
     const fetchSelectSpecialOptions = async (fieldKey: string, type: string) => {
       try {
@@ -382,9 +387,9 @@ const FieldConfigPage = ({setStep, fieldType, fieldPresetConfig}: FieldConfigPag
     return (
       <>
         {isLoading && <LoadingSpinner width="40px" height="40px"/>}
-        {error && 
+        {error.message && 
             <div className="bg-red-300 max-w-2xl mx-auto text-center mb-2 rounded py-2 px-10">
-                <p className="font-semibold">{error}</p>
+                <p className="font-semibold">{error.message}</p>
             </div>
         }
         {fieldSetup && 
