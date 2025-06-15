@@ -12,10 +12,7 @@ const errorBorderClass = 'border-red-500 border';
 
 const LoginForm = () => {
     //----------State----------//
-    const {loading: isSubmitting, error, callFetch} = useFetch( `${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
-        method: "POST",
-        skip: true
-    } );
+    const {loading: isSubmitting, error, callFetch} = useFetch<{access_token: string}>( `${process.env.NEXT_PUBLIC_API_URL}/auth/login`);
     //----------End State----------//
 
     //----------Derived State----------//
@@ -49,9 +46,12 @@ const LoginForm = () => {
         const formData = new FormData(form);
         const body = Object.fromEntries(formData.entries());
             
-        const result = await callFetch(undefined, body);
+        const result = await callFetch({
+            method: "POST",
+            body
+        });
 
-        if (result){
+        if (result) {
             window.location.reload();
         }
     }

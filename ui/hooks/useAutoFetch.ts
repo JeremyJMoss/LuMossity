@@ -1,6 +1,5 @@
-"use client";
 //----------Dependencies----------//
-import {useState, useCallback} from 'react'
+import {useState, useEffect, useCallback} from 'react';
 //----------End Dependencies----------//
 
 //----------Types----------//
@@ -26,16 +25,8 @@ type FetchOptions = Omit<RequestInit, "body"> & {
 }
 //----------End Types----------//
 
-//----------Constants----------//
-const errorInitState = {
-    message: '',
-    errorText: '',
-    issues: []
-}
-//----------End Constants----------//
-
 //----------Utilities----------//
-function buildQueryParams(params?: Record<string, any>): string {
+function buildQueryParams(params: QueryParams | null): string {
     if (!params) return '';
     const query = new URLSearchParams();
     for (const key in params) {
@@ -49,39 +40,54 @@ function buildQueryParams(params?: Record<string, any>): string {
 }
 //----------End Utilities----------//
 
-const useFetch = <TData = unknown>( baseUrl: string ) => {
-    //----------State----------//
-    const [data, setData] = useState<TData | null>(null);
-    const [loading, setLoading] = useState<boolean>(false);
+//----------Constants----------//
+const errorInitState: APIErrorResponse = {
+    message: '',
+    errorText: '',
+    issues: []
+}
+//----------End Constants----------//
+
+function useAutoFetch<TData = unknown>(baseUrl: string, options: FetchOptions = {}) {
+    const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<APIErrorResponse>(errorInitState);
-    //----------End State----------//
+    const [data, setData] = useState<TData | null>(null);
+    
+    const {
+        params = null,
+        method = "GET",
+        body = {},
+        headers = {},
+        ...fetchOptions
+    } = options;
 
-    //----------API Call----------//
-    const fetchData = useCallback(async (options: FetchOptions) => {
-        const {
-            params = {},
-            body = {},
-            method = "GET",
-            headers = {},
-            ...fetchOptions
-        } = options;
+    const stringifiedParams = JSON.stringify(params);
+    const stringifiedHeaders = JSON.stringify(headers);
+    const stringifiedBody = JSON.stringify(body);
+    const stringifiedFetchOptions = JSON.stringify(fetchOptions);
 
-        setLoading(true);
-
-        const fullUrl = `${baseUrl}${buildQueryParams(params)}`;
+    const fetchData = useCallback(async () => {
+        setIsLoading(true);
 
         try {
+            const currentParams = JSON.parse(stringifiedParams);
+            const currentHeaders = JSON.parse(stringifiedHeaders);
+            const currentBody = JSON.parse(stringifiedBody);
+            const currentFetchOptions = JSON.parse(stringifiedFetchOptions);
+
+            const fullUrl = `${baseUrl}${buildQueryParams(currentParams)}`;
+
             const res = await fetch(fullUrl , {
                 method,
                 credentials: "include",
                 headers: {
                   "Content-Type": "application/json",
-                  ...headers,
+                  ...currentHeaders,
                 },
                 body: ["POST", "PUT", "PATCH"].includes(method)
-                  ? JSON.stringify(body)
+                  ? JSON.stringify(currentBody)
                   : undefined,
-                ...fetchOptions,
+                ...currentFetchOptions,
             });
 
             if (!res.ok) {
@@ -98,39 +104,34 @@ const useFetch = <TData = unknown>( baseUrl: string ) => {
                     };
                 }
                 setError(parsedError);
+                setData(null);
                 return;
             }
 
             const json: TData = await res.json();
             setData(json);
             setError(errorInitState);
-
-            return json;
-
         } catch (err: any) {
-            // Set error if fetch completely failed
             setError({
                 message: err.message || "Fetch Failed",
                 errorText: "NETWORK_ERROR",
                 issues: []
             });
-
-            return null;
-
+            setData(null);
         } finally {
-            setLoading(false);
+            setIsLoading(false);
         }
-    }, [baseUrl])
-    //----------End API Call----------//
+    }, [baseUrl, stringifiedParams, method, stringifiedHeaders, stringifiedFetchOptions, stringifiedBody]);
+
+    useEffect(() => {
+        fetchData();
+    }, [fetchData])
 
     return {
+        isLoading,
         error,
-        data,
-        loading,
-        callFetch: fetchData
+        data
     }
 }
 
-//----------Exports----------//
-export {useFetch}
-//----------End Exports----------//
+export {useAutoFetch}

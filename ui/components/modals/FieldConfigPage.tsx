@@ -6,7 +6,7 @@ import PrimaryFormButton from "../buttons/PrimaryFormButton";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import SelectBoxFieldConfigField from "./partials/SelectBoxFieldConfigField";
 import MultiSelect from "./partials/MultiSelect";
-import { useFetch } from "@/hooks/useFetch";
+import { useAutoFetch } from "@/hooks/useAutoFetch";
 //----------End Dependencies----------//
 
 //----------Types----------//
@@ -69,10 +69,10 @@ const extraFormDataFields: Record<string, FieldConfig> = {
 const FieldConfigPage = ({setStep, fieldType, fieldPresetConfig}: FieldConfigPageProps) => {
     //----------State----------//
     const {
-        loading: isLoading,
+        isLoading,
         error, 
         data
-    } = useFetch<{ field_setup: { fields: Record<string, FieldConfig> } }>(`${process.env.NEXT_PUBLIC_API_URL}/field-types/${fieldType}/field-setup`);
+    } = useAutoFetch<{ field_setup: { fields: Record<string, FieldConfig> } }>(`${process.env.NEXT_PUBLIC_API_URL}/field-types/${fieldType}/field-setup`);
     const [databaseColumnSelected, setDatabaseColumnSelected] = useState(false);
     const [fieldSetup, setFieldSetup] = useState<Record<string, FieldConfig>>({});
     const [checkboxStates, setCheckboxStates] = useState<Record<string, boolean>>({});

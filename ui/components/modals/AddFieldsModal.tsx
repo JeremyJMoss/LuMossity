@@ -5,7 +5,7 @@ import LoadingSpinner from "../ui/LoadingSpinner";
 import CallToActionButton from "../buttons/CallToActionButton";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import FieldConfigPage from "./FieldConfigPage";
-import { useFetch } from "@/hooks/useFetch";
+import { useAutoFetch } from "@/hooks/useAutoFetch";
 //----------End Dependencies----------//
 
 //----------Types----------//
@@ -25,7 +25,7 @@ type FieldPreset = {
 
 const AddFieldModal = ({ entityKey, onClose, onSuccess }: Props) => {
     //----------State----------//
-    const {loading: isLoading, error, data} = useFetch<{ field_presets: FieldPreset[]}>(`${process.env.NEXT_PUBLIC_API_URL}/field-types/field-presets`)
+    const {isLoading, error, data} = useAutoFetch<{ field_presets: FieldPreset[]}>(`${process.env.NEXT_PUBLIC_API_URL}/field-types/field-presets`)
     const [fieldConfig, setFieldConfig] = useState<number | null>(null);
     const [step, setStep] = useState<number>(1);
     const modalRef = useRef<HTMLDivElement | null>(null);
